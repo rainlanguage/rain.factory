@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.19;
 
-import "forge-std/Script.sol";
-import "src/concrete/CloneFactory.sol";
+import "../lib/forge-std/src/Script.sol";
+import "../src/concrete/CloneFactory.sol";
 
 /// @title DeployCloneFactory
 /// @notice A script that deploys a CloneFactory. This is intended to be run on

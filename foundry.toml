@@ -16,6 +16,9 @@ cbor_metadata = false
 # than expose ffi to forge.
 fs_permissions = [{ access = "read", path = "./meta"}]
 
+auto_detect_remappings = false
+remappings = ["ds-test/=lib/forge-std/lib/ds-test/src/"]
+
 [fuzz]
 runs = 2048
 

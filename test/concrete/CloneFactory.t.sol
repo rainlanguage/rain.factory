@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.19;
 
-import "forge-std/Test.sol";
+import "../../lib/forge-std/src/Test.sol";
 
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV1.sol";
-import "rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
+import "../../lib/rain.interpreter/src/abstract/DeployerDiscoverableMetaV1.sol";
+import "../../lib/rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
 
-import "src/concrete/CloneFactory.sol";
-import {CloneFactory} from "src/concrete/CloneFactory.sol";
+import "../../src/concrete/CloneFactory.sol";
+import {CloneFactory} from "../../src/concrete/CloneFactory.sol";
 
 /// @title TestCloneable
 /// @notice A cloneable contract that implements `ICloneableV2`. Initializes

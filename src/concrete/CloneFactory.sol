@@ -3,8 +3,8 @@ pragma solidity =0.8.19;
 
 import "../interface/ICloneableV2.sol";
 import "../interface/ICloneableFactoryV2.sol";
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV1.sol";
-import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
+import "../../lib/rain.interpreter/src/abstract/DeployerDiscoverableMetaV1.sol";
+import {Clones} from "../../lib/openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 /// Thrown when an implementation has zero code size which is always a mistake.
 error ZeroImplementationCodeSize();
