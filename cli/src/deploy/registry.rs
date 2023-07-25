@@ -24,9 +24,6 @@ impl Ethereum {
             block_scanner_key : block_scanner_key
         };
     }
-    pub fn get_chain_id() -> String{
-        String::from("1")
-    }
 }  
 
 /// # Polygon
@@ -51,9 +48,6 @@ impl Polygon {
             block_scanner_api : String::from("https://api.polygonscan.com/") ,
             block_scanner_key : block_scanner_key
         };
-    }
-    pub fn get_chain_id() -> String{
-        String::from("137")
     }
 }  
 
@@ -80,9 +74,6 @@ impl Mumbai {
             block_scanner_key : block_scanner_key
         };
     }
-    pub fn get_chain_id() -> String{
-        String::from("80001")
-    }
 }   
 
 /// # Fuji
@@ -107,9 +98,6 @@ impl Fuji {
             block_scanner_api : String::from("https://api-testnet.snowtrace.io/api") ,
             block_scanner_key : block_scanner_key
         };
-    }
-    pub fn get_chain_id() -> String{
-        String::from("43113")
     }
 }  
 

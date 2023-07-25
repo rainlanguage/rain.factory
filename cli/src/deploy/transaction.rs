@@ -1,7 +1,6 @@
 
 use ethers::providers::{Provider, Middleware, Http} ;
 use ethers::types::{H256, Bytes};
-use std::str::FromStr;
 use anyhow::Result;
 use super::registry::RainNetworks; 
 use anyhow::anyhow;

@@ -4,13 +4,13 @@
 //! to other supported chains.
 
 use anyhow::Result;
-use crate::{subgraph::get_transaction_hash, deploy::registry::{Fuji, RainNetworks}, cli::deploy::CrossDeploy};
-use self::{registry::{RainNetworkOptions, Ethereum, Mumbai, Polygon}, transaction::get_transaction_data, dis::{DISpair, replace_dis_pair}}; 
+use crate::{subgraph::get_transaction_hash, deploy::registry::RainNetworks};
+use self::{transaction::get_transaction_data, dis::{DISpair, replace_dis_pair}}; 
 use ethers::{providers::{Provider, Middleware, Http}, types::{H160, H256, Bytes}} ; 
 use ethers::{signers::LocalWallet, types::{Eip1559TransactionRequest, U64}, prelude::SignerMiddleware};
-use std::str::FromStr;
+
 pub mod registry; 
-use anyhow::anyhow; 
+
 
 pub mod transaction; 
 pub mod dis; 
@@ -21,7 +21,7 @@ pub mod deployer;
 /// Optional transaction hash as an argument can be provided, which is recommended for Non-Rain contracts.
 /// Returns deployment data for any contract without a constructor argument. 
 /// For contracts which have constructor arguments the integrity of the returned data cannot be ensured.  
-/// Returned data can directly be submitted via a signer to the blockchain. Refer[deploy_contract]
+/// Returned data can directly be submitted via a signer to the blockchain. Refer [deploy_contract].
 /// 
 /// # Example 
 /// ```rust
@@ -71,6 +71,7 @@ pub mod deployer;
 ///    ).await.unwrap() ;
 /// 
 /// }
+#[allow(dead_code)]
 pub async fn get_deploy_data(
     from_network : RainNetworks ,
     contract_address : H160 ,

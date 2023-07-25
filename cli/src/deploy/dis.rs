@@ -16,9 +16,6 @@ pub struct DISpair {
 }  
 
 impl DISpair {
-    pub fn new(i : Option<H160>, s : Option<H160>, d : Option<H160>) -> DISpair {
-        DISpair { interpreter: i, store: s, deployer: d }
-    } 
 
     pub fn get_interpreter_hex_string(&self) -> Option<String> { 
         match self.interpreter {

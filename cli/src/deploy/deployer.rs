@@ -2,23 +2,20 @@
 use std::str::FromStr;
 use std::{convert::TryFrom, sync::Arc};
 use anyhow::anyhow;
-use ethers::prelude::SignerMiddleware;
-use ethers::providers::{Provider, Http, Middleware} ;
+use ethers::providers::{Provider, Http} ;
 use ethers::core::abi::Abi ;
-use ethers::core::types::{Address,H160}; 
+use ethers::core::types::H160; 
 use ethers::contract::Contract;
-use ethers::signers::LocalWallet;
-use ethers::types::{Eip1559TransactionRequest, U64, Bytes, H256};
+use ethers::types::H256;
 
 
 use crate::cli::deploy::{Deployer, RainContract};
 use crate::deploy::deploy_contract;
 use crate::deploy::dis::{DISpair, replace_dis_pair};
-use crate::deploy::registry::RainNetworkOptions ;
 use crate::deploy::transaction::get_transaction_data;
 use crate::subgraph::get_transaction_hash;
 
-use super::registry::{RainNetworks, Ethereum, Polygon, Mumbai, Fuji};
+use super::registry::RainNetworks;
 
 /// CLI function handler to cross deploy exxpression deployer
 pub async fn expression_deployer(deployer_data: Deployer) -> anyhow::Result<()> {  
