@@ -13,6 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 pub enum Factory {
+    #[command(subcommand)]
     CrossDeploy(deploy::CrossDeploy)
 }
 
