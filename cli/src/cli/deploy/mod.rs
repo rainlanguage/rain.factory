@@ -180,10 +180,6 @@ pub struct RainContract{
     #[arg(short ='c' , long = "contract-address")]
     pub contract_address: String , 
 
-    /// Set to true to deploy contract to target network 
-    #[arg(long)]
-    pub deploy: bool,  
-
     /// private key (unprefixed) provided when deploy is set to true
     #[arg(short ='k' , long = "priavte-key" )]
     pub private_key: String, 
