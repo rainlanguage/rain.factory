@@ -101,8 +101,8 @@ impl Fuji {
     }
 }  
 
-/// # RainNetworks
-/// Enum representing supported networks for cross deploying contracts.
+/// # RainNetworkOptions
+/// Enum representing options for supported networks for cross deploying contracts.
  #[derive(Debug)]
  #[derive(Copy,Clone,ValueEnum)]
 pub enum RainNetworkOptions{
@@ -112,6 +112,8 @@ pub enum RainNetworkOptions{
     Fuji
 }  
 
+/// # RainNetworks
+/// Value Enums representing supported networks for cross deploying contracts.
 #[derive(Debug)]
  #[derive(Clone)]
 pub enum RainNetworks{

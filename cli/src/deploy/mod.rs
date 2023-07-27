@@ -137,128 +137,130 @@ pub async fn deploy_contract(
     
 }
 
-// #[cfg(test)] 
-// mod test { 
+#[cfg(test)] 
+mod test { 
 
-//     use super::get_deploy_data ; 
-//     use crate::deploy::transaction::get_transaction_data;
-//     use crate::deploy::registry::RainNetworks;
-//     use crate::deploy::registry::Mumbai;
-//     use crate::deploy::registry::Fuji;
-//     use crate::deploy::DISpair;
-//     use std::env ;
+    use super::get_deploy_data ; 
+    use crate::deploy::transaction::get_transaction_data;
+    use crate::deploy::registry::RainNetworks;
+    use crate::deploy::registry::Mumbai;
+    use crate::deploy::registry::Fuji;
+    use crate::deploy::DISpair;
+    use std::env ;
+    use std::str::FromStr;
+    use ethers::types::{H160, H256}; 
 
 
-//     #[tokio::test]
-//     async fn test_rain_contract_deploy_data()  { 
+    #[tokio::test]
+    async fn test_rain_contract_deploy_data()  { 
 
-//         let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
-//         let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network);  
-//         let contract_address = String::from("0x3cc6c6e888b4ad891eea635041a269c4ba1c4a63 ") ;  
-//         let tx_hash = None ; 
+        let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+        let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network);  
+        let contract_address =H160::from_str(&String::from("0x3cc6c6e888b4ad891eea635041a269c4ba1c4a63")).unwrap();  
+        let tx_hash = None ; 
+        
+        let from_dis = DISpair {
+            interpreter : Some(H160::from_str(&String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")).unwrap()),
+            store : Some(H160::from_str(&String::from("0xa5d9c16ddfd05d398fd0f302edd9e9e16d328796")).unwrap()),
+            deployer : Some(H160::from_str(&String::from("0xd3870063bcf25d5110ab9df9672a0d5c79c8b2d5")).unwrap())
+        } ; 
 
-//         let from_dis = DISpair {
-//             interpreter : Some(String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")) ,
-//             store : Some(String::from("0xa5d9c16ddfd05d398fd0f302edd9e9e16d328796")) , 
-//             deployer : Some(String::from("0xd3870063bcf25d5110ab9df9672a0d5c79c8b2d5"))
-//         } ; 
+        let to_dis = DISpair {
+            interpreter : Some(H160::from_str(&String::from("0xfd1da7eee4a9391f6fcabb28617f41894ba84cdc")).unwrap()),
+            store : Some(H160::from_str(&String::from("0x9b8571bd2742ec628211111de3aa940f5984e82b")).unwrap()),
+            deployer : Some(H160::from_str(&String::from("0x3d7d894afc7dbfd45bf50867c9b051da8eee85e9")).unwrap())
+        } ;   
 
-//         let to_dis = DISpair {
-//             interpreter : Some(String::from("0xfd1da7eee4a9391f6fcabb28617f41894ba84cdc")),
-//             store : Some(String::from("0x9b8571bd2742ec628211111de3aa940f5984e82b")),  
-//             deployer : Some(String::from("0x3d7d894afc7dbfd45bf50867c9b051da8eee85e9")),
-//         } ;   
+        let tx_data = get_deploy_data(
+            from_network,
+            contract_address,
+            from_dis,
+            to_dis,
+            tx_hash
+        ).await.unwrap() ;
 
-//         let tx_data = get_deploy_data(
-//             from_network,
-//             contract_address,
-//             from_dis,
-//             to_dis,
-//             tx_hash
-//         ).await.unwrap() ;
+        let expected_tx_hash = H256::from_str(&String::from("0x13b9895c7eb7311bbb22ef0a692b7b115c98c957514903e7c3a0e454e3389378")).unwrap() ; 
+        // Reading environment variables
+        let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
+        let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ;
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
-//         let expected_tx_hash = String::from("0x13b9895c7eb7311bbb22ef0a692b7b115c98c957514903e7c3a0e454e3389378") ; 
-//         // Reading environment variables
-//         let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
-//         let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ;
-//         let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
+        assert_eq!(tx_data,expected_data) ;
 
-//         assert_eq!(tx_data,expected_data) ;
+    }
 
-//     }
+     #[tokio::test]
+    async fn test_non_rain_contract_deploy_data()  { 
 
-//      #[tokio::test]
-//     async fn test_non_rain_contract_deploy_data()  { 
+        let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+        let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network);
+        let contract_address =H160::from_str(&String::from("0x2c9f3204590765aefa7bee01bccb540a7d06e967")).unwrap();   
+        let tx_hash = None ; 
 
-//         let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
-//         let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network); 
-//         let contract_address = String::from("0x2c9f3204590765aefa7bee01bccb540a7d06e967") ;  
-//         let tx_hash = None ; 
+        let from_dis = DISpair {
+            interpreter : None,
+            store : None,
+            deployer : None,
+        } ; 
 
-//         let from_dis = DISpair {
-//             interpreter : None,
-//             store : None,
-//             deployer : None,
-//         } ; 
+        let to_dis = DISpair {
+            interpreter : None,
+            store : None,
+            deployer : None,
+        } ;   
 
-//         let to_dis = DISpair {
-//             interpreter : None,
-//             store : None,
-//             deployer : None,
-//         } ;   
+        let tx_data = get_deploy_data(
+            from_network,
+            contract_address,
+            from_dis,
+            to_dis,
+            tx_hash
+        ).await.unwrap() ;
 
-//         let tx_data = get_deploy_data(
-//             from_network,
-//             contract_address,
-//             from_dis,
-//             to_dis,
-//             tx_hash
-//         ).await.unwrap() ;
+        let expected_tx_hash = H256::from_str(&String::from("0x2bcd975588b90d0da605c829c434c9e0514b329ec956375c32a97c87a870c33f")).unwrap() ; 
+        let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
+        let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ;
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
-//         let expected_tx_hash = String::from("0x2bcd975588b90d0da605c829c434c9e0514b329ec956375c32a97c87a870c33f") ; 
-//         let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
-//         let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ;
-//         let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
+        assert_eq!(tx_data,expected_data) ;
 
-//         assert_eq!(tx_data,expected_data) ;
+    }
 
-//     }
+    #[tokio::test]
+    async fn test_tx_hash_deploy_data()  { 
 
-//     #[tokio::test]
-//     async fn test_tx_hash_deploy_data()  { 
+        let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
+        let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network);  
+        let contract_address =H160::from_str(&String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38")).unwrap();  
+        let tx_hash = Some(H256::from_str(&String::from("0xd8ff2d9381573294ce7d260d3f95e8d00a42d55a5ac29ff9ae22a401b53c2e19")).unwrap()) ;
+         
+        let from_dis = DISpair {
+            interpreter : None,
+            store : None,
+            deployer : None,
+        } ; 
 
-//         let mumbai_network = Mumbai::new(env::var("MUMBAI_RPC_URL").unwrap(), env::var("POLYGONSCAN_API_KEY").unwrap()) ; 
-//         let from_network: RainNetworks = RainNetworks::Mumbai(mumbai_network);  
-//         let contract_address = String::from("0x5f02c2f831d3e0d430aa58c973b8b751f3d81b38 ") ;  
-//         let tx_hash = Some(String::from("0xd8ff2d9381573294ce7d260d3f95e8d00a42d55a5ac29ff9ae22a401b53c2e19")) ; 
+        let to_dis = DISpair {
+            interpreter : None,
+            store : None,
+            deployer : None,
+        } ;   
 
-//         let from_dis = DISpair {
-//             interpreter : None,
-//             store : None,
-//             deployer : None,
-//         } ; 
+        let tx_data = get_deploy_data(
+            from_network,
+            contract_address,
+            from_dis,
+            to_dis,
+            tx_hash
+        ).await.unwrap() ;
 
-//         let to_dis = DISpair {
-//             interpreter : None,
-//             store : None,
-//             deployer : None,
-//         } ;   
+        let expected_tx_hash = H256::from_str(&String::from("0x15f2f57f613a159d0e0a02aa2086ec031a2e56e0b9c803d0e89be78b4fa9b524")).unwrap() ; 
+        let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
+        let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ; 
+        let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
 
-//         let tx_data = get_deploy_data(
-//             from_network,
-//             contract_address,
-//             from_dis,
-//             to_dis,
-//             tx_hash
-//         ).await.unwrap() ;
+        assert_eq!(tx_data,expected_data) ;
 
-//         let expected_tx_hash = String::from("0x15f2f57f613a159d0e0a02aa2086ec031a2e56e0b9c803d0e89be78b4fa9b524") ; 
-//         let fuji_network = Fuji::new(env::var("FUJI_RPC_URL").unwrap(), env::var("SNOWTRACE_API_KEY").unwrap()) ; 
-//         let expected_network: RainNetworks = RainNetworks::Fuji(fuji_network) ; 
-//         let expected_data = get_transaction_data(expected_network,expected_tx_hash).await.unwrap() ; 
+    } 
 
-//         assert_eq!(tx_data,expected_data) ;
-
-//     } 
-
-// }
+}

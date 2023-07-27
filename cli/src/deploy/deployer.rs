@@ -263,7 +263,8 @@ pub async fn rain_contract(contract: RainContract) -> anyhow::Result<()> {
     Ok(())
 }  
 
-/// Function to get Rainterpreter and RainterpreterStore corresponding to deployer
+/// Function to get Rainterpreter and RainterpreterStore corresponding to the provided RainterpreterExpressionDeployer contract address.
+/// Supporting deployers deployed on [RainNetworks].
 pub async fn get_interpreter_store(
     deployer_address: H160 ,
     network : RainNetworks
