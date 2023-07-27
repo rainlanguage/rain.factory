@@ -46,7 +46,7 @@ pub async fn expression_deployer(deployer_data: Deployer) -> anyhow::Result<()> 
         from_network.clone(),
     i_tx).await.unwrap() ;
 
-    let mut sp1 = Spinner::new(
+    let mut sp = Spinner::new(
         Spinners::from_str("Dots9").unwrap(),
         "Deploying RainInterpreter Contract...".into(),
     ); 
@@ -56,7 +56,7 @@ pub async fn expression_deployer(deployer_data: Deployer) -> anyhow::Result<()> 
         deployer_data.private_key.clone(),i_data
     ).await.unwrap() ; 
 
-    sp1.stop_with_message("Finished deploying RainInterpreter contract\n".into());
+    sp.stop_with_message("Finished deploying RainInterpreter contract\n".into());
 
     let print_str = format!(
         "{}{}{}{}{}" ,
