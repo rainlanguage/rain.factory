@@ -69,16 +69,16 @@ impl Deployer {
     pub fn get_origin_network_details(&self) -> anyhow::Result<RainNetworks>{
         let from_network: RainNetworks = match self.origin_network.clone()  {
             RainNetworkOptions::Ethereum => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.ethereum_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --ethereum-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.etherscan_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --etherscan-api-key argument.")) ;
                 }
                 RainNetworks::Ethereum(Ethereum::new(self.ethereum_rpc_url.clone().unwrap(), self.etherscan_api_key.clone().unwrap()))
             } ,
             RainNetworkOptions::Polygon => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.polygon_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --polygon-rpc-url argument.")) ;
                 }
                 if self.polygonscan_api_key.is_none(){
@@ -96,10 +96,10 @@ impl Deployer {
                 RainNetworks::Mumbai(Mumbai::new(self.mumbai_rpc_url.clone().unwrap(), self.polygonscan_api_key.clone().unwrap()))
             },
             RainNetworkOptions::Fuji => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.fuji_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --fuji-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.snowtrace_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --snowtrace-api-key argument.")) ;
                 }
                 RainNetworks::Fuji(Fuji::new(self.fuji_rpc_url.clone().unwrap(), self.snowtrace_api_key.clone().unwrap()))
@@ -111,16 +111,16 @@ impl Deployer {
     pub fn get_target_network_details(&self) -> anyhow::Result<RainNetworks>{ 
         let to_network: RainNetworks = match self.target_network.clone()  {
             RainNetworkOptions::Ethereum => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.ethereum_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --ethereum-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.etherscan_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --etherscan-api-key argument.")) ;
                 }
                 RainNetworks::Ethereum(Ethereum::new(self.ethereum_rpc_url.clone().unwrap(), self.etherscan_api_key.clone().unwrap()))
             } ,
             RainNetworkOptions::Polygon => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.polygon_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --polygon-rpc-url argument.")) ;
                 }
                 if self.polygonscan_api_key.is_none(){
@@ -138,10 +138,10 @@ impl Deployer {
                 RainNetworks::Mumbai(Mumbai::new(self.mumbai_rpc_url.clone().unwrap(), self.polygonscan_api_key.clone().unwrap()))
             },
             RainNetworkOptions::Fuji => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.fuji_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --fuji-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.snowtrace_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --snowtrace-api-key argument.")) ;
                 }
                 RainNetworks::Fuji(Fuji::new(self.fuji_rpc_url.clone().unwrap(), self.snowtrace_api_key.clone().unwrap()))
@@ -218,16 +218,16 @@ impl RainContract{
     pub fn get_origin_network_details(&self) -> anyhow::Result<RainNetworks>{
         let from_network: RainNetworks = match self.origin_network.clone()  {
             RainNetworkOptions::Ethereum => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.ethereum_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --ethereum-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.etherscan_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --etherscan-api-key argument.")) ;
                 }
                 RainNetworks::Ethereum(Ethereum::new(self.ethereum_rpc_url.clone().unwrap(), self.etherscan_api_key.clone().unwrap()))
             } ,
             RainNetworkOptions::Polygon => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.polygon_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --polygon-rpc-url argument.")) ;
                 }
                 if self.polygonscan_api_key.is_none(){
@@ -245,10 +245,10 @@ impl RainContract{
                 RainNetworks::Mumbai(Mumbai::new(self.mumbai_rpc_url.clone().unwrap(), self.polygonscan_api_key.clone().unwrap()))
             },
             RainNetworkOptions::Fuji => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.fuji_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --fuji-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.snowtrace_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --snowtrace-api-key argument.")) ;
                 }
                 RainNetworks::Fuji(Fuji::new(self.fuji_rpc_url.clone().unwrap(), self.snowtrace_api_key.clone().unwrap()))
@@ -260,16 +260,16 @@ impl RainContract{
     pub fn get_target_network_details(&self) -> anyhow::Result<RainNetworks>{ 
         let to_network: RainNetworks = match self.target_network.clone()  {
             RainNetworkOptions::Ethereum => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.ethereum_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --ethereum-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.etherscan_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --etherscan-api-key argument.")) ;
                 }
                 RainNetworks::Ethereum(Ethereum::new(self.ethereum_rpc_url.clone().unwrap(), self.etherscan_api_key.clone().unwrap()))
             } ,
             RainNetworkOptions::Polygon => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.polygon_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --polygon-rpc-url argument.")) ;
                 }
                 if self.polygonscan_api_key.is_none(){
@@ -287,10 +287,10 @@ impl RainContract{
                 RainNetworks::Mumbai(Mumbai::new(self.mumbai_rpc_url.clone().unwrap(), self.polygonscan_api_key.clone().unwrap()))
             },
             RainNetworkOptions::Fuji => {
-                if self.mumbai_rpc_url.is_none(){
+                if self.fuji_rpc_url.is_none(){
                     return Err(anyhow!("\n ❌Please provide --fuji-rpc-url argument.")) ;
                 }
-                if self.polygonscan_api_key.is_none(){
+                if self.snowtrace_api_key.is_none(){
                     return Err(anyhow!("\n ❌Please provide --snowtrace-api-key argument.")) ;
                 }
                 RainNetworks::Fuji(Fuji::new(self.fuji_rpc_url.clone().unwrap(), self.snowtrace_api_key.clone().unwrap()))
