@@ -3,7 +3,7 @@ pragma solidity =0.8.19;
 
 import "forge-std/Test.sol";
 
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV1.sol";
+import "rain.interpreter/abstract/DeployerDiscoverableMetaV2.sol";
 import "rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
 
 import "src/concrete/CloneFactory.sol";
@@ -60,13 +60,13 @@ contract CloneFactoryCloneTest is Test {
         // constructor from completing. We don't care about the return value.
         vm.mockCall(
             deployer,
-            abi.encodeWithSelector(IExpressionDeployerV1.deployExpression.selector),
+            abi.encodeWithSelector(IExpressionDeployerV2.deployExpression.selector),
             abi.encode(address(0), address(0), address(0))
         );
         // We do care that the call is made, however. If we never touch an
         // expression deployer then the `CloneFactory` will not be discoverable.
-        vm.expectCall(address(deployer), abi.encodeWithSelector(IExpressionDeployerV1.deployExpression.selector));
-        _iCloneFactory = new CloneFactory(DeployerDiscoverableMetaV1ConstructionConfig(deployer, meta));
+        vm.expectCall(address(deployer), abi.encodeWithSelector(IExpressionDeployerV2.deployExpression.selector));
+        _iCloneFactory = new CloneFactory(DeployerDiscoverableMetaV2ConstructionConfig(deployer, meta));
     }
 
     /// The bytecode of the implementation contract is irrelevant to the child.
