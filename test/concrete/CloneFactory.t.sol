@@ -3,7 +3,7 @@ pragma solidity =0.8.19;
 
 import "forge-std/Test.sol";
 
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV2.sol";
+import "rain.interpreter/src/abstract/DeployerDiscoverableMetaV2.sol";
 import "rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
 
 import "src/concrete/CloneFactory.sol";

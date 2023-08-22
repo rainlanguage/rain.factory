@@ -3,7 +3,7 @@ pragma solidity =0.8.19;
 
 import "../interface/ICloneableV2.sol";
 import "../interface/ICloneableFactoryV2.sol";
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV2.sol";
+import "rain.interpreter/src/abstract/DeployerDiscoverableMetaV2.sol";
 import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 /// Thrown when an implementation has zero code size which is always a mistake.
