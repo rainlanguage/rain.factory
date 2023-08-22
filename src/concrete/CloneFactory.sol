@@ -3,7 +3,7 @@ pragma solidity =0.8.19;
 
 import "../interface/ICloneableV2.sol";
 import "../interface/ICloneableFactoryV2.sol";
-import "rain.interpreter/abstract/DeployerDiscoverableMetaV1.sol";
+import "rain.interpreter/abstract/DeployerDiscoverableMetaV2.sol";
 import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 /// Thrown when an implementation has zero code size which is always a mistake.
@@ -13,16 +13,16 @@ error ZeroImplementationCodeSize();
 error InitializationFailed();
 
 /// @dev Expected hash of the clone factory rain metadata.
-bytes32 constant CLONE_FACTORY_META_HASH = bytes32(0x1efc6b18f7f4aa4266a7801e1b611be09f1977d4e1a6c3c5c17ac27abf81027e);
+bytes32 constant CLONE_FACTORY_META_HASH = bytes32(0xc95dbb57fc82aaa5d8e58ffb65cff40b4b5c1fdd2d50da43d760cea45ea2304f);
 
 /// @title CloneFactory
 /// @notice A fairly minimal implementation of `ICloneableFactoryV2` and
-/// `DeployerDiscoverableMetaV1` that uses Open Zeppelin `Clones` to create
+/// `DeployerDiscoverableMetaV2` that uses Open Zeppelin `Clones` to create
 /// EIP1167 clones of a reference bytecode. The reference bytecode MUST implement
 /// `ICloneableV2`.
-contract CloneFactory is ICloneableFactoryV2, DeployerDiscoverableMetaV1 {
-    constructor(DeployerDiscoverableMetaV1ConstructionConfig memory config)
-        DeployerDiscoverableMetaV1(CLONE_FACTORY_META_HASH, config)
+contract CloneFactory is ICloneableFactoryV2, DeployerDiscoverableMetaV2 {
+    constructor(DeployerDiscoverableMetaV2ConstructionConfig memory config)
+        DeployerDiscoverableMetaV2(CLONE_FACTORY_META_HASH, config)
     {}
 
     /// @inheritdoc ICloneableFactoryV2

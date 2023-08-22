@@ -25,4 +25,4 @@ jobs:
         env:
           CI_DEPLOY_RPC_URL: ${{ secrets.CI_DEPLOY_RPC_URL }}
           EXPLORER_VERIFICATION_KEY: ${{ secrets.EXPLORER_VERIFICATION_KEY }}
-        run: forge build && forge script script/DeployCloneFactory.sol:DeployCloneFactory --legacy --verify --broadcast --rpc-url "${CI_DEPLOY_RPC_URL}" --etherscan-api-key "${EXPLORER_VERIFICATION_KEY}" --sig='run(bytes)' $(rain meta build -i <(rain meta solc artifact -c abi -i out/CloneFactory.sol/CloneFactory.json) -m solidity-abi-v2 -t json -e deflate -l en -E hex)
+        run: forge build && forge script -vvvvv script/DeployCloneFactory.sol:DeployCloneFactory --legacy --verify --broadcast --rpc-url "${CI_DEPLOY_RPC_URL}" --etherscan-api-key "${EXPLORER_VERIFICATION_KEY}" --sig='run(bytes)' $(rain meta build -i <(rain meta solc artifact -c abi -i out/CloneFactory.sol/CloneFactory.json) -m solidity-abi-v2 -t json -e deflate -l en -E hex)
