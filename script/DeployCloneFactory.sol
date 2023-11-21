@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.19;
 
-import "forge-std/Script.sol";
-import "src/concrete/CloneFactory.sol";
+import {Script, console2} from "forge-std/Script.sol";
+import {CloneFactory} from "src/concrete/CloneFactory.sol";
+import {
+    DeployerDiscoverableMetaV3,
+    DeployerDiscoverableMetaV3ConstructionConfig
+} from "rain.interpreter/src/abstract/DeployerDiscoverableMetaV3.sol";
 
 /// @title DeployCloneFactory
 /// @notice A script that deploys a CloneFactory. This is intended to be run on
@@ -21,7 +25,7 @@ contract DeployCloneFactory is Script {
         console2.logBytes32(keccak256(meta));
 
         vm.startBroadcast(deployerPrivateKey);
-        CloneFactory cloneFactory = new CloneFactory(DeployerDiscoverableMetaV2ConstructionConfig (
+        CloneFactory cloneFactory = new CloneFactory(DeployerDiscoverableMetaV3ConstructionConfig (
             i9rDeployer,
             meta
         ));
