@@ -18,8 +18,8 @@ contract DeployCloneFactory is Script {
     function run(bytes memory meta) external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
         // @todo pull this from subgraph.
-        // hardcoded from CI https://github.com/rainprotocol/rain.interpreter/actions/runs/5940190761/job/16108225960
-        address i9rDeployer = 0xB7d691B7E3676cb70dB0cDae95797F24Eab6980D;
+        // hardcoded from CI https://github.com/rainprotocol/rain.interpreter/actions/runs/6945028339/job/18893471403
+        address i9rDeployer = 0x5c67221f721D1EEa73d99551b271DfDBB16902CF;
 
         console2.log("meta hash:");
         console2.logBytes32(keccak256(meta));
