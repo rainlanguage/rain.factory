@@ -11,9 +11,6 @@ error ZeroImplementationCodeSize();
 /// Thrown when initialization fails.
 error InitializationFailed();
 
-/// @dev Expected hash of the clone factory rain metadata.
-bytes32 constant CLONE_FACTORY_META_HASH = bytes32(0xb44c49d6e54d4af4c9b09b207d5194a7eecc6bf61923d2cc751cef550d3b40ef);
-
 /// @title CloneFactory
 /// @notice A fairly minimal implementation of `ICloneableFactoryV2` and
 /// `DeployerDiscoverableMetaV2` that uses Open Zeppelin `Clones` to create
