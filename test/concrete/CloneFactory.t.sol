@@ -3,10 +3,6 @@ pragma solidity =0.8.19;
 
 import {Test, Vm, console2} from "forge-std/Test.sol";
 
-import {
-    DeployerDiscoverableMetaV3,
-    DeployerDiscoverableMetaV3ConstructionConfig
-} from "rain.interpreter.interface/src/abstract/DeployerDiscoverableMetaV3.sol";
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "src/concrete/CloneFactory.sol";
@@ -47,29 +43,7 @@ contract CloneFactoryCloneTest is Test {
 
     /// Construct a new `CloneFactory` instance for testing.
     constructor() {
-        // Deployer address is arbitrary, we're going to mock the call anyway.
-        address deployer = address(uint160(uint256(keccak256("deployer"))));
-        // Need to provide some bytecode for the mock call to succeed.
-        vm.etch(deployer, hex"00");
-        // This is the real metadata, it will be checked against the hash in the
-        // constructor. If the metadata on file becomes stale then the CI
-        // deployment will fail due to a hash mismatch as the github action
-        // builds from source.
-        bytes memory meta = vm.readFileBinary("meta/CloneFactory.rain.meta");
-        console2.log("meta hash:");
-        console2.logBytes32(keccak256(meta));
-
-        // We only mock the call so that it doesn't error and prevent the
-        // constructor from completing. We don't care about the return value.
-        vm.mockCall(
-            deployer,
-            abi.encodeWithSelector(IExpressionDeployerV3.deployExpression2.selector),
-            abi.encode(address(0), address(0), address(0), "")
-        );
-        // We do care that the call is made, however. If we never touch an
-        // expression deployer then the `CloneFactory` will not be discoverable.
-        vm.expectCall(address(deployer), abi.encodeWithSelector(IExpressionDeployerV3.deployExpression2.selector));
-        _iCloneFactory = new CloneFactory(DeployerDiscoverableMetaV3ConstructionConfig(deployer, meta));
+        _iCloneFactory = new CloneFactory();
     }
 
     /// The bytecode of the implementation contract is irrelevant to the child.
