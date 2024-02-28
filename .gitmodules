@@ -8,6 +8,6 @@
 [submodule "lib/rain.extrospection"]
 	path = lib/rain.extrospection
 	url = https://github.com/rainprotocol/rain.extrospection
-[submodule "lib/rain.interpreter"]
-	path = lib/rain.interpreter
-	url = https://github.com/rainprotocol/rain.interpreter
+[submodule "lib/rain.interpreter.interface"]
+	path = lib/rain.interpreter.interface
+	url = https://github.com/rainlanguage/rain.interpreter.interface

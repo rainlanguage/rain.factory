@@ -1,0 +1,36 @@
+name: Manual sol artifacts
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network to deploy to'
+        required: true
+        type: choice
+        options:
+          - polygon
+          - songbird
+          - flare
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOYMENT_KEY: ${{ github.ref == 'refs/heads/main' && secrets.PRIVATE_KEY || secrets.PRIVATE_KEY_DEV }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - run: nix develop --command rainix-sol-prelude
+      - name: deploy to ${{ inputs.network }}
+        run: nix develop --command rainix-sol-artifacts
+        env:
+          ETH_RPC_URL: ${{ inputs.network == 'polygon' && secrets.CI_DEPLOY_POLYGON_RPC_URL || inputs.network == 'songbird' && secrets.CI_DEPLOY_SONGBIRD_RPC_URL || inputs.network == 'flare' && secrets.CI_DEPLOY_FLARE_RPC_URL || '' }}
+          # Flare has hardcoded api key https://flarescan.com/documentation/recipes/foundry-verification
+          ETHERSCAN_API_KEY: ${{ inputs.network == 'flare' && 'verifyContract' || secrets.EXPLORER_VERIFICATION_KEY }}
+          DEPLOY_VERIFIER: ${{ inputs.network == 'songbird' && 'blockscout' || inputs.network == 'polygon' && 'etherscan' || '' }}
+          DEPLOY_VERIFIER_URL: ${{ inputs.network == 'songbird' && 'https://songbird-explorer.flare.network/api' || inputs.network == 'flare' && 'https://api.routescan.io/v2/network/mainnet/evm/14/etherscan' || '' }}
