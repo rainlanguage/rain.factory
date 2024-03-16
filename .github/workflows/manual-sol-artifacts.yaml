@@ -42,5 +42,5 @@ jobs:
         env:
           ETH_RPC_URL: ${{ secrets[env.rpc_secret_name] || '' }}
           ETHERSCAN_API_KEY: ${{ secrets[env.etherscan_api_key_secret_name] || ''}}
-          DEPLOY_VERIFIER: ${{ inputs.network == 'songbird' && 'blockscout' || inputs.network == 'polygon' && 'etherscan' || '' }}
+          DEPLOY_VERIFIER: ${{ inputs.network == 'flare' && 'sourcify' || inputs.network == 'songbird' && 'blockscout' || 'etherscan' }}
           DEPLOY_VERIFIER_URL: ${{ inputs.network == 'songbird' && 'https://songbird-explorer.flare.network/api' || inputs.network == 'flare' && 'https://api.routescan.io/v2/network/mainnet/evm/14/etherscan' || '' }}
