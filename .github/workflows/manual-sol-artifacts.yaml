@@ -20,6 +20,7 @@ on:
           - polygon
           - sepolia
           - songbird
+          - amoy
 
 jobs:
   deploy:
