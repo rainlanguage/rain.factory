@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: CAL
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../interface/ICloneableV2.sol";
@@ -30,7 +31,8 @@ contract CloneFactory is ICloneableFactoryV2 {
         // Standard Open Zeppelin clone here.
         address child = Clones.clone(implementation);
         // NewClone does NOT include the data passed to initialize.
-        // The implementation is responsible for emitting an event if it wants.
+        // The implementation is responsible for emitting a data event if it
+        // wants.
         emit NewClone(msg.sender, implementation, child);
         // Checking the return value of initialize is mandatory as per
         // ICloneableFactoryV2.
