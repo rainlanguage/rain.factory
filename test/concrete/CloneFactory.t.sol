@@ -7,7 +7,6 @@ import {Test, Vm, console2} from "forge-std/Test.sol";
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/src/lib/LibExtrospectERC1167Proxy.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "src/concrete/CloneFactory.sol";
-import {IExpressionDeployerV3} from "rain.interpreter.interface/interface/unstable/IExpressionDeployerV3.sol";
 
 /// @title TestCloneable
 /// @notice A cloneable contract that implements `ICloneableV2`. Initializes
