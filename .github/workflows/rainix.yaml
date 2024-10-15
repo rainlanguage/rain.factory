@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        task: [rainix-sol-test, rainix-sol-static]
+        task: [rainix-sol-test, rainix-sol-static, rainix-sol-legal]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
@@ -21,11 +21,11 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - run: nix develop --command rainix-sol-prelude
+      - run: nix develop -c rainix-sol-prelude
 
       - name: Run ${{ matrix.task }}
         env:
           ETH_RPC_URL: ${{ secrets.CI_DEPLOY_RPC_URL }}
           ETHERSCAN_API_KEY: ${{ secrets.EXPLORER_VERIFICATION_KEY }}
           DEPLOY_VERIFIER: 'etherscan'
-        run: nix develop --command ${{ matrix.task }}
+        run: nix develop -c ${{ matrix.task }}
