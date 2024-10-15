@@ -40,11 +40,11 @@ contract TestCloneableFailure is ICloneableV2 {
 contract CloneFactoryCloneTest is Test {
     /// The `CloneFactory` instance under test. As `CloneFactory` is
     /// stateless, we can reuse the same instance for all tests.
-    CloneFactory internal immutable _iCloneFactory;
+    CloneFactory internal immutable iCloneFactory;
 
     /// Construct a new `CloneFactory` instance for testing.
     constructor() {
-        _iCloneFactory = new CloneFactory();
+        iCloneFactory = new CloneFactory();
     }
 
     /// The bytecode of the implementation contract is irrelevant to the child.
@@ -53,7 +53,7 @@ contract CloneFactoryCloneTest is Test {
     function testCloneBytecode(bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = _iCloneFactory.clone(address(implementation), data);
+        address child = iCloneFactory.clone(address(implementation), data);
 
         (bool result, address proxyImplementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(child.code);
         assertEq(result, true);
@@ -64,7 +64,7 @@ contract CloneFactoryCloneTest is Test {
     function testCloneInitializeData(bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = _iCloneFactory.clone(address(implementation), data);
+        address child = iCloneFactory.clone(address(implementation), data);
         assertEq(TestCloneable(child).sData(), data);
     }
 
@@ -74,7 +74,7 @@ contract CloneFactoryCloneTest is Test {
         TestCloneable implementation = new TestCloneable();
 
         vm.recordLogs();
-        address child = _iCloneFactory.clone(address(implementation), data);
+        address child = iCloneFactory.clone(address(implementation), data);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
@@ -87,7 +87,7 @@ contract CloneFactoryCloneTest is Test {
     /// for unrelated reasons so we can't directly assert the error message.
     function testCloneUninitializableFails(address implementation, bytes memory data) external {
         vm.expectRevert();
-        _iCloneFactory.clone(implementation, data);
+        iCloneFactory.clone(implementation, data);
     }
 
     /// In the case an implementation is initialized but returns a failure code,
@@ -97,13 +97,13 @@ contract CloneFactoryCloneTest is Test {
         TestCloneableFailure implementation = new TestCloneableFailure();
 
         vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
-        _iCloneFactory.clone(address(implementation), abi.encode(notSuccess));
+        iCloneFactory.clone(address(implementation), abi.encode(notSuccess));
     }
 
     /// If the implementation has zero code size then this is always an error.
     function testZeroImplementationCodeSizeError(address implementation, bytes memory data) public {
         vm.assume(implementation.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
-        _iCloneFactory.clone(implementation, data);
+        iCloneFactory.clone(implementation, data);
     }
 }

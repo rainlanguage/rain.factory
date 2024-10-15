@@ -19,9 +19,9 @@ interface IFactory {
 
     /// Creates a new child contract.
     ///
-    /// @param data_ Domain specific data for the child contract constructor.
+    /// @param data Domain specific data for the child contract constructor.
     /// @return New child contract address.
-    function createChild(bytes calldata data_) external returns (address);
+    function createChild(bytes calldata data) external returns (address);
 
     /// Checks if address is registered as a child contract of this factory.
     ///
@@ -29,8 +29,8 @@ interface IFactory {
     /// `true` from `isChild`. This is CRITICAL to the security guarantees for
     /// any contract implementing `IFactory`.
     ///
-    /// @param maybeChild_ Address to check registration for.
+    /// @param maybeChild Address to check registration for.
     /// @return `true` if address was deployed by this contract factory,
     /// otherwise `false`.
-    function isChild(address maybeChild_) external view returns (bool);
+    function isChild(address maybeChild) external view returns (bool);
 }

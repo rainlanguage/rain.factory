@@ -31,7 +31,8 @@ contract CloneFactory is ICloneableFactoryV2 {
         // Standard Open Zeppelin clone here.
         address child = Clones.clone(implementation);
         // NewClone does NOT include the data passed to initialize.
-        // The implementation is responsible for emitting an event if it wants.
+        // The implementation is responsible for emitting a data event if it
+        // wants.
         emit NewClone(msg.sender, implementation, child);
         // Checking the return value of initialize is mandatory as per
         // ICloneableFactoryV2.
