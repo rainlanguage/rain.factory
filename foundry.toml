@@ -12,6 +12,9 @@ optimizer_runs = 100000
 bytecode_hash = "none"
 cbor_metadata = false
 
+# pre push0 for maximum compatibility
+evm_version = "paris"
+
 # Build metadata used for testing rain meta aware contracts in this folder rather
 # than expose ffi to forge.
 fs_permissions = [{ access = "read", path = "./meta"}]
