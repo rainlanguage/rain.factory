@@ -9,8 +9,7 @@ solc = "0.8.25"
 optimizer = true
 optimizer_runs = 100000
 
-# pre push0 for maximum compatibility
-evm_version = "paris"
+evm_version = "cancun"
 
 # Build metadata used for testing rain meta aware contracts in this folder rather
 # than expose ffi to forge.
