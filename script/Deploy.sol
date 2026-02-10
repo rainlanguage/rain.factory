@@ -23,10 +23,5 @@ contract Deploy is Script {
             LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH,
             new address[](0)
         );
-
-        // vm.startBroadcast(deployerPrivateKey);
-        // CloneFactory cloneFactory = new CloneFactory();
-        // (cloneFactory);
-        // vm.stopBroadcast();
     }
 }
