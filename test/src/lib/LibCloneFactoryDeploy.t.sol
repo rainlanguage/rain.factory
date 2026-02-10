@@ -19,7 +19,7 @@ contract LibCloneFactoryDeployTest is Test {
         assertEq(address(deployedAddress).codehash, LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH);
     }
 
-    function testExpectedCodeHashDecimalFloat() external {
+    function testExpectedCodeHash() external {
         CloneFactory cloneFactory = new CloneFactory();
 
         assertEq(address(cloneFactory).codehash, LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH);
