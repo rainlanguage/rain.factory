@@ -15,6 +15,10 @@ evm_version = "cancun"
 # than expose ffi to forge.
 fs_permissions = [{ access = "read", path = "./meta"}]
 
+remappings = [
+    "rain.deploy/=lib/rain.deploy/src/"
+]
+
 [fuzz]
 runs = 2048
 

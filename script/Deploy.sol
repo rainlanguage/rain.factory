@@ -4,6 +4,8 @@ pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
 import {CloneFactory} from "src/concrete/CloneFactory.sol";
+import {LibRainDeploy} from "rain.deploy/lib/LibRainDeploy.sol";
+import {LibCloneFactoryDeploy} from "src/lib/LibCloneFactoryDeploy.sol";
 
 /// @title Deploy
 /// @notice A script that deploys a CloneFactory.
