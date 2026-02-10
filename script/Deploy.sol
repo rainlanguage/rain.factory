@@ -4,6 +4,8 @@ pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
 import {CloneFactory} from "src/concrete/CloneFactory.sol";
+import {LibRainDeploy} from "rain.deploy/lib/LibRainDeploy.sol";
+import {LibCloneFactoryDeploy} from "src/lib/LibCloneFactoryDeploy.sol";
 
 /// @title Deploy
 /// @notice A script that deploys a CloneFactory.
@@ -11,9 +13,15 @@ contract Deploy is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
 
-        vm.startBroadcast(deployerPrivateKey);
-        CloneFactory cloneFactory = new CloneFactory();
-        (cloneFactory);
-        vm.stopBroadcast();
+        LibRainDeploy.deployAndBroadcastToSupportedNetworks(
+            vm,
+            LibRainDeploy.supportedNetworks(),
+            deployerPrivateKey,
+            type(CloneFactory).creationCode,
+            "",
+            LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_ADDRESS,
+            LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH,
+            new address[](0)
+        );
     }
 }
