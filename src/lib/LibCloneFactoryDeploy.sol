@@ -3,8 +3,8 @@
 pragma solidity ^0.8.25;
 
 library LibCloneFactoryDeploy {
-    address constant CLONE_FACTORY_DEPLOYED_ADDRESS = address(0x0118968b787271206878fcc635d5961f15cb2344);
+    address constant CLONE_FACTORY_DEPLOYED_ADDRESS = address(0x444acC29d63fa643E8adCC35FD9aa6DE111dCb39);
 
     bytes32 constant CLONE_FACTORY_DEPLOYED_CODEHASH =
-        bytes32(0xc3551c73c20f69ddbb73f5cf312b40405b757815ed200b99ea076a64454c4517);
+        bytes32(0xf21b813c7075a1621285df3a8369d0652c31ea80cb807be1aaadafeecd134475);
 }
