@@ -4,11 +4,9 @@ Docs at https://rainprotocol.github.io/rain.factory
 
 ## Concrete implementations
 
-`CloneFactory` implements the latest version of `ICloneableFactory` allowing any
-compatible `ICloneable` contract to be cloned as an EIP1167 proxy and
+`CloneFactory` implements `ICloneableFactoryV2` allowing any
+compatible `ICloneableV2` contract to be cloned as an EIP1167 proxy and
 initialized.
-
-`CloneFactory` implements interpreter deployer discoverability.
 
 ## Interfaces
 
@@ -64,5 +62,3 @@ This was suboptimal for several reasons:
 
 The legacy interface is available as `IFactory` but it is NOT RECOMMENDED for
 new contracts.
-
-## Implementations

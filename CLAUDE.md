@@ -42,7 +42,7 @@ forge test
 forge test --match-test testCloneFactory
 
 # Run tests in a specific file
-forge test --match-path test/src/CloneFactory.t.sol
+forge test --match-path test/src/concrete/CloneFactory.t.sol
 
 # Build
 forge build

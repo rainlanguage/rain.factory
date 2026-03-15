@@ -1,5 +1,6 @@
 [profile.default]
 src = 'src'
+test = 'test'
 out = 'out'
 libs = ['lib']
 
@@ -21,6 +22,8 @@ fs_permissions = [{ access = "read", path = "./meta"}]
 remappings = [
     "rain.deploy/=lib/rain.deploy/src/"
 ]
+
+no_match_path = "lib/**/test/**"
 
 [fuzz]
 runs = 2048

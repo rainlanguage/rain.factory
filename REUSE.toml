@@ -8,6 +8,7 @@ path = [
     ".gitignore",
     ".gitmodules",
     "audit/**/",
+    "CLAUDE.md",
     "README.md",
     "flake.lock",
     "flake.nix",

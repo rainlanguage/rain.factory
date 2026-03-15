@@ -10,10 +10,12 @@ import {LibCloneFactoryDeploy} from "../src/lib/LibCloneFactoryDeploy.sol";
 /// @title Deploy
 /// @notice A script that deploys a CloneFactory.
 contract Deploy is Script {
+    mapping(string => mapping(address => bytes32)) internal sDepCodeHashes;
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
 
-        LibRainDeploy.deployAndBroadcastToSupportedNetworks(
+        LibRainDeploy.deployAndBroadcast(
             vm,
             LibRainDeploy.supportedNetworks(),
             deployerPrivateKey,
@@ -21,7 +23,8 @@ contract Deploy is Script {
             "src/concrete/CloneFactory.sol:CloneFactory",
             LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_ADDRESS,
             LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH,
-            new address[](0)
+            new address[](0),
+            sDepCodeHashes
         );
     }
 }
