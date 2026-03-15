@@ -25,7 +25,7 @@ jobs:
 
       - name: Run ${{ matrix.task }}
         env:
-          ETH_RPC_URL: ${{ secrets.CI_DEPLOY_RPC_URL }}
+          ETH_RPC_URL: ${{ secrets.CI_DEPLOY_BASE_RPC_URL || vars.CI_DEPLOY_BASE_RPC_URL || '' }}
           CI_FORK_ETH_RPC_URL: ${{ secrets.RPC_URL_ETHEREUM_FORK || vars.RPC_URL_ETHEREUM_FORK || '' }}
           CI_DEPLOY_ARBITRUM_RPC_URL: ${{ secrets.CI_DEPLOY_ARBITRUM_RPC_URL || vars.CI_DEPLOY_ARBITRUM_RPC_URL || '' }}
           CI_DEPLOY_BASE_RPC_URL: ${{ secrets.CI_DEPLOY_BASE_RPC_URL || vars.CI_DEPLOY_BASE_RPC_URL || '' }}
