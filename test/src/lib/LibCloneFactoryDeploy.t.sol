@@ -4,12 +4,12 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {LibRainDeploy} from "rain.deploy/lib/LibRainDeploy.sol";
-import {LibCloneFactoryDeploy} from "src/lib/LibCloneFactoryDeploy.sol";
-import {CloneFactory} from "src/concrete/CloneFactory.sol";
+import {LibCloneFactoryDeploy} from "../../../src/lib/LibCloneFactoryDeploy.sol";
+import {CloneFactory} from "../../../src/concrete/CloneFactory.sol";
 
 contract LibCloneFactoryDeployTest is Test {
     function testDeployAddress() external {
-        vm.createSelectFork(vm.envString("CI_FORK_ETH_RPC_URL"));
+        LibRainDeploy.etchZoltuFactory(vm);
 
         address deployedAddress = LibRainDeploy.deployZoltu(type(CloneFactory).creationCode);
 

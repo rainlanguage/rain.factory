@@ -1,5 +1,6 @@
 [profile.default]
 src = 'src'
+test = 'test'
 out = 'out'
 libs = ['lib']
 
@@ -22,12 +23,15 @@ remappings = [
     "rain.deploy/=lib/rain.deploy/src/"
 ]
 
+no_match_path = "lib/**/test/**"
+
 [fuzz]
 runs = 2048
 
 [rpc_endpoints]
 arbitrum = "${CI_DEPLOY_ARBITRUM_RPC_URL}"
 base = "${CI_DEPLOY_BASE_RPC_URL}"
+base_sepolia = "${CI_DEPLOY_BASE_SEPOLIA_RPC_URL}"
 flare = "${CI_DEPLOY_FLARE_RPC_URL}"
 polygon = "${CI_DEPLOY_POLYGON_RPC_URL}"
 

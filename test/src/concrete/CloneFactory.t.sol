@@ -5,8 +5,8 @@ pragma solidity =0.8.25;
 import {Test, Vm} from "forge-std/Test.sol";
 
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
-import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "src/concrete/CloneFactory.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
+import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "../../../src/concrete/CloneFactory.sol";
 
 /// @title TestCloneable
 /// @notice A cloneable contract that implements `ICloneableV2`. Initializes
@@ -82,8 +82,13 @@ contract CloneFactoryCloneTest is Test {
     }
 
     /// If the implementation is uninitializable as a cloned child then this is
-    /// always an error. For the sake of fuzzing, the implementation could error
-    /// for unrelated reasons so we can't directly assert the error message.
+    /// always an error. A bare `vm.expectRevert()` is used here intentionally
+    /// because the fuzzed implementation address could fail for several
+    /// different reasons (zero code size, missing initialize function,
+    /// initialize reverting, etc.) and we cannot predict which error will be
+    /// thrown. The purpose of this test is to confirm that cloning an arbitrary
+    /// address always reverts, regardless of the specific reason. More specific
+    /// error paths are tested individually by the other test functions.
     function testCloneUninitializableFails(address implementation, bytes memory data) external {
         vm.expectRevert();
         I_CLONE_FACTORY.clone(implementation, data);
@@ -100,7 +105,7 @@ contract CloneFactoryCloneTest is Test {
     }
 
     /// If the implementation has zero code size then this is always an error.
-    function testZeroImplementationCodeSizeError(address implementation, bytes memory data) public {
+    function testZeroImplementationCodeSizeError(address implementation, bytes memory data) external {
         vm.assume(implementation.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
         I_CLONE_FACTORY.clone(implementation, data);

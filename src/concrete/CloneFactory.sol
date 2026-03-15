@@ -13,10 +13,9 @@ error ZeroImplementationCodeSize();
 error InitializationFailed();
 
 /// @title CloneFactory
-/// @notice A fairly minimal implementation of `ICloneableFactoryV2` and
-/// `DeployerDiscoverableMetaV2` that uses Open Zeppelin `Clones` to create
-/// EIP1167 clones of a reference bytecode. The reference bytecode MUST implement
-/// `ICloneableV2`.
+/// @notice A fairly minimal implementation of `ICloneableFactoryV2`
+/// that uses Open Zeppelin `Clones` to create EIP1167 clones of a reference
+/// bytecode. The reference bytecode MUST implement `ICloneableV2`.
 contract CloneFactory is ICloneableFactoryV2 {
     /// @inheritdoc ICloneableFactoryV2
     function clone(address implementation, bytes calldata data) external returns (address) {
