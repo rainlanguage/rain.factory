@@ -11,9 +11,7 @@ import {LibCloneFactoryDeploy} from "../../../src/lib/LibCloneFactoryDeploy.sol"
 /// deployed at the expected address with the expected codehash.
 contract LibCloneFactoryDeployProdTest is Test {
     function _checkAllContracts() internal view {
-        assertTrue(
-            LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_ADDRESS.code.length > 0, "CloneFactory not deployed"
-        );
+        assertTrue(LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_ADDRESS.code.length > 0, "CloneFactory not deployed");
         assertEq(
             LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_ADDRESS.codehash,
             LibCloneFactoryDeploy.CLONE_FACTORY_DEPLOYED_CODEHASH
