@@ -9,7 +9,7 @@ import {CloneFactory} from "../../../src/concrete/CloneFactory.sol";
 
 contract LibCloneFactoryDeployTest is Test {
     function testDeployAddress() external {
-        vm.createSelectFork(LibRainDeploy.BASE);
+        LibRainDeploy.etchZoltuFactory(vm);
 
         address deployedAddress = LibRainDeploy.deployZoltu(type(CloneFactory).creationCode);
 
