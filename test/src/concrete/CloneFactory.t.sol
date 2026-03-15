@@ -5,8 +5,8 @@ pragma solidity =0.8.25;
 import {Test, Vm} from "forge-std/Test.sol";
 
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
-import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "src/concrete/CloneFactory.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
+import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "../../../src/concrete/CloneFactory.sol";
 
 /// @title TestCloneable
 /// @notice A cloneable contract that implements `ICloneableV2`. Initializes
