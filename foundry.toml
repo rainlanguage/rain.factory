@@ -2,7 +2,6 @@
 src = 'src'
 test = 'test'
 out = 'out'
-libs = ['lib']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 
@@ -17,23 +16,27 @@ cbor_metadata = false
 
 # Build metadata used for testing rain meta aware contracts in this folder rather
 # than expose ffi to forge.
-fs_permissions = [{ access = "read", path = "./meta"}]
-
-remappings = [
-    "rain.deploy/=lib/rain.deploy/src/"
-]
-
-no_match_path = "lib/**/test/**"
+fs_permissions = [{ access = "read", path = "./meta" }]
+libs = ["dependencies"]
 
 [fuzz]
 runs = 2048
 
+[dependencies]
+forge-std = "1.16.1"
+"@openzeppelin-contracts" = "5.6.1"
+"rain-extrospection" = "0.1.0"
+"rain-deploy" = "0.1.2"
+
+[soldeer]
+recursive_deps = false
+
 [rpc_endpoints]
-arbitrum = "${CI_DEPLOY_ARBITRUM_RPC_URL}"
-base = "${CI_DEPLOY_BASE_RPC_URL}"
-base_sepolia = "${CI_DEPLOY_BASE_SEPOLIA_RPC_URL}"
-flare = "${CI_DEPLOY_FLARE_RPC_URL}"
-polygon = "${CI_DEPLOY_POLYGON_RPC_URL}"
+arbitrum = "${ARBITRUM_RPC_URL}"
+base = "${BASE_RPC_URL}"
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+flare = "${FLARE_RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
 
 [etherscan]
 arbitrum = { key = "${CI_DEPLOY_ARBITRUM_ETHERSCAN_API_KEY}" }

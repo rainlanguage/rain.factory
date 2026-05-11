@@ -3,3 +3,6 @@ cache
 result
 .env
 .fixes
+dependencies
+remappings.txt
+.pre-commit-config.yaml

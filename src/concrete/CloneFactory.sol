@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../interface/ICloneableV2.sol";
 import {ICloneableFactoryV2} from "../interface/ICloneableFactoryV2.sol";
-import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
+import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 
 /// Thrown when an implementation has zero code size which is always a mistake.
 error ZeroImplementationCodeSize();
