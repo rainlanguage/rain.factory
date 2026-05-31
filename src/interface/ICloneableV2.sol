@@ -22,7 +22,7 @@ interface ICloneableV2 {
     /// `ICloneableV2` MUST take appropriate measures to ensure that functions
     /// called before initialize are safe to do so, or revert.
     ///
-    /// To be fully generic, `initilize` accepts `bytes` and so MUST ABI decode
+    /// To be fully generic, `initialize` accepts `bytes` and so MUST ABI decode
     /// within the initialize function. This allows a single factory to service
     /// arbitrary cloneable proxies but also erases the type of the
     /// initialization config from the ABI. As tooling will inevitably require
