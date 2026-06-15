@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-06-15T01:28:05Z",
+    "commit": "59a6c4b817c605491980806244860c23b171afde",
+    "publishedTag": "v0.1.1",
+    "commitsAheadOfTag": 8,
+    "scope": "whole repo (CloneFactory.clone + LibCloneFactoryDeploy constants; only logic/constant-bearing units)",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.24.0",
+    "summary": {
+      "behaviours": 14,
+      "mutantsProbed": 14,
+      "mutantsKilledByExistingTests": 14,
+      "survivingMutants": 0,
+      "newTestsAdded": 0,
+      "candidates": 0,
+      "confirmed": 0,
+      "filed": [],
+      "verdict": "saturated — every behaviour pinned by an existing discriminating test; adversarial pass (reentrancy, liar-fallback) found no bug"
+    }
+  }
+]
