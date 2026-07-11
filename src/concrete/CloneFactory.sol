@@ -3,7 +3,6 @@
 pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../interface/ICloneableV2.sol";
-import {ICloneableFactoryV2} from "../interface/ICloneableFactoryV2.sol";
 import {ICloneableFactoryV3} from "../interface/ICloneableFactoryV3.sol";
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 
@@ -14,29 +13,15 @@ error ZeroImplementationCodeSize();
 error InitializationFailed();
 
 /// @title CloneFactory
-/// @notice A fairly minimal implementation of `ICloneableFactoryV3`
-/// that uses Open Zeppelin `Clones` to create EIP1167 clones of a reference
-/// bytecode. The reference bytecode MUST implement `ICloneableV2`.
+/// @notice A fairly minimal implementation of `ICloneableFactoryV3` that uses
+/// Open Zeppelin `Clones` to create EIP1167 clones of a reference bytecode. The
+/// reference bytecode MUST implement `ICloneableV2`.
 ///
-/// `clone` deploys via `CREATE` (nonce-dependent address). `cloneDeterministic`
-/// deploys via `CREATE2` at a pre-computable address
+/// `cloneDeterministic` deploys via `CREATE2` at a pre-computable address
 /// (`predictDeterministicAddress`), namespacing the caller-supplied salt by
 /// `msg.sender` so a caller's `(implementation, salt)` address cannot be squatted
 /// by another account.
 contract CloneFactory is ICloneableFactoryV3 {
-    /// @inheritdoc ICloneableFactoryV2
-    function clone(address implementation, bytes calldata data) external returns (address) {
-        // Explicitly check that the implementation has code. This is a common
-        // mistake that will cause the clone to fail. Notably this catches the
-        // case of address(0). This check is not strictly necessary as a zero
-        // sized implementation will fail to initialize the child, but it gives
-        // a better error message.
-        _requireImplementationCode(implementation);
-        // Standard Open Zeppelin clone here.
-        address child = Clones.clone(implementation);
-        return _initializeClone(implementation, child, data);
-    }
-
     /// @inheritdoc ICloneableFactoryV3
     function cloneDeterministic(address implementation, bytes calldata data, bytes32 salt) external returns (address) {
         _requireImplementationCode(implementation);
@@ -75,7 +60,7 @@ contract CloneFactory is ICloneableFactoryV3 {
     function _initializeClone(address implementation, address child, bytes calldata data) internal returns (address) {
         emit NewClone(msg.sender, implementation, child);
         // Checking the return value of initialize is mandatory as per
-        // ICloneableFactoryV2.
+        // ICloneableFactoryV3.
         if (ICloneableV2(child).initialize(data) != ICLONEABLE_V2_SUCCESS) {
             revert InitializationFailed();
         }

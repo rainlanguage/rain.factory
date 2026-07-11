@@ -2,29 +2,40 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.18;
 
-import {ICloneableFactoryV2} from "./ICloneableFactoryV2.sol";
-
 /// @title ICloneableFactoryV3
-/// @notice Extends `ICloneableFactoryV2` with a deterministic clone whose address
-/// is pre-computable. `clone` (inherited) deploys via `CREATE`, so the address is
-/// nonce-dependent and only knowable after the fact; `cloneDeterministic` deploys
-/// via `CREATE2`, so the address is a pure function of `(implementation, salt,
-/// caller, factory)` and can be computed — and pinned — before deploying.
+/// @notice Creates EIP-1167 proxy clones of a reference bytecode at a
+/// deterministic, pre-computable address, and emits events so indexers can
+/// discover them. Supersedes `ICloneableFactoryV2`, whose `clone` deployed via
+/// `CREATE` (nonce-dependent, only knowable after the fact); this interface
+/// deploys exclusively via `CREATE2`, so a clone's address is a pure function of
+/// `(implementation, salt, caller, factory)` and can be computed — and pinned —
+/// before deploying. It knows nothing about the contracts it clones, relying only
+/// on the minimal `ICloneableV2` interface being implemented on the reference
+/// bytecode.
 ///
 /// Cross-network determinism is inherited from the factory: when the factory is
 /// itself deployed at the same address on every chain (a Zoltu deterministic
 /// deploy), a `cloneDeterministic` address is identical on every chain for the
 /// same caller, implementation and salt.
-interface ICloneableFactoryV3 is ICloneableFactoryV2 {
-    /// Deterministic variant of `clone`: deploys the EIP-1167 proxy via `CREATE2`.
-    /// The factory MUST namespace `salt` by `msg.sender` before deriving the
-    /// `CREATE2` salt, so a caller's `(implementation, salt)` address cannot be
-    /// squatted or front-run by another account. Distinct salts from one caller
-    /// yield distinct clones of the same implementation (many clones per impl).
+interface ICloneableFactoryV3 {
+    /// Emitted upon each `cloneDeterministic`.
+    /// @param sender The `msg.sender` that called `cloneDeterministic`.
+    /// @param implementation The reference bytecode cloned as a proxy.
+    /// @param clone The address of the new proxy contract.
+    event NewClone(address sender, address implementation, address clone);
+
+    /// Deploys an EIP-1167 proxy clone of `implementation` via `CREATE2`. The
+    /// factory MUST namespace `salt` by `msg.sender` before deriving the `CREATE2`
+    /// salt, so a caller's `(implementation, salt)` address cannot be squatted or
+    /// front-run by another account. Distinct salts from one caller yield distinct
+    /// clones of the same implementation (many clones per impl).
     ///
-    /// Same `initialize`/`NewClone` contract as `clone`: MUST emit `NewClone` and
-    /// MUST only succeed if `ICloneableV2.initialize` returns
-    /// `keccak256("ICloneableV2.initialize")`.
+    /// The factory MUST call `ICloneableV2.initialize` atomically with the cloning
+    /// process and MUST NOT call any other functions on the cloned proxy before
+    /// `initialize` completes successfully. The factory MUST ONLY consider the
+    /// clone successfully created if `initialize` returns the keccak256 hash of
+    /// the string "ICloneableV2.initialize". MUST emit `NewClone` with the
+    /// implementation and clone address.
     ///
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`.
