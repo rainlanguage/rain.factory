@@ -7,7 +7,7 @@ pragma solidity ^0.8.25;
 import {
     DEPLOYED_ADDRESS as CLONE_FACTORY_ADDR,
     BYTECODE_HASH as CLONE_FACTORY_HASH
-} from "../generated/0_1_3/CloneFactory.pointers.sol";
+} from "../generated/0_1_4/CloneFactory.pointers.sol";
 
 /// @title LibCloneFactoryDeploy
 /// @notice The deterministic Zoltu deploy address and code hash of the current
