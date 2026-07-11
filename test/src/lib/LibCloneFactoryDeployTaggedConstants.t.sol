@@ -10,6 +10,12 @@ import {
     CREATION_CODE as CLONE_FACTORY_CREATION_CODE_0_1_3,
     RUNTIME_CODE as CLONE_FACTORY_RUNTIME_CODE_0_1_3
 } from "../../../src/generated/0_1_3/CloneFactory.pointers.sol";
+import {
+    BYTECODE_HASH as CLONE_FACTORY_BYTECODE_HASH_0_1_4,
+    DEPLOYED_ADDRESS as CLONE_FACTORY_DEPLOYED_ADDRESS_0_1_4,
+    CREATION_CODE as CLONE_FACTORY_CREATION_CODE_0_1_4,
+    RUNTIME_CODE as CLONE_FACTORY_RUNTIME_CODE_0_1_4
+} from "../../../src/generated/0_1_4/CloneFactory.pointers.sol";
 
 /// @title LibCloneFactoryDeployTaggedConstantsTest
 /// @notice Each frozen per-tag `CloneFactory` snapshot must be self-consistent
@@ -33,5 +39,22 @@ contract LibCloneFactoryDeployTaggedConstantsTest is Test {
         assertEq(deployed, CLONE_FACTORY_DEPLOYED_ADDRESS_0_1_3);
         assertEq(deployed.codehash, CLONE_FACTORY_BYTECODE_HASH_0_1_3);
         assertEq(keccak256(deployed.code), CLONE_FACTORY_BYTECODE_HASH_0_1_3);
+    }
+
+    /// `keccak256(RUNTIME_CODE) == BYTECODE_HASH` for the tag — the pin is
+    /// internally consistent.
+    function testCloneFactory_0_1_4_RuntimeHashesToBytecodeHash() external pure {
+        assertEq(keccak256(CLONE_FACTORY_RUNTIME_CODE_0_1_4), CLONE_FACTORY_BYTECODE_HASH_0_1_4);
+    }
+
+    /// Deploying the frozen `CREATION_CODE` via the Zoltu factory lands at the
+    /// recorded `DEPLOYED_ADDRESS` with the recorded codehash — the snapshot
+    /// reproduces its own deployment.
+    function testCloneFactory_0_1_4_CreationDeploysToPinnedAddress() external {
+        LibRainDeploy.etchZoltuFactory(vm);
+        address deployed = LibRainDeploy.deployZoltu(CLONE_FACTORY_CREATION_CODE_0_1_4);
+        assertEq(deployed, CLONE_FACTORY_DEPLOYED_ADDRESS_0_1_4);
+        assertEq(deployed.codehash, CLONE_FACTORY_BYTECODE_HASH_0_1_4);
+        assertEq(keccak256(deployed.code), CLONE_FACTORY_BYTECODE_HASH_0_1_4);
     }
 }
