@@ -5,34 +5,10 @@ pragma solidity =0.8.25;
 import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
 
 import {LibExtrospectERC1167Proxy} from "rain-extrospection-0.1.1/src/lib/LibExtrospectERC1167Proxy.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
+import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "../../../src/concrete/CloneFactory.sol";
-
-/// @title TestCloneable
-/// @notice A cloneable contract that implements `ICloneableV2`. Initializes
-/// whatever data is passed to `initialize` as `sData`. As `sData` is public,
-/// we can easily test that it is set correctly.
-contract TestCloneable is ICloneableV2 {
-    bytes public sData;
-
-    /// @inheritdoc ICloneableV2
-    function initialize(bytes memory data) external returns (bytes32) {
-        sData = data;
-        return ICLONEABLE_V2_SUCCESS;
-    }
-}
-
-/// @title TestCloneableFailure
-/// @notice A cloneable contract that implements `ICloneableV2` but always
-/// fails initialization. Specifically, it returns whatever data is passed to
-/// `initialize`, which is expected NOT to be `ICLONEABLE_V2_SUCCESS` for the
-/// purposes of testing.
-contract TestCloneableFailure is ICloneableV2 {
-    /// @inheritdoc ICloneableV2
-    function initialize(bytes memory data) external pure returns (bytes32 notSuccess) {
-        (notSuccess) = abi.decode(data, (bytes32));
-    }
-}
+import {TestCloneable} from "./TestCloneable.sol";
+import {TestCloneableFailure} from "./TestCloneableFailure.sol";
 
 /// @title CloneFactoryCloneTest
 /// @notice A test suite for `CloneFactory` that tests the `clone` function.
