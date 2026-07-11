@@ -43,10 +43,10 @@ Direct Forge commands also work inside the nix shell:
 forge test
 
 # Run a specific test
-forge test --match-test testCloneFactory
+forge test --match-test testCloneDeterministic
 
 # Run tests in a specific file
-forge test --match-path test/src/concrete/CloneFactory.t.sol
+forge test --match-path test/src/concrete/CloneFactoryCloneDeterministic.t.sol
 
 # Build
 forge build
@@ -83,15 +83,16 @@ forge build
 - EVM target: Cancun
 - Optimizer: enabled, 100,000 runs
 - No CBOR metadata (`cbor_metadata = false`, `bytecode_hash = "none"`)
-- Dependencies are git submodules in `lib/` (forge-std, openzeppelin-contracts,
-  rain.deploy, rain.extrospection)
+- Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
+  `soldeer.lock`, vendored under `dependencies/`): forge-std,
+  @openzeppelin-contracts, rain-extrospection, rain-deploy, rain-sol-codegen
 
 ## Deployment
 
 Deployed via deterministic Zoltu deployer (from `rain.deploy`). The canonical
 deployment address and codehash are committed in `LibCloneFactoryDeploy.sol`.
-Deployment scripts are in `script/Deploy.sol` targeting Arbitrum, Base, Flare,
-and Polygon.
+Deployment scripts are in `script/Deploy.sol` targeting Arbitrum, Base, Base
+Sepolia, Flare, and Polygon.
 
 ## CI
 
