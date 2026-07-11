@@ -8,4 +8,12 @@ jobs:
     uses: rainlanguage/rainix/.github/workflows/rainix-autopublish.yaml@main
     with:
       soldeer-package: rain-factory
+      # `foundry.toml` version is the NEXT (in-development) release. On merge,
+      # publish that version, bump to the next, and regenerate the deploy pins so
+      # the bump commit is born clean. BuildPointers writes the frozen `<tag>/`
+      # snapshot + regenerates LibCloneFactoryDeploy; forge fmt normalizes the
+      # generated Solidity (BuildPointers emits it unindented). The reusable runs
+      # this inside its own pinned sol-shell on a fresh checkout with no deps, so
+      # `forge soldeer install` first.
+      soldeer-generate-cmd: forge soldeer install && forge script ./script/BuildPointers.sol && forge fmt
     secrets: inherit
