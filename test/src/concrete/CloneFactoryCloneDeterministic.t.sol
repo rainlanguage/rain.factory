@@ -4,6 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
 
+import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {LibExtrospectERC1167Proxy} from "rain-extrospection-0.1.1/src/lib/LibExtrospectERC1167Proxy.sol";
 import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {CloneFactory, ZeroImplementationCodeSize, InitializationFailed} from "../../../src/concrete/CloneFactory.sol";
@@ -19,6 +20,19 @@ contract CloneFactoryCloneDeterministicTest is Test {
 
     constructor() {
         I_CLONE_FACTORY = new CloneFactory();
+    }
+
+    /// The effective CREATE2 salt is exactly `keccak256(abi.encode(deployer,
+    /// salt))`, so an off-chain caller can reproduce the predicted address from
+    /// the two inputs. Pins the salt derivation — including the scratch-space
+    /// assembly that computes it — against OZ's own prediction under that salt.
+    function testCloneDeterministicSaltIsAbiEncodeHash(address implementation, bytes32 salt, address deployer)
+        external
+        view
+    {
+        bytes32 effectiveSalt = keccak256(abi.encode(deployer, salt));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer), expected);
     }
 
     /// The deployed clone lands at the predicted address, is an EIP1167 proxy of

@@ -43,8 +43,14 @@ contract CloneFactory is ICloneableFactoryV3 {
     /// by the deploying account. Prevents a caller's `(implementation, salt)`
     /// address being front-run/squatted by another account, while still letting a
     /// single caller mint many clones of one implementation via distinct salts.
-    function _effectiveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
-        return keccak256(abi.encode(deployer, salt));
+    /// Equal to `keccak256(abi.encode(deployer, salt))`, hashed directly in the
+    /// scratch space; `deployer` is a clean address so it occupies a full word.
+    function _effectiveSalt(address deployer, bytes32 salt) internal pure returns (bytes32 effectiveSalt) {
+        assembly ("memory-safe") {
+            mstore(0, deployer)
+            mstore(0x20, salt)
+            effectiveSalt := keccak256(0, 0x40)
+        }
     }
 
     /// @dev Reverts with a clear error if `implementation` has no code.
