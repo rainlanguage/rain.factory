@@ -27,7 +27,7 @@ contract CloneFactory is ICloneableFactoryV3 {
         _requireImplementationCode(implementation);
         // CREATE2 clone at a salt namespaced by the caller (see `_effectiveSalt`).
         address child = Clones.cloneDeterministic(implementation, _effectiveSalt(msg.sender, salt));
-        return _initializeClone(implementation, child, data);
+        return _initializeClone(implementation, child, data, salt);
     }
 
     /// @inheritdoc ICloneableFactoryV3
@@ -60,11 +60,14 @@ contract CloneFactory is ICloneableFactoryV3 {
         }
     }
 
-    /// @dev Emit `NewClone` and run the mandatory `ICloneableV2.initialize` check.
-    /// `NewClone` does NOT include the `data` passed to initialize; the
-    /// implementation is responsible for emitting a data event if it wants.
-    function _initializeClone(address implementation, address child, bytes calldata data) internal returns (address) {
-        emit NewClone(msg.sender, implementation, child);
+    /// @dev Emit `NewClone` (with the caller `salt` and init `data`, so the event
+    /// fully describes the deterministic deploy) and run the mandatory
+    /// `ICloneableV2.initialize` check.
+    function _initializeClone(address implementation, address child, bytes calldata data, bytes32 salt)
+        internal
+        returns (address)
+    {
+        emit NewClone(msg.sender, implementation, child, salt, data);
         // Checking the return value of initialize is mandatory as per
         // ICloneableFactoryV3.
         if (ICloneableV2(child).initialize(data) != ICLONEABLE_V2_SUCCESS) {

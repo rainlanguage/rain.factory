@@ -18,11 +18,17 @@ pragma solidity ^0.8.18;
 /// deploy), a `cloneDeterministic` address is identical on every chain for the
 /// same caller, implementation and salt.
 interface ICloneableFactoryV3 {
-    /// Emitted upon each `cloneDeterministic`.
+    /// Emitted upon each `cloneDeterministic`. Carries the full deterministic
+    /// deploy so an indexer can reconstruct it from the event alone — without
+    /// reading calldata or relying on the implementation to emit its own init
+    /// event: the clone address is a pure function of `(implementation, sender,
+    /// salt)`, and the clone's initial state is a function of `data`.
     /// @param sender The `msg.sender` that called `cloneDeterministic`.
     /// @param implementation The reference bytecode cloned as a proxy.
     /// @param clone The address of the new proxy contract.
-    event NewClone(address sender, address implementation, address clone);
+    /// @param salt The caller-supplied salt (before `msg.sender` namespacing).
+    /// @param data The initialization data forwarded to `ICloneableV2.initialize`.
+    event NewClone(address sender, address implementation, address clone, bytes32 salt, bytes data);
 
     /// Deploys an EIP-1167 proxy clone of `implementation` via `CREATE2`. The
     /// factory MUST namespace `salt` by `msg.sender` before deriving the `CREATE2`

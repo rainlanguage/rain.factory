@@ -93,8 +93,8 @@ contract CloneFactoryCloneDeterministicTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address)"))));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child));
+        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
+        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
     }
 
     /// An implementation that initializes to a non-success code reverts
