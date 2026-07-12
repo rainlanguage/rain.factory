@@ -1,6 +1,6 @@
 [package]
 name = "rain-factory"
-version = "0.1.4"
+version = "0.1.5"
 
 [profile.default]
 src = 'src'
@@ -21,11 +21,11 @@ cbor_metadata = false
 # Build metadata used for testing rain meta aware contracts in this folder rather
 # than expose ffi to forge.
 fs_permissions = [
-    { access = "read", path = "./meta" },
-    # BuildPointers reads the version from foundry.toml and writes the generated
-    # per-tag snapshots + the current-pin lib under src/.
-    { access = "read", path = "./foundry.toml" },
-    { access = "read-write", path = "./src" },
+  { access = "read", path = "./meta" },
+  # BuildPointers reads the version from foundry.toml and writes the generated
+  # per-tag snapshots + the current-pin lib under src/.
+  { access = "read", path = "./foundry.toml" },
+  { access = "read-write", path = "./src" },
 ]
 libs = ["dependencies"]
 
