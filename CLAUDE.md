@@ -9,8 +9,8 @@ rain.factory is a Solidity library providing EIP1167 minimal proxy (clone)
 factory contracts for the Rain ecosystem. The core contract `CloneFactory`
 clones any contract implementing `ICloneableV2` and atomically initializes it.
 
-License: LicenseRef-DCL-1.0 (Dark Matter Council License). All source files must
-include SPDX headers.
+License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
+SPDX headers.
 
 ## Build & Test Commands
 
