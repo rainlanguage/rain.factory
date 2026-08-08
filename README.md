@@ -4,9 +4,21 @@ Docs at https://rainprotocol.github.io/rain.factory
 
 ## Concrete implementations
 
-`CloneFactory` implements `ICloneableFactoryV2` allowing any
+`CloneFactory` implements `ICloneableFactoryV4` allowing any
 compatible `ICloneableV2` contract to be cloned as an EIP1167 proxy and
 initialized.
+
+It offers two deterministic (`CREATE2`) entry points that differ only in how the
+salt is derived:
+
+- `cloneDeterministic` namespaces the caller-supplied salt by `msg.sender`, so
+  nobody else can reach the caller's address.
+- `cloneDeterministicOpenSalt` uses the caller-supplied salt verbatim, so the
+  address is a function of `(implementation, salt)` and the factory alone —
+  portable across accounts and chains, but reachable by anyone. It is ONLY safe
+  for implementations whose `initialize` takes no caller-controlled authority;
+  read the NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt` before
+  using it.
 
 ## Interfaces
 
@@ -32,8 +44,12 @@ The onchain tooling for analysis is found at https://github.com/rainprotocol/rai
 
 The current interfaces in this repository are for
 
-- `ICloneableFactoryV2` that is expected to clone proxies from a reference
-  implementation
+- `ICloneableFactoryV4` that is expected to clone proxies from a reference
+  implementation, deterministically, with or without the deployer in the address
+  derivation. It extends `ICloneableFactoryV3` (deterministic-only, deployer
+  always in the derivation), which is still published for consumers pinned to it
+- `ICloneableFactoryV2` that clones via a nonce-dependent `CREATE`. Superseded
+  for `CloneFactory`, still published for other consumers
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
