@@ -60,15 +60,24 @@ forge build
 - `src/interface/ICloneableFactoryV2.sol` — Legacy factory interface: the
   nonce-dependent `clone(address, bytes)` and `NewClone` event. Superseded by
   `ICloneableFactoryV3` for `CloneFactory`; still published for other consumers.
-- `src/interface/ICloneableFactoryV3.sol` — Current factory interface.
-  Deterministic-only: `cloneDeterministic(address, bytes, bytes32)` +
+- `src/interface/ICloneableFactoryV3.sol` — Deterministic-only factory
+  interface: `cloneDeterministic(address, bytes, bytes32)` +
   `predictDeterministicAddress(address, bytes32, address)` (CREATE2, salt
   namespaced by `msg.sender`) and its own `NewClone` event. Standalone — does
   NOT extend `ICloneableFactoryV2`, because the non-deterministic `clone()` was
   intentionally dropped.
+- `src/interface/ICloneableFactoryV4.sol` — Current factory interface. Extends
+  `ICloneableFactoryV3` (nothing was dropped, so it inherits rather than
+  restates) and adds the open-salt variant:
+  `cloneDeterministicOpenSalt(address, bytes, bytes32)` +
+  `predictDeterministicAddressOpenSalt(address, bytes32)`, which use the
+  caller-supplied salt verbatim so the deployer is not in the address
+  derivation. Only safe for implementations whose `initialize` takes no
+  caller-controlled authority — the NatSpec on the function is the spec for
+  that.
 - `src/concrete/CloneFactory.sol` — The single concrete implementation of
-  `ICloneableFactoryV3`. Uses OpenZeppelin `Clones.cloneDeterministic()`; there
-  is no plain `clone()`.
+  `ICloneableFactoryV4`. Uses OpenZeppelin `Clones.cloneDeterministic()` for
+  both variants; there is no plain `clone()`.
 - `src/lib/LibCloneFactoryDeploy.sol` — Deterministic deployment address and
   codehash constants (generated; aliases the current tag's
   `src/generated/<tag>/` snapshot).
