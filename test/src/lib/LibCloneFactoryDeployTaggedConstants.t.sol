@@ -4,6 +4,8 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.3/src/lib/LibRainDeploy.sol";
+import {CloneFactory} from "../../../src/concrete/CloneFactory.sol";
+import {TestCloneable} from "../concrete/TestCloneable.sol";
 import {
     BYTECODE_HASH as CLONE_FACTORY_BYTECODE_HASH_0_1_3,
     DEPLOYED_ADDRESS as CLONE_FACTORY_DEPLOYED_ADDRESS_0_1_3,
@@ -104,33 +106,32 @@ contract LibCloneFactoryDeployTaggedConstantsTest is Test {
         assertEq(keccak256(deployed.code), CLONE_FACTORY_BYTECODE_HASH_0_1_6);
     }
 
-    /// The open-salt release's runtime code MUST expose both deterministic
-    /// entry points. A snapshot that pins bytecode without
-    /// `cloneDeterministicOpenSalt` in it would be a silently wrong pin — the
-    /// address would be real and the function missing.
-    function testCloneFactory_0_1_6_RuntimeExposesBothEntryPoints() external pure {
-        bytes4 cloneDeterministicSelector = bytes4(keccak256("cloneDeterministic(address,bytes,bytes32)"));
-        bytes4 cloneOpenSaltSelector = bytes4(keccak256("cloneDeterministicOpenSalt(address,bytes,bytes32)"));
-        bytes4 predictSelector = bytes4(keccak256("predictDeterministicAddress(address,bytes32,address)"));
-        bytes4 predictOpenSaltSelector = bytes4(keccak256("predictDeterministicAddressOpenSalt(address,bytes32)"));
+    /// The open-salt release's frozen bytecode must actually SERVE all four
+    /// deterministic entry points, so the pin cannot record an address for
+    /// bytecode that is missing one. Proved by deploying the frozen
+    /// `CREATION_CODE` and calling every entry point on the result through the
+    /// `ICloneableFactoryV4` ABI: an entry point the dispatcher does not expose
+    /// falls through to the (absent) fallback and reverts here. A byte scan of
+    /// the runtime code would NOT prove this — a selector can sit in constant
+    /// data without being dispatchable.
+    function testCloneFactory_0_1_6_DeployedBytecodeServesBothEntryPoints() external {
+        LibRainDeploy.etchZoltuFactory(vm);
+        CloneFactory factory = CloneFactory(LibRainDeploy.deployZoltu(CLONE_FACTORY_CREATION_CODE_0_1_6));
+        TestCloneable implementation = new TestCloneable();
 
-        assertTrue(_containsSelector(CLONE_FACTORY_RUNTIME_CODE_0_1_6, cloneDeterministicSelector));
-        assertTrue(_containsSelector(CLONE_FACTORY_RUNTIME_CODE_0_1_6, cloneOpenSaltSelector));
-        assertTrue(_containsSelector(CLONE_FACTORY_RUNTIME_CODE_0_1_6, predictSelector));
-        assertTrue(_containsSelector(CLONE_FACTORY_RUNTIME_CODE_0_1_6, predictOpenSaltSelector));
-    }
+        bytes32 salt = keccak256("rain.factory.tagged.constants.entry.points");
+        bytes memory data = hex"f100dedb0a75";
 
-    /// True if the 4 byte `selector` appears anywhere in `code`. Enough to see a
-    /// selector in a dispatch table without decoding the dispatcher.
-    function _containsSelector(bytes memory code, bytes4 selector) internal pure returns (bool) {
-        for (uint256 i = 0; i + 4 <= code.length; i++) {
-            if (
-                code[i] == selector[0] && code[i + 1] == selector[1] && code[i + 2] == selector[2]
-                    && code[i + 3] == selector[3]
-            ) {
-                return true;
-            }
-        }
-        return false;
+        address predictedNamespaced = factory.predictDeterministicAddress(address(implementation), salt, address(this));
+        address predictedOpen = factory.predictDeterministicAddressOpenSalt(address(implementation), salt);
+        assertTrue(predictedNamespaced != predictedOpen);
+
+        address childNamespaced = factory.cloneDeterministic(address(implementation), data, salt);
+        address childOpen = factory.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(childNamespaced, predictedNamespaced);
+        assertEq(childOpen, predictedOpen);
+        assertEq(TestCloneable(childNamespaced).sData(), data);
+        assertEq(TestCloneable(childOpen).sData(), data);
     }
 }

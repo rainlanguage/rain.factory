@@ -15,10 +15,13 @@ salt is derived:
   nobody else can reach the caller's address.
 - `cloneDeterministicOpenSalt` uses the caller-supplied salt verbatim, so the
   address is a function of `(implementation, salt)` and the factory alone —
-  portable across accounts and chains, but reachable by anyone. It is ONLY safe
-  for implementations whose `initialize` takes no caller-controlled authority;
-  read the NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt` before
-  using it.
+  every account reaches the same address, but so can anyone. That also makes it
+  the same address across chains, but only where both the factory and the
+  implementation are themselves at the same address on each chain: `CREATE2`
+  hashes the factory, and the EIP1167 creation code it hashes contains the
+  implementation. It is ONLY safe for implementations whose `initialize` takes
+  no caller-controlled authority; read the NatSpec on
+  `ICloneableFactoryV4.cloneDeterministicOpenSalt` before using it.
 
 ## Interfaces
 

@@ -22,15 +22,20 @@ import {ICloneableFactoryV3} from "./ICloneableFactoryV3.sol";
 ///   re-established from a different account.
 /// - `cloneDeterministicOpenSalt` uses `salt` verbatim, so the address is a
 ///   function of `(implementation, salt)` and the factory alone. It buys
-///   portability — anyone can deploy it, from any account, on any chain the
-///   factory exists at the same address on, forever — and pays for it with
-///   squat-resistance: the address is reachable by everybody, and whoever gets
-///   there first initializes it.
+///   portability — every account reaches the same address, forever — and pays
+///   for it with squat-resistance: the address is reachable by everybody, and
+///   whoever gets there first initializes it.
 ///
-/// Cross-network determinism is inherited from the factory, as in
-/// `ICloneableFactoryV3`: when the factory is itself at the same address on
-/// every chain (a Zoltu deterministic deploy), an open-salt clone address is
-/// the same address on every chain, for every deployer.
+/// Cross-network determinism is NOT a property of either derivation on its own.
+/// `CREATE2` hashes the deploying factory's address, and the EIP-1167 creation
+/// code it hashes contains the implementation's address, so an open-salt clone
+/// is at the same address on two chains only when BOTH the factory and the
+/// implementation are at the same address on both — each deployed
+/// deterministically (Zoltu-style), all the way down. Dropping `msg.sender` from
+/// the salt removes the deployer as a third thing that has to match; it does not
+/// make the other two match. If the implementation is deployed by an ordinary
+/// nonce-dependent `CREATE` on each chain, its address differs per chain and so
+/// does every clone of it, on both derivations.
 interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// Deploys an EIP-1167 proxy clone of `implementation` via `CREATE2`, using
     /// the caller-supplied `salt` DIRECTLY as the `CREATE2` salt. The factory
@@ -115,8 +120,9 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// to. Takes no `deployer` because there is none in the derivation — that is
     /// the entire difference from `predictDeterministicAddress`. A pure function
     /// of its inputs and this factory, so it is computable (and pinnable) before
-    /// deploying, by anyone, and identical on every chain this factory exists at
-    /// the same address on.
+    /// deploying, by anyone. Identical across chains only where both this
+    /// factory and `implementation` are at the same address on each — see the
+    /// cross-network note on this interface.
     ///
     /// A non-zero code size at the returned address means the salt is already
     /// taken and `cloneDeterministicOpenSalt` will revert there. Callers who
