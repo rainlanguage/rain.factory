@@ -2,26 +2,24 @@
 
 Docs at https://rainprotocol.github.io/rain.factory
 
+This repo is the **library** half of the library/deploy split
+([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
+`ICloneable*` interface surface, and nothing else. It publishes to Soldeer as
+`rain-factory`.
+
 ## Concrete implementations
 
-`CloneFactory` implements `ICloneableFactoryV4` allowing any
-compatible `ICloneableV2` contract to be cloned as an EIP1167 proxy and
-initialized.
+`CloneFactory` — the concrete that implements these interfaces, letting any
+compatible `ICloneableV2` contract be cloned as an EIP1167 proxy and initialized
+— lives in
+[`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
+together with its deployed address + codehash pins, its frozen per-release
+deploy-pin snapshots and its deploy script. That repo publishes as
+`rain-factory-deploy`.
 
-It offers two deterministic (`CREATE2`) entry points that differ only in how the
-salt is derived:
-
-- `cloneDeterministic` namespaces the caller-supplied salt by `msg.sender`, so
-  nobody else can reach the caller's address.
-- `cloneDeterministicOpenSalt` uses the caller-supplied salt verbatim, so the
-  address is a function of `(implementation, salt)` and the factory alone —
-  every account reaches the same address, but so can anyone. That also makes it
-  the same address across chains, but only where both the factory and the
-  implementation are themselves at the same address on each chain: `CREATE2`
-  hashes the factory, and the EIP1167 creation code it hashes contains the
-  implementation. It is ONLY safe for implementations whose `initialize` takes
-  no caller-controlled authority; read the NatSpec on
-  `ICloneableFactoryV4.cloneDeterministicOpenSalt` before using it.
+Depend on `rain-factory` if you need only the interfaces. Depend on
+`rain-factory-deploy` if you need the deployed address or codehash of a live
+`CloneFactory`.
 
 ## Interfaces
 
@@ -47,12 +45,30 @@ The onchain tooling for analysis is found at https://github.com/rainprotocol/rai
 
 The current interfaces in this repository are for
 
-- `ICloneableFactoryV4` that is expected to clone proxies from a reference
-  implementation, deterministically, with or without the deployer in the address
-  derivation. It extends `ICloneableFactoryV3` (deterministic-only, deployer
-  always in the derivation), which is still published for consumers pinned to it
-- `ICloneableFactoryV2` that clones via a nonce-dependent `CREATE`. Superseded
-  for `CloneFactory`, still published for other consumers
+- `ICloneableFactoryV4`, the current factory interface. Extends
+  `ICloneableFactoryV3` — nothing was dropped this time, so it inherits rather
+  than restates — and adds a second deterministic derivation,
+  `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, which
+  use the caller-supplied salt verbatim. The two derivations trade off against
+  each other and neither dominates: the V3 pair namespaces the salt by
+  `msg.sender`, so nobody else can reach the caller's address but the deploying
+  account is baked into it forever; the open-salt pair puts no identity in the
+  derivation, so every account reaches the same address (and so can anyone).
+  Open-salt is therefore ONLY safe for implementations whose `initialize` takes
+  no caller-controlled authority, because clone-and-initialize is atomic and
+  first mover wins permanently. That condition, what qualifies an
+  implementation under it, and the registry pairing it is intended for, are
+  spelled out in the NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt`
+  — read it before using the function
+- `ICloneableFactoryV3`, deterministic-only (`cloneDeterministic` +
+  `predictDeterministicAddress`, CREATE2 with the salt namespaced by
+  `msg.sender`). Superseded by `ICloneableFactoryV4`, still published for
+  consumers pinned to it. Standalone rather than extending
+  `ICloneableFactoryV2`, because the non-deterministic `clone()` was
+  intentionally dropped
+- `ICloneableFactoryV2` that is expected to clone proxies from a reference
+  implementation. Superseded by `ICloneableFactoryV3` for the concrete factory,
+  still published for other consumers
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
