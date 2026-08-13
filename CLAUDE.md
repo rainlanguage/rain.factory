@@ -5,9 +5,19 @@ code in this repository.
 
 ## Project Overview
 
-rain.factory is a Solidity library providing EIP1167 minimal proxy (clone)
-factory contracts for the Rain ecosystem. The core contract `CloneFactory`
-clones any contract implementing `ICloneableV2` and atomically initializes it.
+rain.factory is a Solidity **library** repo: the `ICloneable*` interface surface
+for EIP1167 minimal proxy (clone) factories in the Rain ecosystem. It is the
+library half of the library/deploy split (rainlanguage/rain.factory#46) and holds
+interfaces only — no concrete contract, no deploy pins, no deploy script, and no
+tests.
+
+The concrete `CloneFactory` that implements these interfaces, its deployed
+address + codehash pins (`LibCloneFactoryDeploy`), the frozen
+`src/generated/<tag>/` deploy-pin snapshots and `script/Deploy.sol` all live in
+[`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy) and
+publish as the `rain-factory-deploy` Soldeer package. Consumers that need only
+the interfaces depend on `rain-factory`; consumers that need the deployed
+address/codehash pins depend on `rain-factory-deploy`.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
 SPDX headers.
@@ -23,9 +33,6 @@ nix develop
 Then use rainix tasks:
 
 ```bash
-# Run all tests
-nix develop -c rainix-sol-test
-
 # Static analysis (Slither)
 nix develop -c rainix-sol-static
 
@@ -34,20 +41,16 @@ nix develop -c rainix-sol-legal
 
 # Prelude (dependency setup, run before other tasks)
 nix develop -c rainix-sol-prelude
+
+# Runs, but there is no test suite here: the interfaces have no behaviour to
+# test. The tests that exercise them live in rain.factory.deploy, against the
+# concrete.
+nix develop -c rainix-sol-test
 ```
 
 Direct Forge commands also work inside the nix shell:
 
 ```bash
-# Run all tests
-forge test
-
-# Run a specific test
-forge test --match-test testCloneDeterministic
-
-# Run tests in a specific file
-forge test --match-path test/src/concrete/CloneFactoryCloneDeterministic.t.sol
-
 # Build
 forge build
 ```
@@ -59,42 +62,52 @@ forge build
   success.
 - `src/interface/ICloneableFactoryV2.sol` — Legacy factory interface: the
   nonce-dependent `clone(address, bytes)` and `NewClone` event. Superseded by
-  `ICloneableFactoryV3` for `CloneFactory`; still published for other consumers.
+  `ICloneableFactoryV3` for the concrete factory in rain.factory.deploy; still
+  published for other consumers.
 - `src/interface/ICloneableFactoryV3.sol` — Current factory interface.
   Deterministic-only: `cloneDeterministic(address, bytes, bytes32)` +
   `predictDeterministicAddress(address, bytes32, address)` (CREATE2, salt
   namespaced by `msg.sender`) and its own `NewClone` event. Standalone — does
   NOT extend `ICloneableFactoryV2`, because the non-deterministic `clone()` was
   intentionally dropped.
-- `src/concrete/CloneFactory.sol` — The single concrete implementation of
-  `ICloneableFactoryV3`. Uses OpenZeppelin `Clones.cloneDeterministic()`; there
-  is no plain `clone()`.
-- `src/lib/LibCloneFactoryDeploy.sol` — Deterministic deployment address and
-  codehash constants (generated; aliases the current tag's
-  `src/generated/<tag>/` snapshot).
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
+`src/` holds nothing else. The interfaces import nothing — not each other, not a
+third-party library — which is what makes this half a standalone publish.
+
 ## Solidity Conventions
 
-- Solidity version: concrete contracts pin `=0.8.25` (exact); interface and
-  library files float `^` (the interfaces use `^0.8.18`) so downstream soldeer
-  consumers on a different `0.8.x` can still compile them
+- Solidity version: every file here is an interface and floats `^` (the
+  interfaces use `^0.8.18`) so downstream soldeer consumers on a different
+  `0.8.x` can still compile them. The `=0.8.25` exact-pin rule applies to
+  concrete contracts, scripts and tests, which live in rain.factory.deploy.
 - EVM target: Cancun
 - Optimizer: enabled, 100,000 runs
 - No CBOR metadata (`cbor_metadata = false`, `bytecode_hash = "none"`)
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
-  `soldeer.lock`, vendored under `dependencies/`): forge-std,
-  @openzeppelin-contracts, rain-extrospection, rain-deploy, rain-sol-codegen
+  `soldeer.lock`, vendored under `dependencies/`). The interfaces import nothing,
+  so the only entry is forge-std. `@openzeppelin-contracts`, `rain-extrospection`,
+  `rain-deploy` and `rain-sol-codegen` went with the deploy half and must not
+  come back: adding one here means concrete code has landed in a library repo.
 
 ## Deployment
 
-Deployed via deterministic Zoltu deployer (from `rain.deploy`). The canonical
-deployment address and codehash are committed in `LibCloneFactoryDeploy.sol`.
-Deployment scripts are in `script/Deploy.sol` targeting Arbitrum, Base, Base
-Sepolia, Flare, and Polygon.
+Nothing in this repo is deployed. The deterministic Zoltu deploy of the concrete
+`CloneFactory`, its canonical address and codehash, and the deploy scripts
+targeting Arbitrum, Base, Base Sepolia, Flare and Polygon are all in
+rain.factory.deploy.
+
+## Releases
+
+Library repo, so `package-release.yaml` runs `rainix-autopublish`:
+`[package].version` in `foundry.toml` is the NEXT, unpublished version, and a
+content change on merge publishes it and bumps to the next. Nothing here is
+tag-released, and no snapshot is frozen — that lifecycle belongs to the deploy
+half.
 
 ## CI
 
 GitHub Actions runs three parallel jobs on every push: `rainix-sol-test`,
-`rainix-sol-static`, `rainix-sol-legal`. Fork tests require RPC URL secrets.
+`rainix-sol-static`, `rainix-sol-legal`. There are no fork tests and no RPC
+secrets are needed.

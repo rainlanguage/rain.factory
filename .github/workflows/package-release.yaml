@@ -7,13 +7,9 @@ jobs:
   release:
     uses: rainlanguage/rainix/.github/workflows/rainix-autopublish.yaml@main
     with:
-      # `foundry.toml` version is the NEXT (in-development) release. On merge,
-      # publish that version and bump to the next — the bump no longer generates
-      # artifacts. A version's deploy-pin snapshot is built by the PR that changes
-      # the bytecode: run `forge script ./script/BuildPointers.sol` and commit the
-      # new `src/generated/<tag>/` snapshot + LibCloneFactoryDeploy. The
-      # LibCloneFactoryDeploy fork/deploy tests fail if that snapshot is stale, and
-      # the rainix append-only check rejects any change to a snapshot already on
-      # main, so snapshots stay frozen once merged.
+      # Library repo: the ICloneable* interface surface. `foundry.toml` version is
+      # the NEXT (in-development) release; on a content change on merge, autopublish
+      # publishes it and bumps to the next. The deploy half (concrete + deploy-pin
+      # snapshots) lives in rain.factory.deploy (rainlanguage/rain.factory#46).
       soldeer-package: rain-factory
     secrets: inherit
