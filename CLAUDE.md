@@ -7,9 +7,9 @@ code in this repository.
 
 rain.factory is a Solidity **library** repo: the `ICloneable*` interface surface
 for EIP1167 minimal proxy (clone) factories in the Rain ecosystem. It is the
-library half of the library/deploy split (rainlanguage/rain.factory#46) and holds
-interfaces only — no concrete contract, no deploy pins, no deploy script, and no
-tests.
+library half of the library/deploy split (rainlanguage/rain.factory#46) and
+holds interfaces only — no concrete contract, no deploy pins, no deploy script,
+and no tests.
 
 The concrete `CloneFactory` that implements these interfaces, its deployed
 address + codehash pins (`LibCloneFactoryDeploy`), the frozen
@@ -74,12 +74,18 @@ forge build
   `ICloneableFactoryV3` (nothing was dropped this time, so it inherits rather
   than restates) and adds the open-salt variant:
   `cloneDeterministicOpenSalt(address, bytes, bytes32)` +
-  `predictDeterministicAddressOpenSalt(address, bytes32)`, which use the
-  caller-supplied salt verbatim so the deployer is not in the address
-  derivation. Only safe for implementations whose `initialize` takes no
-  caller-controlled authority — the NatSpec on the function is the spec for
-  that, and it is the deliverable of this interface as much as the two
-  signatures are.
+  `predictDeterministicAddressOpenSalt(address, bytes, bytes32)`. Their
+  `CREATE2` salt is
+  `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`
+  — the deployer is out of the derivation and the initialization data is in it,
+  so the address commits to what was deployed rather than to who deployed it,
+  and a front-runner can only either land elsewhere or produce the intended
+  contract. `ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN` is a file-level constant,
+  same pattern as `ICLONEABLE_V2_SUCCESS`; it keeps the open-salt image disjoint
+  from the inherited `cloneDeterministic` one, which does take arbitrary `data`.
+  The NatSpec on the function is the spec for what the address does NOT fix
+  (implementations MUST NOT read `tx.origin`) and for the registry pairing, and
+  it is the deliverable of this interface as much as the two signatures are.
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
@@ -101,9 +107,9 @@ relative import).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
   `soldeer.lock`, vendored under `dependencies/`). The interfaces import nothing
   from outside this repo, so the only entry is forge-std.
-  `@openzeppelin-contracts`, `rain-extrospection`,
-  `rain-deploy` and `rain-sol-codegen` went with the deploy half and must not
-  come back: adding one here means concrete code has landed in a library repo.
+  `@openzeppelin-contracts`, `rain-extrospection`, `rain-deploy` and
+  `rain-sol-codegen` went with the deploy half and must not come back: adding
+  one here means concrete code has landed in a library repo.
 
 ## Deployment
 

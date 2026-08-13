@@ -31,7 +31,8 @@ possible on the implementation side.
 The ideal would be that "any" contract can call an interpreter and magically be
 supported but there's a lot that can go wrong, for example:
 
-- Contracts can self destruct or even [redeployed with new bytecode](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e)
+- Contracts can self destruct or even
+  [redeployed with new bytecode](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e)
 - Proxies can point to new implementations and "upgrade"
 - Discoverability of ABIs and other metadata subject to indexer limitations
 
@@ -41,25 +42,29 @@ Falling short of the ideal, we want to support:
 - Support existing patterns such as EIP1167 for clones, etc.
 - Avoid introducing Rain-isms as much as possible
 
-The onchain tooling for analysis is found at https://github.com/rainprotocol/rain.extrospection
+The onchain tooling for analysis is found at
+https://github.com/rainprotocol/rain.extrospection
 
 The current interfaces in this repository are for
 
 - `ICloneableFactoryV4`, the current factory interface. Extends
   `ICloneableFactoryV3` — nothing was dropped this time, so it inherits rather
   than restates — and adds a second deterministic derivation,
-  `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, which
-  use the caller-supplied salt verbatim. The two derivations trade off against
-  each other and neither dominates: the V3 pair namespaces the salt by
-  `msg.sender`, so nobody else can reach the caller's address but the deploying
-  account is baked into it forever; the open-salt pair puts no identity in the
-  derivation, so every account reaches the same address (and so can anyone).
-  Open-salt is therefore ONLY safe for implementations whose `initialize` takes
-  no caller-controlled authority, because clone-and-initialize is atomic and
-  first mover wins permanently. That condition, what qualifies an
-  implementation under it, and the registry pairing it is intended for, are
-  spelled out in the NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt`
-  — read it before using the function
+  `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, whose
+  `CREATE2` salt hashes the caller-supplied salt together with the
+  initialization data and nothing about the caller. The two derivations differ
+  in what the clone's address commits to, and neither dominates: the V3 pair
+  namespaces the salt by `msg.sender`, so the address commits to WHO deployed
+  and not to WHAT — nobody else can reach the caller's address, but the
+  deploying account is baked into it forever and the deployer alone decides the
+  initial state. The open-salt pair commits to WHAT and not to WHO — every
+  account reaches the same address, and so can anyone, but everyone who reaches
+  it deploys the same contract initialized with the same bytes, because varying
+  either input lands somewhere else. Its cost is that the address is not
+  knowable until the data is final. The residual the address cannot fix —
+  implementations MUST NOT read `tx.origin` — and the address-registry pairing
+  it is intended for are spelled out in the NatSpec on
+  `ICloneableFactoryV4.cloneDeterministicOpenSalt`
 - `ICloneableFactoryV3`, deterministic-only (`cloneDeterministic` +
   `predictDeterministicAddress`, CREATE2 with the salt namespaced by
   `msg.sender`). Superseded by `ICloneableFactoryV4`, still published for
@@ -77,9 +82,9 @@ The current interfaces in this repository are for
 
 #### `ICloneableV1`
 
-This version of `ICloneable` did not have any explicit return value on success of
-initialize. It is possible for contracts that do not implement `ICloneableV1` to
-silently fail to initialize when cloned by an `ICloneableFactoryV1`.
+This version of `ICloneable` did not have any explicit return value on success
+of initialize. It is possible for contracts that do not implement `ICloneableV1`
+to silently fail to initialize when cloned by an `ICloneableFactoryV1`.
 
 Newer versions of the interface include an explicit success value and check.
 
