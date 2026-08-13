@@ -2,11 +2,24 @@
 
 Docs at https://rainprotocol.github.io/rain.factory
 
+This repo is the **library** half of the library/deploy split
+([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
+`ICloneable*` interface surface, and nothing else. It publishes to Soldeer as
+`rain-factory`.
+
 ## Concrete implementations
 
-`CloneFactory` implements `ICloneableFactoryV2` allowing any
-compatible `ICloneableV2` contract to be cloned as an EIP1167 proxy and
-initialized.
+`CloneFactory` — the concrete that implements these interfaces, letting any
+compatible `ICloneableV2` contract be cloned as an EIP1167 proxy and initialized
+— lives in
+[`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
+together with its deployed address + codehash pins, its frozen per-release
+deploy-pin snapshots and its deploy script. That repo publishes as
+`rain-factory-deploy`.
+
+Depend on `rain-factory` if you need only the interfaces. Depend on
+`rain-factory-deploy` if you need the deployed address or codehash of a live
+`CloneFactory`.
 
 ## Interfaces
 
@@ -32,8 +45,14 @@ The onchain tooling for analysis is found at https://github.com/rainprotocol/rai
 
 The current interfaces in this repository are for
 
+- `ICloneableFactoryV3`, the current factory interface: deterministic-only
+  (`cloneDeterministic` + `predictDeterministicAddress`, CREATE2 with the salt
+  namespaced by `msg.sender`). Standalone rather than extending
+  `ICloneableFactoryV2`, because the non-deterministic `clone()` was
+  intentionally dropped
 - `ICloneableFactoryV2` that is expected to clone proxies from a reference
-  implementation
+  implementation. Superseded by `ICloneableFactoryV3` for the concrete factory,
+  still published for other consumers
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
