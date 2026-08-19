@@ -24,36 +24,11 @@ SPDX headers.
 
 ## Build & Test Commands
 
-This project uses **Nix + Foundry (Forge)**. Enter the dev shell first:
-
-```bash
-nix develop
-```
-
-Then use rainix tasks:
-
-```bash
-# Static analysis (Slither)
-nix develop -c rainix-sol-static
-
-# License/legal checks (REUSE compliance)
-nix develop -c rainix-sol-legal
-
-# Prelude (dependency setup, run before other tasks)
-nix develop -c rainix-sol-prelude
-
-# Runs, but there is no test suite here: the interfaces have no behaviour to
-# test. The tests that exercise them live in rain.factory.deploy, against the
-# concrete.
-nix develop -c rainix-sol-test
-```
-
-Direct Forge commands also work inside the nix shell:
-
-```bash
-# Build
-forge build
-```
+Nix + Foundry. Enter the shell with `nix develop`, then run rainix tasks:
+`rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE), `rainix-sol-prelude`
+(deps, run first), `rainix-sol-test`, and `forge build` directly. There is no
+test suite here — the interfaces have no behaviour; the tests that exercise them
+live in rain.factory.deploy against the concrete.
 
 ## Architecture
 
@@ -93,21 +68,14 @@ third-party library — which is what makes this half a standalone publish.
 
 ## Deployment
 
-Nothing in this repo is deployed. The deterministic Zoltu deploy of the concrete
-`CloneFactory`, its canonical address and codehash, and the deploy scripts
-targeting Arbitrum, Base, Base Sepolia, Flare and Polygon are all in
+Nothing here is deployed. The concrete `CloneFactory`, its address/codehash, and
+the deploy scripts (Arbitrum, Base, Base Sepolia, Flare, Polygon) all live in
 rain.factory.deploy.
 
 ## Releases
 
-Library repo, so `package-release.yaml` runs `rainix-autopublish`:
-`[package].version` in `foundry.toml` is the NEXT, unpublished version, and a
-content change on merge publishes it and bumps to the next. Nothing here is
-tag-released, and no snapshot is frozen — that lifecycle belongs to the deploy
-half.
-
-## CI
-
-GitHub Actions runs three parallel jobs on every push: `rainix-sol-test`,
-`rainix-sol-static`, `rainix-sol-legal`. There are no fork tests and no RPC
-secrets are needed.
+Library repo: `package-release.yaml` runs `rainix-autopublish`. A content change
+on merge publishes to Soldeer at a registry-derived version (newest published,
+patch-bumped); push a `next-v<x.y.z>` tag on main to jump minor/major.
+`foundry.toml` holds no release metadata, nothing is committed back, and no
+snapshot is frozen — that lifecycle belongs to the deploy half.
