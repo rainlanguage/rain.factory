@@ -57,9 +57,9 @@ interfaces have no behaviour to test.
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
-Nothing here imports from outside this repo — intra-repo inheritance is allowed
-(`ICloneableFactoryV4` extends `ICloneableFactoryV3`), which is what makes this
-half a standalone publish.
+No `src/` file imports from outside this repo — intra-repo inheritance is
+allowed (`ICloneableFactoryV4` extends `ICloneableFactoryV3`), which is what
+makes this half a standalone publish.
 
 ## Solidity Conventions
 
