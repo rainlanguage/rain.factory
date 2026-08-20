@@ -4,21 +4,8 @@ Docs at https://rainprotocol.github.io/rain.factory
 
 This repo is the **library** half of the library/deploy split
 ([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
-`ICloneable*` interface surface, plus the `Lib*` logic that implements it. It
-publishes to Soldeer as `rain-factory`.
-
-## Library
-
-`LibCloneFactory` is the whole of an `ICloneableFactoryV4` factory as internal
-library code, unit tested here: both effective-salt derivations pinned by that
-interface, the implementation-code guard, the EIP1167 creation code and its
-CREATE2 address prediction (constructed from the standard's own bytes, so the
-published `src/` depends on no external cloning code), and the atomic
-clone-initialize-verify flow with its typed errors and the `NewClone` event.
-`msg.sender` and `address(this)` are read inside the library, so a concrete
-factory is nothing but one delegation per entry point and cannot misroute
-either. The tests pin the construction byte for byte against OpenZeppelin
-`Clones` as a foreign implementation of the same standard.
+`ICloneable*` interface surface and the `LibICloneableFactoryV4` library that
+implements it. It publishes to Soldeer as `rain-factory`.
 
 ## Concrete implementations
 
@@ -33,6 +20,25 @@ deploy-pin snapshots and its deploy script. That repo publishes as
 Depend on `rain-factory` if you need the interfaces or the library. Depend on
 `rain-factory-deploy` if you need the deployed address or codehash of a live
 `CloneFactory`.
+
+## Library
+
+`src/lib/LibICloneableFactoryV4.sol` is the executable form of
+`ICloneableFactoryV4` as internal library logic. The two `CREATE2` salt
+derivations the interface pins to exact bytes — the `msg.sender`-namespaced one
+and the open-salt one — are pure functions that import the domain tags from the
+interface, so the tags have a single source of truth and a factory, an indexer
+or a consumer predicting a clone address computes the salt from one place. On
+top of them sit the implementation-code guard, the EIP1167 creation code and
+its CREATE2 address prediction (constructed from the standard's own bytes, so
+the published `src/` depends on no external cloning code), and the atomic
+clone-initialize-verify flow with its typed errors and the `NewClone` event.
+`msg.sender` and `address(this)` are read inside the library, so a concrete
+factory is nothing but one delegation per entry point and cannot misroute
+either. The tests live here under `test/src/lib/`: they recompute both salt
+formulas independently to pin them to the interface's spec byte for byte, and
+pin the EIP1167 construction against OpenZeppelin `Clones` as a foreign
+implementation of the same standard.
 
 ## Interfaces
 
