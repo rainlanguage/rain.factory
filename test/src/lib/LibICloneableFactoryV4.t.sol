@@ -67,4 +67,59 @@ contract LibICloneableFactoryV4Test is Test {
                 != LibICloneableFactoryV4.effectiveOpenSalt(openSalt, data)
         );
     }
+
+    /// The namespaced preimage is 96 bytes whose FIRST word is the
+    /// string-derived namespaced tag. Packed independently of both the library
+    /// and the interface constant, so this also pins the constant to its
+    /// documented string.
+    function testEffectiveSaltPreimageShape(address deployer, bytes32 salt) external pure {
+        bytes memory preimage =
+            abi.encodePacked(keccak256("rain.factory.clone.namespaced"), bytes32(uint256(uint160(deployer))), salt);
+        assertEq(preimage.length, 96);
+        assertEq(LibICloneableFactoryV4.effectiveSalt(deployer, salt), keccak256(preimage));
+    }
+
+    /// The deployer is in the namespaced derivation: two deployers, two
+    /// effective salts.
+    function testEffectiveSaltDeployerSensitive(address alice, address bob, bytes32 salt) external pure {
+        vm.assume(alice != bob);
+        assertTrue(LibICloneableFactoryV4.effectiveSalt(alice, salt) != LibICloneableFactoryV4.effectiveSalt(bob, salt));
+    }
+
+    /// The caller salt is in the namespaced derivation: two salts, two
+    /// effective salts.
+    function testEffectiveSaltSaltSensitive(address deployer, bytes32 saltA, bytes32 saltB) external pure {
+        vm.assume(saltA != saltB);
+        assertTrue(
+            LibICloneableFactoryV4.effectiveSalt(deployer, saltA) != LibICloneableFactoryV4.effectiveSalt(deployer, saltB)
+        );
+    }
+
+    /// The open-salt preimage is 96 bytes whose FIRST word is the
+    /// string-derived open-salt tag, whose second is the caller salt and whose
+    /// third is `keccak256(data)` — `data` enters by hash, so the preimage is
+    /// fixed length for any data length. Packed independently of both the
+    /// library and the interface constant.
+    function testEffectiveOpenSaltPreimageShape(bytes32 salt, bytes memory data) external pure {
+        bytes memory preimage = abi.encodePacked(keccak256("rain.factory.clone.opensalt"), salt, keccak256(data));
+        assertEq(preimage.length, 96);
+        assertEq(LibICloneableFactoryV4.effectiveOpenSalt(salt, data), keccak256(preimage));
+    }
+
+    /// `data` is in the open-salt derivation: two data, two effective salts.
+    function testEffectiveOpenSaltDataSensitive(bytes32 salt, bytes memory dataA, bytes memory dataB) external pure {
+        vm.assume(keccak256(dataA) != keccak256(dataB));
+        assertTrue(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, dataA) != LibICloneableFactoryV4.effectiveOpenSalt(salt, dataB)
+        );
+    }
+
+    /// The caller salt is in the open-salt derivation: two salts, two
+    /// effective salts.
+    function testEffectiveOpenSaltSaltSensitive(bytes32 saltA, bytes32 saltB, bytes memory data) external pure {
+        vm.assume(saltA != saltB);
+        assertTrue(
+            LibICloneableFactoryV4.effectiveOpenSalt(saltA, data) != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
+        );
+    }
 }

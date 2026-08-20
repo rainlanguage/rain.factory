@@ -4,13 +4,13 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 
-import {LibCloneFactory} from "src/lib/LibCloneFactory.sol";
+import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
 
-/// @title LibCloneFactoryCloneCreationCodeTest
-/// @notice Tests `LibCloneFactory.cloneCreationCode` against the EIP-1167
+/// @title LibICloneableFactoryV4CloneCreationCodeTest
+/// @notice Tests `LibICloneableFactoryV4.cloneCreationCode` against the EIP-1167
 /// bytes written out literally here, from the EIP, so the library's constants
 /// are pinned against the standard rather than against themselves.
-contract LibCloneFactoryCloneCreationCodeTest is Test {
+contract LibICloneableFactoryV4CloneCreationCodeTest is Test {
     /// The creation code is the canonical 55-byte EIP-1167 sequence: the
     /// 10-byte deploy preamble, the 10-byte runtime prefix, the 20-byte
     /// implementation address and the 15-byte runtime suffix.
@@ -18,7 +18,7 @@ contract LibCloneFactoryCloneCreationCodeTest is Test {
         bytes memory expected = abi.encodePacked(
             hex"3d602d80600a3d3981f3363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3"
         );
-        bytes memory creationCode = LibCloneFactory.cloneCreationCode(implementation);
+        bytes memory creationCode = LibICloneableFactoryV4.cloneCreationCode(implementation);
         assertEq(creationCode.length, 55);
         assertEq(creationCode, expected);
     }
@@ -28,7 +28,7 @@ contract LibCloneFactoryCloneCreationCodeTest is Test {
     /// preamble. This pins the preamble's semantics (codecopy of the trailing
     /// 45 bytes) and not just its bytes.
     function testCloneCreationCodeDeploysEIP1167Runtime(address implementation, bytes32 salt) external {
-        bytes memory creationCode = LibCloneFactory.cloneCreationCode(implementation);
+        bytes memory creationCode = LibICloneableFactoryV4.cloneCreationCode(implementation);
         address child;
         assembly ("memory-safe") {
             child := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
