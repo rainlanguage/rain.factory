@@ -7,9 +7,9 @@ code in this repository.
 
 rain.factory is a Solidity **library** repo: the `ICloneable*` interface surface
 for EIP1167 minimal proxy (clone) factories in the Rain ecosystem. It is the
-library half of the library/deploy split (rainlanguage/rain.factory#46) and holds
-interfaces only — no concrete contract, no deploy pins, no deploy script, and no
-tests.
+library half of the library/deploy split (rainlanguage/rain.factory#46) and
+holds interfaces only — no concrete contract, no deploy pins, no deploy script,
+and no tests.
 
 The concrete `CloneFactory` that implements these interfaces, its deployed
 address + codehash pins (`LibCloneFactoryDeploy`), the frozen
@@ -28,7 +28,7 @@ Nix + Foundry. Enter the shell with `nix develop`, then run rainix tasks:
 `rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE), `rainix-sol-prelude`
 (deps, run first), `rainix-sol-test`, and `forge build` directly. There is no
 test suite here — the interfaces have no behaviour; the tests that exercise them
-live in rain.factory.deploy against the concrete.
+live against the concrete in rain.factory.deploy.
 
 ## Architecture
 
@@ -36,20 +36,27 @@ live in rain.factory.deploy against the concrete.
   `initialize(bytes)` must return `ICLONEABLE_V2_SUCCESS` (keccak256 hash) on
   success.
 - `src/interface/ICloneableFactoryV2.sol` — Legacy factory interface: the
-  nonce-dependent `clone(address, bytes)` and `NewClone` event. Superseded by
-  `ICloneableFactoryV3` for the concrete factory in rain.factory.deploy; still
-  published for other consumers.
-- `src/interface/ICloneableFactoryV3.sol` — Current factory interface.
-  Deterministic-only: `cloneDeterministic(address, bytes, bytes32)` +
+  nonce-dependent `clone(address, bytes)` and `NewClone` event. The concrete
+  factory in rain.factory.deploy implements `ICloneableFactoryV4`, not this;
+  still published for other consumers.
+- `src/interface/ICloneableFactoryV3.sol` — Deterministic-only factory
+  interface: `cloneDeterministic(address, bytes, bytes32)` +
   `predictDeterministicAddress(address, bytes32, address)` (CREATE2, salt
   namespaced by `msg.sender`) and its own `NewClone` event. Standalone — does
-  NOT extend `ICloneableFactoryV2`, because the non-deterministic `clone()` was
-  intentionally dropped.
+  NOT extend `ICloneableFactoryV2` and has no non-deterministic `clone()`. Still
+  published for consumers pinned to it.
+- `src/interface/ICloneableFactoryV4.sol` — Current factory interface. Extends
+  `ICloneableFactoryV3` and defines the open-salt pair
+  `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`. Both
+  derivations are pinned to exact bytes, each `keccak256`-ing a 96-byte preimage
+  led by a distinct string-derived domain tag, so the two images are disjoint by
+  construction. The full spec is the NatSpec on the interface.
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
-`src/` holds nothing else. The interfaces import nothing — not each other, not a
-third-party library — which is what makes this half a standalone publish.
+`src/` holds nothing else. The interfaces import nothing from outside this repo
+— intra-repo inheritance is allowed and `ICloneableFactoryV4` extends
+`ICloneableFactoryV3` — which is what makes this half a standalone publish.
 
 ## Solidity Conventions
 
@@ -57,17 +64,11 @@ third-party library — which is what makes this half a standalone publish.
   interfaces use `^0.8.18`) so downstream soldeer consumers on a different
   `0.8.x` can still compile them. The `=0.8.25` exact-pin rule applies to
   concrete contracts, scripts and tests, which live in rain.factory.deploy.
-- EVM target: Cancun
-- Optimizer: enabled, 100,000 runs
-- No CBOR metadata (`cbor_metadata = false`, `bytecode_hash = "none"`)
+- Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
+  metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
-  `soldeer.lock`, vendored under `dependencies/`). The interfaces import nothing,
-  so the only entry is forge-std. `@openzeppelin-contracts`, `rain-extrospection`,
-  `rain-deploy` and `rain-sol-codegen` went with the deploy half and must not
-  come back: adding one here means concrete code has landed in a library repo.
-
-## Deployment
-
-Nothing here is deployed. The concrete `CloneFactory`, its address/codehash, and
-the deploy scripts (Arbitrum, Base, Base Sepolia, Flare, Polygon) all live in
-rain.factory.deploy.
+  `soldeer.lock`, vendored under `dependencies/`). The interfaces import nothing
+  external, so the only entry is forge-std. `@openzeppelin-contracts`,
+  `rain-extrospection`, `rain-deploy` and `rain-sol-codegen` belong to the
+  deploy half and must not be added here: adding one means concrete code has
+  landed in a library repo.

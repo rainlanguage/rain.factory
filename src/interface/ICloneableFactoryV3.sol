@@ -43,6 +43,12 @@ interface ICloneableFactoryV3 {
     /// the string "ICloneableV2.initialize". MUST emit `NewClone` with the
     /// implementation and clone address.
     ///
+    /// @dev A factory that also implements `ICloneableFactoryV4` pins this
+    /// `msg.sender` namespacing to exact bytes: the effective `CREATE2` salt is
+    /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt))`.
+    /// See that interface for the full derivation and its disjointness from the
+    /// open-salt one.
+    ///
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`.
     /// @param salt Caller-chosen salt; distinct salts yield distinct clones.
