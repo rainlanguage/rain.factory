@@ -19,12 +19,15 @@ libs = ["dependencies"]
 [fuzz]
 runs = 2048
 
-# Library repo: the ICloneable* interface surface only. The concrete CloneFactory,
-# its deploy-pin snapshots and deploy scripts live in rain.factory.deploy
-# (rainlanguage/rain.factory#46). Interfaces import nothing, so there are no
-# Solidity dependencies beyond the test harness.
+# Library repo: the ICloneable* interface surface plus the Lib* logic that
+# implements it. The concrete CloneFactory, its deploy-pin snapshots and deploy
+# scripts live in rain.factory.deploy (rainlanguage/rain.factory#46). The
+# published src/ imports nothing external, so every dependency here is
+# test-harness only: forge-std, and OZ Clones as the independent equivalence
+# oracle for the EIP1167 construction.
 [dependencies]
 forge-std = "1.16.1"
+"@openzeppelin-contracts" = "5.6.1"
 
 [soldeer]
 recursive_deps = false
