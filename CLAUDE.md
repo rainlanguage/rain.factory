@@ -71,11 +71,3 @@ third-party library — which is what makes this half a standalone publish.
 Nothing here is deployed. The concrete `CloneFactory`, its address/codehash, and
 the deploy scripts (Arbitrum, Base, Base Sepolia, Flare, Polygon) all live in
 rain.factory.deploy.
-
-## Releases
-
-Library repo: `package-release.yaml` runs `rainix-autopublish`. A content change
-on merge publishes to Soldeer at a registry-derived version (newest published,
-patch-bumped); push a `next-v<x.y.z>` tag on main to jump minor/major.
-`foundry.toml` holds no release metadata, nothing is committed back, and no
-snapshot is frozen — that lifecycle belongs to the deploy half.
