@@ -36,22 +36,21 @@ live against the concrete in rain.factory.deploy.
   `initialize(bytes)` must return `ICLONEABLE_V2_SUCCESS` (keccak256 hash) on
   success.
 - `src/interface/ICloneableFactoryV2.sol` — Legacy factory interface: the
-  nonce-dependent `clone(address, bytes)` and `NewClone` event. Superseded by
-  `ICloneableFactoryV4` for the concrete factory in rain.factory.deploy; still
-  published for other consumers.
+  nonce-dependent `clone(address, bytes)` and `NewClone` event. The concrete
+  factory in rain.factory.deploy implements `ICloneableFactoryV4`, not this;
+  still published for other consumers.
 - `src/interface/ICloneableFactoryV3.sol` — Deterministic-only factory
   interface: `cloneDeterministic(address, bytes, bytes32)` +
   `predictDeterministicAddress(address, bytes32, address)` (CREATE2, salt
   namespaced by `msg.sender`) and its own `NewClone` event. Standalone — does
-  NOT extend `ICloneableFactoryV2`, because the non-deterministic `clone()` was
-  intentionally dropped. Superseded by `ICloneableFactoryV4`, still published
-  for consumers pinned to it.
+  NOT extend `ICloneableFactoryV2` and has no non-deterministic `clone()`. Still
+  published for consumers pinned to it.
 - `src/interface/ICloneableFactoryV4.sol` — Current factory interface. Extends
-  `ICloneableFactoryV3` and adds the open-salt pair `cloneDeterministicOpenSalt`
-  / `predictDeterministicAddressOpenSalt`. Both derivations are pinned to exact
-  bytes, each `keccak256`-ing a 96-byte preimage led by a distinct
-  string-derived domain tag, so the two images are disjoint by construction. The
-  full spec is the NatSpec on the interface.
+  `ICloneableFactoryV3` and defines the open-salt pair
+  `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`. Both
+  derivations are pinned to exact bytes, each `keccak256`-ing a 96-byte preimage
+  led by a distinct string-derived domain tag, so the two images are disjoint by
+  construction. The full spec is the NatSpec on the interface.
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
@@ -70,6 +69,6 @@ live against the concrete in rain.factory.deploy.
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
   `soldeer.lock`, vendored under `dependencies/`). The interfaces import nothing
   external, so the only entry is forge-std. `@openzeppelin-contracts`,
-  `rain-extrospection`, `rain-deploy` and `rain-sol-codegen` went with the
-  deploy half and must not come back: adding one here means concrete code has
+  `rain-extrospection`, `rain-deploy` and `rain-sol-codegen` belong to the
+  deploy half and must not be added here: adding one means concrete code has
   landed in a library repo.

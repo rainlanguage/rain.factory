@@ -24,14 +24,12 @@ bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.facto
 bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factory.clone.opensalt");
 
 /// @title ICloneableFactoryV4
-/// @notice Extends `ICloneableFactoryV3` with an "open salt" deterministic
-/// clone. Everything `ICloneableFactoryV3` specifies is unchanged and still
-/// required — `cloneDeterministic` keeps namespacing its salt by `msg.sender`,
-/// and `predictDeterministicAddress` keeps taking a `deployer`. This interface
-/// ADDS a second derivation alongside it, so a factory may offer both and the
-/// caller picks per deploy, and it PINS both derivations to exact bytes: V3
-/// mandates only the `msg.sender` namespacing as a property, and V4 fixes the
-/// whole preimage of each.
+/// @notice A factory with two deterministic-clone derivations, both pinned to
+/// exact bytes. The namespaced pair — `cloneDeterministic`, which namespaces its
+/// salt by `msg.sender`, and `predictDeterministicAddress`, which takes a
+/// `deployer` — is inherited from `ICloneableFactoryV3`. The open-salt pair,
+/// `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`, is
+/// defined here. A factory may offer both, and the caller picks per deploy.
 ///
 /// Both effective `CREATE2` salts are a `keccak256` over a 96-byte preimage
 /// whose FIRST word is a distinct, string-derived domain tag the caller cannot
@@ -101,8 +99,8 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// `(factory, implementation, salt, data)`. The factory MUST NOT mix
     /// `msg.sender`, `tx.origin`, or any other caller-derived value into it.
     ///
-    /// Initialization is unchanged from `ICloneableFactoryV3.cloneDeterministic`
-    /// and MUST stay atomic with the clone: the factory MUST call
+    /// Initialization MUST be atomic with the clone, per the shared spec in
+    /// `ICloneableFactoryV3.cloneDeterministic`: the factory MUST call
     /// `ICloneableV2.initialize` with `data` verbatim, MUST NOT call anything
     /// else on the proxy first, and MUST ONLY consider the clone created if
     /// `initialize` returns keccak256("ICloneableV2.initialize"). MUST emit
@@ -156,10 +154,10 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   opens once the binding exists. A clone that resolves once during
     ///   `initialize` and stores the answer is unaffected by any later
     ///   rebinding.
-    /// - Registry-resolved authority is now the ordinary case rather than a
-    ///   special one: it is simply `data` that names things instead of naming
-    ///   addresses. `data` MAY be empty, and an implementation that resolves
-    ///   everything from the registry will pass empty `data`.
+    /// - Registry-resolved authority is the ordinary case: it is simply `data`
+    ///   that names things instead of naming addresses. `data` MAY be empty, and
+    ///   an implementation that resolves everything from the registry will pass
+    ///   empty `data`.
     ///
     /// # Obligation on the factory, not on the consumer
     ///
@@ -183,8 +181,7 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// caller here chooses only words 1 and 2 (`salt` and `keccak256(data)`);
     /// neither can place the other derivation's tag in word 0, so neither can
     /// aim its entry point at an address the other produces. The disjointness is
-    /// a property of the two fixed tags — not of a preimage length an attacker
-    /// might match or a value an attacker might fail to reach.
+    /// a property of the two fixed tags.
     ///
     /// # Events
     ///
