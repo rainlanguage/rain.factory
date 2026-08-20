@@ -4,36 +4,73 @@ pragma solidity ^0.8.18;
 
 import {ICloneableFactoryV3} from "./ICloneableFactoryV3.sol";
 
-/// @dev Domain separator mixed into every `cloneDeterministicOpenSalt` effective
-/// salt. Its only job is to keep the open-salt derivation's image disjoint from
-/// every other derivation the same factory offers, so no other entry point on
-/// the factory can be aimed at an open-salt address. See `ICloneableFactoryV4`.
-bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("ICloneableFactoryV4.cloneDeterministicOpenSalt");
+/// @dev Domain tag hashed as the FIRST word of the `cloneDeterministic` /
+/// `predictDeterministicAddress` effective `CREATE2` salt on a factory that
+/// implements `ICloneableFactoryV4`. String-derived so the literal is its own
+/// documentation. Its job is to keep the namespaced derivation's image disjoint
+/// from the open-salt one BY CONSTRUCTION: the two tags are distinct fixed
+/// words and no caller can place either in word 0 of the other derivation, so
+/// neither entry point can be aimed at an address the other produces. See
+/// `ICloneableFactoryV4`.
+bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.factory.clone.namespaced");
+
+/// @dev Domain tag hashed as the FIRST word of the `cloneDeterministicOpenSalt`
+/// / `predictDeterministicAddressOpenSalt` effective `CREATE2` salt.
+/// String-derived so the literal is its own documentation. Pairs with
+/// `ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN`: the two are distinct fixed words,
+/// so the open-salt and namespaced images cannot overlap and no other entry
+/// point on the factory can be aimed at an open-salt address. See
+/// `ICloneableFactoryV4`.
+bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factory.clone.opensalt");
 
 /// @title ICloneableFactoryV4
 /// @notice Extends `ICloneableFactoryV3` with an "open salt" deterministic
 /// clone. Everything `ICloneableFactoryV3` specifies is unchanged and still
 /// required — `cloneDeterministic` keeps namespacing its salt by `msg.sender`,
 /// and `predictDeterministicAddress` keeps taking a `deployer`. This interface
-/// only ADDS a second derivation alongside it, so a factory may offer both and
-/// the caller picks per deploy.
+/// ADDS a second derivation alongside it, so a factory may offer both and the
+/// caller picks per deploy, and it PINS both derivations to exact bytes: V3
+/// mandates only the `msg.sender` namespacing as a property, and V4 fixes the
+/// whole preimage of each.
+///
+/// Both effective `CREATE2` salts are a `keccak256` over a 96-byte preimage
+/// whose FIRST word is a distinct, string-derived domain tag the caller cannot
+/// set:
+///
+/// ```
+/// // cloneDeterministic / predictDeterministicAddress (the namespaced pair)
+/// keccak256(abi.encode(
+///     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt
+/// ))
+///
+/// // cloneDeterministicOpenSalt / predictDeterministicAddressOpenSalt
+/// keccak256(abi.encode(
+///     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)
+/// ))
+/// ```
+///
+/// so third parties can recompute either, and the two `predict…` functions are
+/// the factory saying the same thing. The two tags differ, so the two images
+/// are disjoint by construction — see the disjointness note on
+/// `cloneDeterministicOpenSalt`.
 ///
 /// The difference between the two is which of the deployer and the
 /// initialization data the clone's address commits to:
 ///
-/// - `cloneDeterministic` derives the `CREATE2` salt from `(msg.sender, salt)`.
-///   The address commits to WHO deployed and not to WHAT was deployed. It buys
-///   squat-resistance — nobody but that account can reach that address — and
-///   pays with an identity baked into an address: retire the deploying account
-///   and every address derived from it becomes unreachable, so a pinned address
-///   can never be re-established from a different account. It also leaves
-///   `data` outside the derivation, so the deployer alone decides the clone's
-///   initial state at an address that says nothing about it.
-/// - `cloneDeterministicOpenSalt` derives the `CREATE2` salt from
-///   `(salt, data)`. The address commits to WHAT was deployed and not to WHO
-///   deployed it. Every account reaches the same address — and so can anyone —
-///   but every account that reaches it deploys the same contract, initialized
-///   with the same bytes, because varying either input lands somewhere else.
+/// - `cloneDeterministic` derives its salt from `msg.sender` and `salt` (behind
+///   the namespaced tag). The address commits to WHO deployed and not to WHAT
+///   was deployed. It buys squat-resistance — nobody but that account can reach
+///   that address — and pays with an identity baked into an address: retire the
+///   deploying account and every address derived from it becomes unreachable,
+///   so a pinned address can never be re-established from a different account.
+///   It also leaves `data` outside the derivation, so the deployer alone
+///   decides the clone's initial state at an address that says nothing about it.
+/// - `cloneDeterministicOpenSalt` derives its salt from `salt` and `data`
+///   (behind the open-salt tag). The address commits to WHAT was deployed and
+///   not to WHO deployed it. Every account reaches the same address — and so
+///   can anyone — but every account that reaches it deploys the same contract,
+///   initialized with the same bytes, because varying either input lands
+///   somewhere else.
 ///
 /// Neither dominates. Open-salt costs the ability to choose an address before
 /// the initialization data is final: the address is not knowable until `data`
@@ -42,17 +79,6 @@ bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("ICloneableF
 /// pinning an open-salt address must be able to reproduce the exact `data`
 /// bytes, ABI encoding and all, since a byte of difference is a different
 /// address.
-///
-/// The open-salt effective `CREATE2` salt is fixed by this interface as
-///
-/// ```
-/// keccak256(abi.encode(
-///     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)
-/// ))
-/// ```
-///
-/// so third parties can recompute it, and `predictDeterministicAddressOpenSalt`
-/// is the factory saying the same thing.
 ///
 /// Cross-network determinism is NOT a property of either derivation on its own.
 /// `CREATE2` hashes the deploying factory's address, and the EIP-1167 creation
@@ -139,13 +165,26 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///
     /// The guarantee above holds only while no OTHER entry point on the same
     /// factory can `CREATE2` at an effective salt in this derivation's image
-    /// with caller-supplied initialization data. A factory implementing this
-    /// interface MUST NOT expose one. That is what
-    /// `ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN` is for: it separates this
-    /// derivation from the inherited `cloneDeterministic` one — which does take
-    /// arbitrary `data` — by both a domain tag and a preimage length, so
-    /// aiming `cloneDeterministic` at an open-salt address requires a keccak256
-    /// preimage rather than a choice of salt.
+    /// with caller-supplied initialization data. The inherited
+    /// `cloneDeterministic` is exactly such an entry point — it takes arbitrary
+    /// `data` — so the two derivations MUST NOT share an effective-salt image,
+    /// and a factory implementing this interface MUST NOT expose any entry point
+    /// that does.
+    ///
+    /// They do not overlap, by construction. Both preimages are 96 bytes whose
+    /// FIRST word is a fixed domain tag no caller can set:
+    /// `cloneDeterministic` hashes
+    /// `abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt)`
+    /// and this function hashes
+    /// `abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data))`.
+    /// The two domain constants are distinct `keccak256` outputs, so the two
+    /// preimage sets are disjoint in their first word alone. A caller on the
+    /// namespaced path chooses only words 1 and 2 (`msg.sender` and `salt`); a
+    /// caller here chooses only words 1 and 2 (`salt` and `keccak256(data)`);
+    /// neither can place the other derivation's tag in word 0, so neither can
+    /// aim its entry point at an address the other produces. The disjointness is
+    /// a property of the two fixed tags — not of a preimage length an attacker
+    /// might match or a value an attacker might fail to reach.
     ///
     /// # Events
     ///

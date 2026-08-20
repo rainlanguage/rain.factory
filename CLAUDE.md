@@ -74,18 +74,23 @@ forge build
   `ICloneableFactoryV3` (nothing was dropped this time, so it inherits rather
   than restates) and adds the open-salt variant:
   `cloneDeterministicOpenSalt(address, bytes, bytes32)` +
-  `predictDeterministicAddressOpenSalt(address, bytes, bytes32)`. Their
-  `CREATE2` salt is
-  `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`
-  — the deployer is out of the derivation and the initialization data is in it,
-  so the address commits to what was deployed rather than to who deployed it,
-  and a front-runner can only either land elsewhere or produce the intended
-  contract. `ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN` is a file-level constant,
-  same pattern as `ICLONEABLE_V2_SUCCESS`; it keeps the open-salt image disjoint
-  from the inherited `cloneDeterministic` one, which does take arbitrary `data`.
-  The NatSpec on the function is the spec for what the address does NOT fix
-  (implementations MUST NOT read `tx.origin`) and for the registry pairing, and
-  it is the deliverable of this interface as much as the two signatures are.
+  `predictDeterministicAddressOpenSalt(address, bytes, bytes32)`, and pins BOTH
+  derivations to exact bytes. Each effective `CREATE2` salt is a `keccak256`
+  over a 96-byte preimage led by a distinct, string-derived domain tag the
+  caller cannot set: the namespaced pair uses
+  `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt))`
+  and the open-salt pair uses
+  `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`.
+  Open-salt drops the deployer and hashes the initialization data in, so its
+  address commits to what was deployed rather than to who deployed it, and a
+  front-runner can only either land elsewhere or produce the intended contract.
+  Both domains are file-level constants, same pattern as
+  `ICLONEABLE_V2_SUCCESS`; because the two tags are distinct fixed first words,
+  the two images are disjoint BY CONSTRUCTION — no caller can aim one
+  derivation's entry point at the other's address. The NatSpec on the function
+  is the spec for what the address does NOT fix (implementations MUST NOT read
+  `tx.origin`) and for the registry pairing, and it is the deliverable of this
+  interface as much as the two signatures are.
 - `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
   `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
 
