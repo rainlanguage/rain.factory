@@ -4,8 +4,8 @@ Docs at https://rainprotocol.github.io/rain.factory
 
 This repo is the **library** half of the library/deploy split
 ([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
-`ICloneable*` interface surface, and nothing else. It publishes to Soldeer as
-`rain-factory`.
+`ICloneable*` interface surface and the `LibICloneableFactoryV4` salt-derivation
+library. It publishes to Soldeer as `rain-factory`.
 
 ## Concrete implementations
 
@@ -20,6 +20,17 @@ deploy-pin snapshots and its deploy script. That repo publishes as
 Depend on `rain-factory` if you need only the interfaces. Depend on
 `rain-factory-deploy` if you need the deployed address or codehash of a live
 `CloneFactory`.
+
+## Derivation library
+
+`src/lib/LibICloneableFactoryV4.sol` is the executable form of the two `CREATE2`
+salt derivations `ICloneableFactoryV4` pins to exact bytes — the
+`msg.sender`-namespaced one and the open-salt one — as pure `internal`
+functions. It imports the domain tags from the interface, so the tags have a
+single source of truth, and its tests recompute both formulas independently to
+pin them to the interface's spec byte for byte. A factory, an indexer or a
+consumer predicting a clone address computes the salt from one place. The tests
+live here under `test/src/lib/`.
 
 ## Interfaces
 
