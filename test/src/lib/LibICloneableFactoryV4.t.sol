@@ -91,7 +91,8 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveSaltSaltSensitive(address deployer, bytes32 saltA, bytes32 saltB) external pure {
         vm.assume(saltA != saltB);
         assertTrue(
-            LibICloneableFactoryV4.effectiveSalt(deployer, saltA) != LibICloneableFactoryV4.effectiveSalt(deployer, saltB)
+            LibICloneableFactoryV4.effectiveSalt(deployer, saltA)
+                != LibICloneableFactoryV4.effectiveSalt(deployer, saltB)
         );
     }
 
@@ -110,7 +111,8 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveOpenSaltDataSensitive(bytes32 salt, bytes memory dataA, bytes memory dataB) external pure {
         vm.assume(keccak256(dataA) != keccak256(dataB));
         assertTrue(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, dataA) != LibICloneableFactoryV4.effectiveOpenSalt(salt, dataB)
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, dataA)
+                != LibICloneableFactoryV4.effectiveOpenSalt(salt, dataB)
         );
     }
 
@@ -119,7 +121,8 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveOpenSaltSaltSensitive(bytes32 saltA, bytes32 saltB, bytes memory data) external pure {
         vm.assume(saltA != saltB);
         assertTrue(
-            LibICloneableFactoryV4.effectiveOpenSalt(saltA, data) != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
+            LibICloneableFactoryV4.effectiveOpenSalt(saltA, data)
+                != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
         );
     }
 }
