@@ -31,7 +31,7 @@ possible on the implementation side.
 The ideal would be that "any" contract can call an interpreter and magically be
 supported but there's a lot that can go wrong, for example:
 
-- Contracts can self destruct or even
+- Contracts can self-destruct or even be
   [redeployed with new bytecode](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e)
 - Proxies can point to new implementations and "upgrade"
 - Discoverability of ABIs and other metadata subject to indexer limitations
