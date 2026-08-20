@@ -29,9 +29,9 @@ derivations the interface pins to exact bytes — the `msg.sender`-namespaced on
 and the open-salt one — are pure functions that import the domain tags from the
 interface, so the tags have a single source of truth and a factory, an indexer
 or a consumer predicting a clone address computes the salt from one place. On
-top of them sit the implementation-code guard, the EIP1167 creation code and
-its CREATE2 address prediction (constructed from the standard's own bytes, so
-the published `src/` depends on no external cloning code), and the atomic
+top of them sit the implementation-code guard, the EIP1167 creation code and its
+CREATE2 address prediction (constructed from the standard's own bytes, so the
+published `src/` depends on no external cloning code), and the atomic
 clone-initialize-verify flow with its typed errors and the `NewClone` event.
 `msg.sender` and `address(this)` are read inside the library, so a concrete
 factory is nothing but one delegation per entry point and cannot misroute

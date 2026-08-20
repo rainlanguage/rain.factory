@@ -8,8 +8,8 @@ code in this repository.
 rain.factory is a Solidity **library** repo for EIP1167 minimal proxy (clone)
 factories in the Rain ecosystem: the `ICloneable*` interface surface and the
 `LibICloneableFactoryV4` library that implements it. It is the library half of
-the library/deploy split (rainlanguage/rain.factory#46) — no concrete
-contract, no deploy pins, no deploy script.
+the library/deploy split (rainlanguage/rain.factory#46) — no concrete contract,
+no deploy pins, no deploy script.
 
 The concrete `CloneFactory` — meant to be a pure delegation into
 `LibICloneableFactoryV4`, one call per entry point — its deployed address +
