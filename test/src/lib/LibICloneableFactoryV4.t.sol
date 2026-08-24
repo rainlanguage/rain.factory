@@ -125,4 +125,22 @@ contract LibICloneableFactoryV4Test is Test {
                 != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
         );
     }
+
+    /// Boundary salts are supported, distinct cases: `bytes32(0)` and
+    /// `bytes32(type(uint256).max)` go through the derivation exactly as any
+    /// other salt does, with no special-casing at either end. Pinned
+    /// deliberately rather than left to the fuzzer, as
+    /// `testEffectiveOpenSaltEmptyData` pins the empty-data boundary: a
+    /// mutation special-casing the maximum salt survives the whole suite
+    /// otherwise.
+    function testEffectiveOpenSaltBoundarySalts(bytes memory data) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(0), data),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(0), keccak256(data)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(type(uint256).max), data),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(type(uint256).max), keccak256(data)))
+        );
+    }
 }
