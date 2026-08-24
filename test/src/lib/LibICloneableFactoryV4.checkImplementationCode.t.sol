@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 
 import {LibICloneableFactoryV4, ZeroImplementationCodeSize} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV4CheckImplementationCodeTest
 /// @notice Tests `LibICloneableFactoryV4.checkImplementationCode`: a codeless
@@ -38,12 +38,17 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.assume(uint160(implementation) > 0x0a);
         vm.assume(code.length > 0);
-        // EIP-3541 makes `0xEF`-leading runtime code unreachable on chain, and
-        // `vm.etch` refuses to write it — a `0xef01` prefix is parsed as an
-        // EIP-7702 delegation designator and rejected with "Eip7702 is not 23
-        // bytes long". Excluding it narrows the fuzz domain to code that can
-        // actually exist at an address, which is the domain the guard is
-        // specified over.
+        // EIP-3541 forbids DEPLOYING any code whose first byte is `0xef`, so
+        // no implementation on any chain can have such code and the guard is
+        // never specified over it. The exclusion narrows the fuzz domain to
+        // code that could actually exist at an address; it cannot weaken the
+        // property, because the guard only ever looks at code LENGTH.
+        //
+        // It is also what keeps this test from failing for a harness reason:
+        // `vm.etch` parses a `0xef01` prefix as an EIP-7702 delegation
+        // designator and rejects it unless the blob is exactly 23 bytes
+        // ("Eip7702 is not 23 bytes long"), so a fuzz run that drew one died
+        // in the cheatcode rather than in the code under test.
         vm.assume(code[0] != 0xef);
         vm.etch(implementation, code);
         LibICloneableFactoryV4.checkImplementationCode(implementation);

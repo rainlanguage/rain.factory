@@ -10,9 +10,9 @@ import {
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
 } from "src/interface/ICloneableFactoryV4.sol";
 import {InitializationFailed} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneableLiteralSuccess} from "test/src/concrete/TestCloneableLiteralSuccess.sol";
-import {TestCloneableNearMissSuccess} from "test/src/concrete/TestCloneableNearMissSuccess.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneableLiteralSuccess} from "test/concrete/TestCloneableLiteralSuccess.sol";
+import {TestCloneableNearMissSuccess} from "test/concrete/TestCloneableNearMissSuccess.sol";
 
 /// @title ICloneableV2Test
 /// @notice Pins `ICLONEABLE_V2_SUCCESS`, the initialization success sentinel.
