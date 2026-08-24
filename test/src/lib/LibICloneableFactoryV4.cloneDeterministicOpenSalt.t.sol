@@ -16,9 +16,9 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
-import {TestCloneableFailure} from "test/src/concrete/TestCloneableFailure.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
 
 /// @title LibICloneableFactoryV4CloneDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV4.cloneDeterministicOpenSalt` /

@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 
 import {LibICloneableFactoryV4, ZeroImplementationCodeSize} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV4CheckImplementationCodeTest
 /// @notice Tests `LibICloneableFactoryV4.checkImplementationCode`: a codeless
