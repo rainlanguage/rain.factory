@@ -7,7 +7,7 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {ICloneableFactoryV2} from "src/interface/ICloneableFactoryV2.sol";
 import {ICloneableFactoryV3} from "src/interface/ICloneableFactoryV3.sol";
 import {ICloneableFactoryV1} from "src/interface/deprecated/ICloneableFactoryV1.sol";
-import {LibPublishedAbi} from "test/src/lib/LibPublishedAbi.sol";
+import {LibPublishedAbi} from "test/lib/LibPublishedAbi.sol";
 
 /// @title ICloneableFactoryV2DeclarationTest
 /// @notice `ICloneableFactoryV2` is the legacy, nonce-dependent factory

@@ -6,7 +6,7 @@ import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
 
 import {ICloneableFactoryV3} from "src/interface/ICloneableFactoryV3.sol";
 import {ICloneableFactoryV2} from "src/interface/ICloneableFactoryV2.sol";
-import {LibPublishedAbi} from "test/src/lib/LibPublishedAbi.sol";
+import {LibPublishedAbi} from "test/lib/LibPublishedAbi.sol";
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
 
