@@ -38,6 +38,13 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.assume(uint160(implementation) > 0x0a);
         vm.assume(code.length > 0);
+        // EIP-3541 makes `0xEF`-leading runtime code unreachable on chain, and
+        // `vm.etch` refuses to write it — a `0xef01` prefix is parsed as an
+        // EIP-7702 delegation designator and rejected with "Eip7702 is not 23
+        // bytes long". Excluding it narrows the fuzz domain to code that can
+        // actually exist at an address, which is the domain the guard is
+        // specified over.
+        vm.assume(code[0] != 0xef);
         vm.etch(implementation, code);
         LibICloneableFactoryV4.checkImplementationCode(implementation);
     }

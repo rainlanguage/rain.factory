@@ -180,4 +180,114 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
         I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
     }
+
+    /// The PREDICTION does not read the caller. `predictDeterministicAddress`
+    /// takes the deployer as a parameter precisely so that anyone can predict
+    /// on anyone's behalf, so the same `(implementation, salt, deployer)` asked
+    /// from two different accounts must give the same answer. This is the
+    /// namespaced mirror of
+    /// `testCloneDeterministicOpenSaltPredictCallerIndependent`: without it the
+    /// only thing pinning `deployer` against `msg.sender` is that
+    /// `…SaltIsDomainTaggedHash` happens to fuzz `deployer` from one fixed
+    /// caller.
+    function testCloneDeterministicPredictCallerIndependent(
+        address implementation,
+        bytes32 salt,
+        address deployer,
+        address alice,
+        address bob
+    ) external {
+        vm.assume(alice != bob);
+
+        vm.prank(alice);
+        address predictedFromAlice = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer);
+
+        vm.prank(bob);
+        address predictedFromBob = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer);
+
+        assertEq(predictedFromAlice, predictedFromBob);
+
+        // And the answer is the deployer's, not either caller's: asking about
+        // `alice` gives a different address than asking about `bob`, no matter
+        // who asks.
+        vm.assume(deployer != alice);
+        vm.prank(bob);
+        assertTrue(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, alice) != predictedFromBob);
+    }
+
+    /// `deployer` is an arbitrary account identifier, not a live caller, so
+    /// `address(0)` is a perfectly well-defined input and gets the pinned
+    /// formula like any other. A prediction that quietly substituted
+    /// `msg.sender` for a zero deployer would be a plausible "helpful default"
+    /// and is ruled out here.
+    function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0)), expected);
+
+        // And it is not the caller's answer wearing a disguise.
+        assertTrue(
+            I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0))
+                != I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(this))
+        );
+    }
+
+    /// The FACTORY is in the address too — `address(this)`, read inside the
+    /// library. Two factories, everything else held equal, are two different
+    /// addresses, and each really deploys at its own. A pinned clone address
+    /// is only meaningful against a named factory.
+    function testCloneDeterministicFactoryScoped(bytes32 salt, bytes memory data) external {
+        TestCloneFactory otherFactory = new TestCloneFactory();
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedHere =
+            I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        address predictedThere = otherFactory.predictDeterministicAddress(address(implementation), salt, address(this));
+        assertTrue(predictedHere != predictedThere);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt), predictedHere);
+        assertEq(otherFactory.cloneDeterministic(address(implementation), data, salt), predictedThere);
+    }
+
+    /// The extremes of the salt space are ordinary salts. `bytes32(0)` and
+    /// `type(uint256).max` both predict, both deploy where predicted, and are
+    /// distinct from each other — the salt goes into a `keccak256` preimage, so
+    /// there is no edge to fall off, and this states that rather than leaving it
+    /// to a fuzzer that may never pick either.
+    function testCloneDeterministicExtremeSalts(bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedZero =
+            I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), bytes32(0), address(this));
+        address predictedMax = I_CLONE_FACTORY.predictDeterministicAddress(
+            address(implementation), bytes32(type(uint256).max), address(this)
+        );
+        assertTrue(predictedZero != predictedMax);
+
+        address childZero = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(0));
+        address childMax = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(type(uint256).max));
+
+        assertEq(childZero, predictedZero);
+        assertEq(childMax, predictedMax);
+        assertEq(TestCloneable(childZero).sData(), data);
+        assertEq(TestCloneable(childMax).sData(), data);
+    }
+
+    /// The prediction writes no state: called through a raw `STATICCALL` it
+    /// still answers, and answers the same thing the typed call does. The
+    /// library function is `view` and the compiler enforces that on the
+    /// delegating concrete, but nothing else in the suite exercises the
+    /// prediction at the EVM boundary where a state write would actually
+    /// revert.
+    function testCloneDeterministicPredictIsStaticCallable(address implementation, bytes32 salt, address deployer)
+        external
+        view
+    {
+        (bool ok, bytes memory ret) = address(I_CLONE_FACTORY)
+            .staticcall(abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddress, (implementation, salt, deployer)));
+        assertTrue(ok);
+        assertEq(
+            abi.decode(ret, (address)), I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer)
+        );
+    }
 }
