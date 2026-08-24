@@ -12,11 +12,11 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
-import {TestCloneableCallRecorder} from "test/src/concrete/TestCloneableCallRecorder.sol";
-import {TestCloneableFailure} from "test/src/concrete/TestCloneableFailure.sol";
-import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/src/concrete/TestCloneableRevert.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {TestCloneableCallRecorder} from "test/concrete/TestCloneableCallRecorder.sol";
+import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
+import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/concrete/TestCloneableRevert.sol";
 
 /// @title LibICloneableFactoryV4CloneDeterministicTest
 /// @notice Tests `LibICloneableFactoryV4.cloneDeterministic` /
