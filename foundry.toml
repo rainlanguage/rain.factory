@@ -16,6 +16,14 @@ cbor_metadata = false
 
 libs = ["dependencies"]
 
+# The interface half of this repo is a PUBLISHED ABI: downstream indexers and
+# soldeer consumers decode `NewClone` and call `initialize` by NAME, from the
+# compiled ABI. Parameter names, parameter order among same-typed parameters,
+# `indexed` flags and return types are all invisible to the EVM but visible to
+# those consumers, so the only place they can be pinned by a test is the
+# compiled artifact. Read-only access to `out` exists for exactly that.
+fs_permissions = [{ access = "read", path = "./out" }]
+
 [fuzz]
 runs = 2048
 
