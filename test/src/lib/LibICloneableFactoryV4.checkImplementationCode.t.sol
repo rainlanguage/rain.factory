@@ -38,6 +38,13 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.assume(uint160(implementation) > 0x0a);
         vm.assume(code.length > 0);
+        // EIP-3541 forbids deployed code beginning `0xEF`, and `vm.etch` enforces
+        // the EIP-7702 form of that: a `0xef01` prefix is rejected unless the code
+        // is exactly the 23-byte delegation designator. Such `code` cannot exist at
+        // an implementation address on a real chain and cannot be etched at one
+        // here, so it is excluded as unrepresentable input, not as a property of
+        // the code-size guard under test.
+        vm.assume(code[0] != 0xef);
         vm.etch(implementation, code);
         LibICloneableFactoryV4.checkImplementationCode(implementation);
     }
