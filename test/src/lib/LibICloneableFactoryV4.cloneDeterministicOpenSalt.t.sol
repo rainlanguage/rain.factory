@@ -16,9 +16,9 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
-import {TestCloneableFailure} from "test/src/concrete/TestCloneableFailure.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
 
 /// @title LibICloneableFactoryV4CloneDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV4.cloneDeterministicOpenSalt` /
@@ -370,5 +370,152 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+    }
+
+    /// The FACTORY is in the address even though the caller is not. Two
+    /// factories, same `(implementation, data, salt)`, are two different
+    /// addresses and each really deploys at its own. This is the exact limit of
+    /// "every account reaches the same address": every account reaches the same
+    /// address ON A GIVEN FACTORY, and the cross-network note on
+    /// `ICloneableFactoryV4` turns on precisely this — the factory has to be at
+    /// the same address on both chains.
+    function testCloneDeterministicOpenSaltFactoryScoped(bytes32 salt, bytes memory data) external {
+        TestCloneFactory otherFactory = new TestCloneFactory();
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedHere = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        address predictedThere = otherFactory.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        assertTrue(predictedHere != predictedThere);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt), predictedHere);
+        assertEq(otherFactory.cloneDeterministicOpenSalt(address(implementation), data, salt), predictedThere);
+    }
+
+    /// The IMPLEMENTATION is in the address, and by its ADDRESS rather than by
+    /// its code: two deploys of identical bytecode are two different
+    /// implementations as far as the derivation is concerned. This is the
+    /// mechanism behind the cross-network note — an implementation deployed by
+    /// an ordinary nonce-dependent `CREATE` on each chain lands at a different
+    /// address on each, and so does every clone of it.
+    function testCloneDeterministicOpenSaltImplementationIsByAddress(bytes32 salt, bytes memory data) external {
+        TestCloneable implementationA = new TestCloneable();
+        TestCloneable implementationB = new TestCloneable();
+
+        assertEq(address(implementationA).code, address(implementationB).code);
+        assertTrue(address(implementationA) != address(implementationB));
+
+        address predictedA = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementationA), data, salt);
+        address predictedB = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementationB), data, salt);
+        assertTrue(predictedA != predictedB);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementationA), data, salt), predictedA);
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementationB), data, salt), predictedB);
+    }
+
+    /// Empty `data` is explicitly supported — `ICloneableFactoryV4` says so
+    /// twice, and the registry-resolved shape it describes is expected to pass
+    /// nothing. End to end: it predicts, it deploys where predicted, it
+    /// initializes to empty, and it is a DIFFERENT address from any non-empty
+    /// data at the same salt, because `keccak256("")` is just another word in
+    /// the preimage.
+    function testCloneDeterministicOpenSaltEmptyData(bytes32 salt, bytes memory data) external {
+        vm.assume(data.length > 0);
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedEmpty = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), "", salt);
+        address childEmpty = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), "", salt);
+
+        assertEq(childEmpty, predictedEmpty);
+        assertEq(TestCloneable(childEmpty).sData(), "");
+        assertEq(TestCloneable(childEmpty).sData().length, 0);
+
+        assertTrue(
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt) != predictedEmpty
+        );
+    }
+
+    /// `data` enters the derivation BY HASH, so there is no length at which the
+    /// preimage stops being 96 bytes and no length at which the derivation
+    /// changes shape. Ten kilobytes of it behaves exactly like four bytes.
+    function testCloneDeterministicOpenSaltLargeData(bytes32 salt, bytes1 fill) external {
+        TestCloneable implementation = new TestCloneable();
+
+        bytes memory data = new bytes(10_000);
+        for (uint256 i = 0; i < data.length; ++i) {
+            data[i] = fill;
+        }
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(child, predicted);
+        assertEq(TestCloneable(child).sData(), data);
+
+        // One byte of difference anywhere in ten kilobytes is a different
+        // address: the commitment is to the whole of `data`, not a prefix.
+        data[9_999] = ~fill;
+        assertTrue(
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt) != predicted
+        );
+    }
+
+    /// ORDER INDEPENDENCE. Two open-salt deploys land at the same two addresses
+    /// whichever order they happen in, and neither consumes the other's
+    /// address. The factory holds no state — no nonce, no counter — so nothing
+    /// about a deploy can depend on what was deployed before it. State is
+    /// snapshotted and rolled back so both orderings genuinely start from the
+    /// same state.
+    function testCloneDeterministicOpenSaltOrderIndependent(bytes32 saltA, bytes32 saltB, bytes memory data) external {
+        vm.assume(saltA != saltB);
+        TestCloneable implementation = new TestCloneable();
+
+        uint256 snapshot = vm.snapshotState();
+
+        address firstA = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, saltA);
+        address firstB = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, saltB);
+
+        vm.revertToState(snapshot);
+
+        address secondB = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, saltB);
+        address secondA = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, saltA);
+
+        assertEq(firstA, secondA);
+        assertEq(firstB, secondB);
+        assertTrue(firstA != firstB);
+    }
+
+    /// The prediction writes no state: called through a raw `STATICCALL` it
+    /// still answers, and answers the same thing the typed call does.
+    function testCloneDeterministicOpenSaltPredictIsStaticCallable(
+        address implementation,
+        bytes memory data,
+        bytes32 salt
+    ) external view {
+        (bool ok, bytes memory ret) = address(I_CLONE_FACTORY)
+            .staticcall(
+                abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt, (implementation, data, salt))
+            );
+        assertTrue(ok);
+        assertEq(
+            abi.decode(ret, (address)), I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt)
+        );
+    }
+
+    /// The extremes of the salt space are ordinary salts on this path too.
+    function testCloneDeterministicOpenSaltExtremeSalts(bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedZero =
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, bytes32(0));
+        address predictedMax = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(
+            address(implementation), data, bytes32(type(uint256).max)
+        );
+        assertTrue(predictedZero != predictedMax);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, bytes32(0)), predictedZero);
+        assertEq(
+            I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, bytes32(type(uint256).max)),
+            predictedMax
+        );
     }
 }
