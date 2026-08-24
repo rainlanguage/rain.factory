@@ -38,6 +38,13 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.assume(uint160(implementation) > 0x0a);
         vm.assume(code.length > 0);
+        // `vm.etch` refuses any code whose first byte is `0xef`: `0xef00` is
+        // the EOF magic and `0xef01` the EIP-7702 delegation magic, and the
+        // cheatcode parses both rather than installing them verbatim — an
+        // `0xef01…` blob that is not exactly the 23-byte designator is
+        // rejected by the cheatcode, not by the guard under test, so a fuzz
+        // run that happened to draw one failed for a harness reason.
+        vm.assume(code[0] != bytes1(0xef));
         vm.etch(implementation, code);
         LibICloneableFactoryV4.checkImplementationCode(implementation);
     }
