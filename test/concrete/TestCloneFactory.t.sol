@@ -6,8 +6,8 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 
 import {ICloneableFactoryV4} from "src/interface/ICloneableFactoryV4.sol";
 import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/src/concrete/TestCloneable.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
 
 /// @title TestCloneFactoryTest
 /// @notice `TestCloneFactory` is the executable stand-in for the real

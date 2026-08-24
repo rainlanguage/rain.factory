@@ -7,10 +7,10 @@ import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {ICloneableV1} from "src/interface/deprecated/ICloneableV1.sol";
 import {LibPublishedAbi} from "test/src/lib/LibPublishedAbi.sol";
-import {TestCloneFactory} from "test/src/concrete/TestCloneFactory.sol";
-import {TestCloneableConformant} from "test/src/concrete/TestCloneableConformant.sol";
-import {TestCloneableEmitter} from "test/src/concrete/TestCloneableEmitter.sol";
-import {TestCloneableReverter} from "test/src/concrete/TestCloneableReverter.sol";
+import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {TestCloneableConformant} from "test/concrete/TestCloneableConformant.sol";
+import {TestCloneableEmitter} from "test/concrete/TestCloneableEmitter.sol";
+import {TestCloneableReverter} from "test/concrete/TestCloneableReverter.sol";
 
 /// @title ICloneableV2DeclarationTest
 /// @notice Pins the PUBLISHED declaration of `ICloneableV2` and makes its two
