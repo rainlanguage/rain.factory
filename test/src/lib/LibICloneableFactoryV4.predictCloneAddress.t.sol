@@ -55,4 +55,22 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         }
         assertEq(child, predicted);
     }
+
+    /// Boundary derived salts are supported, distinct cases: `bytes32(0)` and
+    /// `bytes32(type(uint256).max)` enter the `CREATE2` preimage exactly as any
+    /// other salt does, with no special-casing at either end. Pinned
+    /// deliberately rather than left to the fuzzer — a mutation special-casing
+    /// the maximum salt survives the whole suite otherwise — and checked
+    /// against OZ `Clones`, so the expectation is a foreign implementation of
+    /// the standard rather than this library's own arithmetic restated.
+    function testPredictCloneAddressBoundarySalts(address factory, address implementation) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(0)),
+            Clones.predictDeterministicAddress(implementation, bytes32(0), factory)
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(type(uint256).max)),
+            Clones.predictDeterministicAddress(implementation, bytes32(type(uint256).max), factory)
+        );
+    }
 }
