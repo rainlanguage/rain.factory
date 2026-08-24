@@ -18,7 +18,7 @@ import {LibPublishedAbi} from "test/lib/LibPublishedAbi.sol";
 /// redeployed.
 contract ICloneableFactoryV1DeclarationTest is Test {
     /// `ICloneableFactoryV1`: the three-parameter `NewClone` and `clone`.
-    function testAbiPinned() external view {
+    function testICloneableFactoryV1AbiPinned() external view {
         assertEq(ICloneableFactoryV1.NewClone.selector, keccak256("NewClone(address,address,address)"));
         assertEq(ICloneableFactoryV1.clone.selector, bytes4(keccak256("clone(address,bytes)")));
 

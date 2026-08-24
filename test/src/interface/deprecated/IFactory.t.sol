@@ -21,7 +21,7 @@ contract IFactoryDeclarationTest is Test {
     /// `bool` is load-bearing — the interface calls it CRITICAL to the
     /// security guarantees of any implementation — and a return type is not
     /// part of a selector, so only the ABI pins it.
-    function testAbiPinned() external view {
+    function testIFactoryAbiPinned() external view {
         assertEq(IFactory.NewChild.selector, keccak256("NewChild(address,address)"));
         assertEq(IFactory.Implementation.selector, keccak256("Implementation(address,address)"));
         assertEq(IFactory.createChild.selector, bytes4(keccak256("createChild(bytes)")));
