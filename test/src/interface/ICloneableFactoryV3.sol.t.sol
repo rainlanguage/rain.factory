@@ -27,9 +27,7 @@ contract ICloneableFactoryV3DeclarationTest is Test {
     /// is what an indexer subscribes to, and it is deliberately restated from
     /// the literal string rather than read back off the event.
     function testNewCloneTopicZeroPinned() external pure {
-        assertEq(
-            ICloneableFactoryV3.NewClone.selector, keccak256("NewClone(address,address,address,bytes32,bytes)")
-        );
+        assertEq(ICloneableFactoryV3.NewClone.selector, keccak256("NewClone(address,address,address,bytes32,bytes)"));
     }
 
     /// `ICloneableFactoryV3.NewClone` and `ICloneableFactoryV2.NewClone` share
@@ -44,7 +42,10 @@ contract ICloneableFactoryV3DeclarationTest is Test {
 
     /// The two function selectors of the V3 surface.
     function testFunctionSelectorsPinned() external pure {
-        assertEq(ICloneableFactoryV3.cloneDeterministic.selector, bytes4(keccak256("cloneDeterministic(address,bytes,bytes32)")));
+        assertEq(
+            ICloneableFactoryV3.cloneDeterministic.selector,
+            bytes4(keccak256("cloneDeterministic(address,bytes,bytes32)"))
+        );
         assertEq(
             ICloneableFactoryV3.predictDeterministicAddress.selector,
             bytes4(keccak256("predictDeterministicAddress(address,bytes32,address)"))
@@ -133,7 +134,9 @@ contract ICloneableFactoryV3DeclarationTest is Test {
         // The two derivations put the clone at different addresses, so the
         // blobs differ in exactly that one field and nowhere else.
         assertTrue(namespacedChild != openChild);
-        assertEq(namespacedLogs[0].data, abi.encode(address(this), address(implementation), namespacedChild, salt, data));
+        assertEq(
+            namespacedLogs[0].data, abi.encode(address(this), address(implementation), namespacedChild, salt, data)
+        );
         assertEq(openLogs[0].data, abi.encode(address(this), address(implementation), openChild, salt, data));
     }
 }

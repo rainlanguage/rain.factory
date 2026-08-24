@@ -38,6 +38,14 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.assume(uint160(implementation) > 0x0a);
         vm.assume(code.length > 0);
+        // EIP-3541 forbids DEPLOYING any code whose first byte is 0xEF, so no
+        // implementation on chain can have such code and `vm.etch` refuses to
+        // fabricate it (it reads a leading 0xEF as an EIP-7702 delegation
+        // designator and demands 23 bytes). The exclusion narrows the fuzz
+        // domain to code that could actually exist, which is what the guard is
+        // about; it does not weaken the property, since the guard only ever
+        // looks at code LENGTH.
+        vm.assume(code[0] != 0xEF);
         vm.etch(implementation, code);
         LibICloneableFactoryV4.checkImplementationCode(implementation);
     }

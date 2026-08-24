@@ -77,22 +77,21 @@ contract TestCloneFactoryTest is Test {
         external
         view
     {
-        (bool okNamespaced, bytes memory namespaced) = address(I_CLONE_FACTORY).staticcall(
-            abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddress, (implementation, salt, deployer))
-        );
+        (bool okNamespaced, bytes memory namespaced) = address(I_CLONE_FACTORY)
+            .staticcall(abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddress, (implementation, salt, deployer)));
         assertTrue(okNamespaced, "predictDeterministicAddress is not static");
         assertEq(
             abi.decode(namespaced, (address)),
             I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer)
         );
 
-        (bool okOpen, bytes memory open) = address(I_CLONE_FACTORY).staticcall(
-            abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt, (implementation, data, salt))
-        );
+        (bool okOpen, bytes memory open) = address(I_CLONE_FACTORY)
+            .staticcall(
+                abi.encodeCall(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt, (implementation, data, salt))
+            );
         assertTrue(okOpen, "predictDeterministicAddressOpenSalt is not static");
         assertEq(
-            abi.decode(open, (address)),
-            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt)
+            abi.decode(open, (address)), I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt)
         );
     }
 
@@ -117,9 +116,7 @@ contract TestCloneFactoryTest is Test {
         assertEq(
             open,
             LibICloneableFactoryV4.predictCloneAddress(
-                address(I_CLONE_FACTORY),
-                address(implementation),
-                LibICloneableFactoryV4.effectiveOpenSalt(salt, data)
+                address(I_CLONE_FACTORY), address(implementation), LibICloneableFactoryV4.effectiveOpenSalt(salt, data)
             )
         );
     }
