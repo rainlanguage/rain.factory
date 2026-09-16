@@ -41,7 +41,7 @@ contract TestCloneableObserved is ICloneableV2 {
 
     /// @inheritdoc ICloneableV2
     function initialize(bytes memory data) external returns (bytes32) {
-        I_OBSERVER.observe(address(this));
+        I_OBSERVER.observe();
         sInitialized = true;
         sData = data;
         return I_RESULT;
