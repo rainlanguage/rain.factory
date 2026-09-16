@@ -8,6 +8,7 @@ import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "src/interface/ICloneableFactoryV4.sol";
 import {
+    CloneAddressOccupied,
     CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
@@ -126,15 +127,18 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(TestCloneable(childB).sData(), dataB);
     }
 
-    /// A second deploy at an already-taken `(deployer, salt)` reverts with the
-    /// library's own typed error: a caller can never mistake an
-    /// already-initialized contract for their own fresh deploy.
+    /// A second deploy at an already-taken `(deployer, salt)` reverts
+    /// `CloneAddressOccupied` carrying the occupied address, which is exactly
+    /// what `predictDeterministicAddress` returns for the same inputs: a caller
+    /// can never mistake an already-initialized contract for their own fresh
+    /// deploy, and can tell an occupied address from a failed create by type.
     function testCloneDeterministicSecondDeployReverts(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
 
-        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
 
         // The first deploy's state is untouched by the failed second one.
@@ -142,7 +146,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
     }
 
     /// A second deploy at an already-taken `(deployer, salt)` reverts
-    /// `CloneDeploymentFailed` even with DIFFERENT `data`, because `data` is
+    /// `CloneAddressOccupied` even with DIFFERENT `data`, because `data` is
     /// not in the namespaced derivation and so cannot move the address. The
     /// occupant at the predicted address is the FIRST deploy's clone,
     /// initialized with the first deploy's bytes, not the bytes the reverting
@@ -158,10 +162,28 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataA, salt);
         assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
 
-        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataB, salt);
 
         assertEq(TestCloneable(child).sData(), dataA);
+    }
+
+    /// An address that holds no code but has a nonzero nonce passes the
+    /// occupancy check and then fails the `CREATE2` itself, so the residual
+    /// `CloneDeploymentFailed` is what surfaces, and the address stays
+    /// codeless: no clone was deployed, so none could have been initialized.
+    function testCloneDeterministicNonceOnlyCollisionReverts(bytes32 salt, bytes memory data, uint64 nonce) external {
+        vm.assume(nonce != 0);
+        TestCloneable implementation = new TestCloneable();
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        assertEq(predicted.code.length, 0);
+        vm.setNonce(predicted, nonce);
+
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+
+        assertEq(predicted.code.length, 0);
     }
 
     /// `NewClone` is emitted with the caller, implementation, child, salt and

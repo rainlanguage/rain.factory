@@ -12,6 +12,7 @@ import {
 } from "src/interface/ICloneableFactoryV4.sol";
 import {
     LibICloneableFactoryV4,
+    CloneAddressOccupied,
     CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
@@ -297,14 +298,16 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         assertTrue(child1 != child2);
     }
 
-    /// A second deploy at an already-taken open salt REVERTS with the
-    /// library's own typed error. Since `data` is in the derivation, repeating
-    /// the whole `(implementation, data, salt)` is now the ONLY way to aim at
-    /// an address somebody else already took, and even that does not silently
-    /// return the existing clone: a caller can never mistake an
-    /// already-initialized contract for their own fresh deploy. What the
-    /// reverting caller would have deployed is byte-identical to what is
-    /// already there, so the loss is the gas and nothing else.
+    /// A second deploy at an already-taken open salt reverts
+    /// `CloneAddressOccupied` carrying the occupied address, which is exactly
+    /// what `predictDeterministicAddressOpenSalt` returns for the same inputs.
+    /// Since `data` is in the derivation, repeating the whole
+    /// `(implementation, data, salt)` is the ONLY way to aim at an address
+    /// somebody else already took, and even that does not silently return the
+    /// existing clone: a caller can never mistake an already-initialized
+    /// contract for their own fresh deploy. What the reverting caller would
+    /// have deployed is byte-identical to what is already there, so the error
+    /// type tells them the idempotent-deploy case apart from a failed create.
     function testCloneDeterministicOpenSaltSecondDeployReverts(
         bytes32 salt,
         bytes memory data,
@@ -316,13 +319,34 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
 
         vm.prank(alice);
         address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt));
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
 
         // The first deploy's state is untouched by the failed second one.
         assertEq(TestCloneable(child).sData(), data);
+    }
+
+    /// An address that holds no code but has a nonzero nonce passes the
+    /// occupancy check and then fails the `CREATE2` itself, so the residual
+    /// `CloneDeploymentFailed` is what surfaces, and the address stays
+    /// codeless: no clone was deployed, so none could have been initialized.
+    function testCloneDeterministicOpenSaltNonceOnlyCollisionReverts(bytes32 salt, bytes memory data, uint64 nonce)
+        external
+    {
+        vm.assume(nonce != 0);
+        TestCloneable implementation = new TestCloneable();
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        assertEq(predicted.code.length, 0);
+        vm.setNonce(predicted, nonce);
+
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(predicted.code.length, 0);
     }
 
     /// `NewClone` is emitted with the caller, implementation, child, salt and

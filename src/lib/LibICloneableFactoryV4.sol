@@ -10,21 +10,27 @@ import {
 } from "../interface/ICloneableFactoryV4.sol";
 
 /// Thrown when an implementation has zero code size which is always a mistake:
-/// an EIP-1167 proxy of a codeless implementation delegates every call —
-/// `initialize` included — to nothing.
+/// an EIP-1167 proxy of a codeless implementation delegates every call â
+/// `initialize` included â to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when the `CREATE2` deploy of the clone itself fails: the effective
-/// salt is already taken (the address has code or a nonzero nonce) or the
-/// create ran out of gas. Either way the caller gets a revert, never a handback
-/// of a contract they did not deploy: nothing is initialized and no `NewClone`
-/// is emitted, so an already-initialized contract can never be mistaken for a
-/// fresh deploy. What an occupant was initialized with depends on the
+/// Thrown when the address the clone would deploy to already has code, so the
+/// `CREATE2` there can only fail. What the occupant is depends on the
 /// derivation. The open salt hashes `data`, so the occupant is the exact clone
-/// asked for. The namespaced salt does not, so the occupant is the clone the
-/// same `deployer` deployed at the same `salt` earlier, initialized with
-/// whatever `data` THAT call passed, which need not be what this call passed.
-/// See `ICloneableFactoryV4` for what each derivation commits to.
+/// asked for, initialized with the bytes asked for: the idempotent-deploy case.
+/// The namespaced salt does not, so the occupant is the clone the same
+/// `deployer` deployed at the same `salt` earlier, initialized with whatever
+/// `data` THAT call passed, which need not be what this call passed. See
+/// `ICloneableFactoryV4` for what each derivation commits to.
+/// @param clone The occupied address: what the matching `predict...` function
+/// returns for this call's inputs.
+error CloneAddressOccupied(address clone);
+
+/// Thrown when the `CREATE2` deploy of the clone fails at an address that had
+/// no code: the create ran out of gas, or the address collides on a nonzero
+/// nonce (or nonempty storage) while holding no code. An occupied address is
+/// caught before the create and reverts `CloneAddressOccupied` instead, so an
+/// already-initialized clone never surfaces as this error.
 error CloneDeploymentFailed();
 
 /// Thrown when initialization fails: `ICloneableV2.initialize` on the fresh
@@ -57,12 +63,12 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// truth and the derivation cannot drift from the spec. The entry points below
 /// them consume the derivations from here and nowhere else. See
 /// `ICloneableFactoryV4` for what each salt commits to and why the two images
-/// are disjoint — its NatSpec, with the atomic clone-and-initialize and the
+/// are disjoint â its NatSpec, with the atomic clone-and-initialize and the
 /// `NewClone` event carrying the RAW caller salt, is the spec for everything
 /// here.
 ///
-/// `msg.sender` is read INSIDE this library — `cloneDeterministic` namespaces
-/// by it and `NewClone` reports it — and the internal functions execute in the
+/// `msg.sender` is read INSIDE this library â `cloneDeterministic` namespaces
+/// by it and `NewClone` reports it â and the internal functions execute in the
 /// factory's own call context, so a delegating concrete cannot get either
 /// wrong: there is no sender parameter to misroute `tx.origin` into. Likewise
 /// the predictions read `address(this)`, the factory the library is inlined
@@ -70,8 +76,8 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
-    /// `salt` behind the namespaced domain tag and `deployer`, so the salt — and
-    /// therefore the clone address — is namespaced to the account that deploys.
+    /// `salt` behind the namespaced domain tag and `deployer`, so the salt â and
+    /// therefore the clone address â is namespaced to the account that deploys.
     /// @param deployer The account whose namespace the salt belongs to (the
     /// `msg.sender` of `cloneDeterministic`, or the `deployer` argument of
     /// `predictDeterministicAddress`).
@@ -95,8 +101,8 @@ library LibICloneableFactoryV4 {
     }
 
     /// The canonical 55-byte EIP-1167 creation code for `implementation`.
-    /// Constructed from the standard's bytes directly so this library — and
-    /// with it the published factory — depends on no external cloning code;
+    /// Constructed from the standard's bytes directly so this library â and
+    /// with it the published factory â depends on no external cloning code;
     /// the tests pin it byte for byte against OZ `Clones` as a foreign
     /// implementation of the same standard.
     /// @param implementation The contract the deployed proxy will delegate to.
@@ -140,9 +146,10 @@ library LibICloneableFactoryV4 {
     }
 
     /// The shared tail of both clone entry points: guard the implementation,
+    /// revert `CloneAddressOccupied` if the predicted address already has code,
     /// `CREATE2` the EIP-1167 clone at `derivedSalt`, emit `NewClone` with
     /// the RAW caller salt, then run the mandatory `ICloneableV2.initialize`
-    /// check — atomically, with nothing else called on the proxy first, and
+    /// check â atomically, with nothing else called on the proxy first, and
     /// the clone only considered created if `initialize` returns
     /// `ICLONEABLE_V2_SUCCESS`, per the shared spec on
     /// `ICloneableFactoryV3.cloneDeterministic`.
@@ -158,6 +165,10 @@ library LibICloneableFactoryV4 {
         returns (address)
     {
         checkImplementationCode(implementation);
+        address predicted = predictCloneAddress(address(this), implementation, derivedSalt);
+        if (predicted.code.length != 0) {
+            revert CloneAddressOccupied(predicted);
+        }
         bytes memory creationCode = cloneCreationCode(implementation);
         address child;
         assembly ("memory-safe") {
@@ -176,8 +187,8 @@ library LibICloneableFactoryV4 {
     }
 
     /// `ICloneableFactoryV3.cloneDeterministic`, whole: `effectiveSalt` over
-    /// `msg.sender` — read here, not passed, so a delegating concrete cannot
-    /// namespace by anything else — then the shared clone-initialize-verify
+    /// `msg.sender` â read here, not passed, so a delegating concrete cannot
+    /// namespace by anything else â then the shared clone-initialize-verify
     /// flow.
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`.
@@ -203,7 +214,7 @@ library LibICloneableFactoryV4 {
     }
 
     /// `ICloneableFactoryV4.cloneDeterministicOpenSalt`, whole:
-    /// `effectiveOpenSalt` — no caller-derived value hashed in — then the
+    /// `effectiveOpenSalt` â no caller-derived value hashed in â then the
     /// shared clone-initialize-verify flow.
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`, and part of the address derivation.
