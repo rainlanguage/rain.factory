@@ -7,8 +7,16 @@ pragma solidity ^0.8.18;
 /// and emit events so that indexers can discover it. `ICloneableFactoryV2` knows
 /// nothing about the contracts that it clones, instead relying only on the
 /// minimal `ICloneableV2` interface being implemented on the reference bytecode.
+///
+/// Superseded by `ICloneableFactoryV3`, which deploys only via `CREATE2` and
+/// has no `clone`. Published for consumers of factories that implement this
+/// interface; nothing in this package implements it.
 interface ICloneableFactoryV2 {
-    /// Emitted upon each `clone`.
+    /// Emitted upon each `clone`. Same signature, and so the same topic, as
+    /// `ICloneableFactoryV1.NewClone`: a log with this topic does not say which
+    /// of the two interfaces the emitting factory implements. Shares only its
+    /// NAME with `ICloneableFactoryV3.NewClone`, whose signature and topic
+    /// differ.
     /// @param sender The `msg.sender` that called `clone`.
     /// @param implementation The reference bytecode to clone as a proxy.
     /// @param clone The address of the new proxy contract.

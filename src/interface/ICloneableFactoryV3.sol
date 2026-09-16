@@ -23,6 +23,12 @@ interface ICloneableFactoryV3 {
     /// reading calldata or relying on the implementation to emit its own init
     /// event: the clone address is a pure function of `(implementation, sender,
     /// salt)`, and the clone's initial state is a function of `data`.
+    ///
+    /// Shares its name with `ICloneableFactoryV2.NewClone` but not its signature,
+    /// so the two have distinct topics. A factory implementing both interfaces
+    /// carries both as overloads in its ABI, so tooling MUST select this event by
+    /// its full signature `NewClone(address,address,address,bytes32,bytes)` rather
+    /// than by name.
     /// @param sender The `msg.sender` that called `cloneDeterministic`.
     /// @param implementation The reference bytecode cloned as a proxy.
     /// @param clone The address of the new proxy contract.

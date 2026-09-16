@@ -8,7 +8,9 @@ pragma solidity ^0.8.18;
 /// nothing about the contracts that it clones, instead relying only on the
 /// minimal `ICloneableV1` interface being implemented on the reference bytecode.
 interface ICloneableFactoryV1 {
-    /// Emitted upon each `clone`.
+    /// Emitted upon each `clone`. Same signature, and so the same topic, as
+    /// `ICloneableFactoryV2.NewClone`: a log with this topic does not say which
+    /// of the two interfaces the emitting factory implements.
     /// @param sender The `msg.sender` that called `clone`.
     /// @param implementation The reference bytecode to clone as a proxy.
     /// @param clone The address of the new proxy contract.
