@@ -345,6 +345,48 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
     }
 
+    /// The emitted `clone` is recomputable from the event's own fields under
+    /// the open derivation — `(implementation, salt, data)` and the emitting
+    /// factory, recomputed here through OZ under an independently constructed
+    /// effective salt — and `sender` plays no part: reading the same event as
+    /// a `cloneDeterministic` emission, `(implementation, sender, salt)`
+    /// namespaced, lands somewhere else, because the two images are disjoint.
+    /// The deploy is made from a foreign account so the `sender` field is a
+    /// value an indexer would actually see, not this test contract.
+    function testCloneDeterministicOpenSaltEventAddressIndependentOfSender(
+        bytes32 salt,
+        bytes memory data,
+        address alice
+    ) external {
+        TestCloneable implementation = new TestCloneable();
+
+        vm.recordLogs();
+        vm.prank(alice);
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertEq(entries.length, 1);
+        (address sender, address emittedImplementation, address clone, bytes32 emittedSalt, bytes memory emittedData) =
+            abi.decode(entries[0].data, (address, address, address, bytes32, bytes));
+        assertEq(sender, alice);
+
+        bytes32 openEffectiveSalt =
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, emittedSalt, keccak256(emittedData)));
+        assertEq(
+            clone,
+            Clones.predictDeterministicAddress(emittedImplementation, openEffectiveSalt, address(I_CLONE_FACTORY))
+        );
+
+        bytes32 namespacedEffectiveSalt =
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, sender, emittedSalt));
+        assertTrue(
+            clone
+                != Clones.predictDeterministicAddress(
+                    emittedImplementation, namespacedEffectiveSalt, address(I_CLONE_FACTORY)
+                )
+        );
+    }
+
     /// An implementation that initializes to a non-success code reverts
     /// `InitializationFailed`, so clone-and-initialize stays atomic and the
     /// address is left free rather than occupied by an uninitialized clone.

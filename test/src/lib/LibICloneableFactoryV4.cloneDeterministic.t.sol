@@ -6,7 +6,10 @@ import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
-import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "src/interface/ICloneableFactoryV4.sol";
+import {
+    ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
+    ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
+} from "src/interface/ICloneableFactoryV4.sol";
 import {
     CloneDeploymentFailed,
     InitializationFailed,
@@ -155,6 +158,47 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
         assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
         assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+    }
+
+    /// The emitted `clone` is recomputable from the event's own fields under
+    /// the namespaced derivation — `(implementation, sender, salt)` and the
+    /// emitting factory, recomputed here through OZ under an independently
+    /// constructed effective salt — and `data` plays no part: reading the same
+    /// event as a `cloneDeterministicOpenSalt` emission, `(implementation,
+    /// salt, data)` under the open tag, lands somewhere else, because the two
+    /// images are disjoint. The deploy is made from a foreign account so the
+    /// `sender` field is a value an indexer would actually see, not this test
+    /// contract.
+    function testCloneDeterministicEventAddressDependsOnSender(bytes32 salt, bytes memory data, address alice)
+        external
+    {
+        TestCloneable implementation = new TestCloneable();
+
+        vm.recordLogs();
+        vm.prank(alice);
+        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertEq(entries.length, 1);
+        (address sender, address emittedImplementation, address clone, bytes32 emittedSalt, bytes memory emittedData) =
+            abi.decode(entries[0].data, (address, address, address, bytes32, bytes));
+        assertEq(sender, alice);
+
+        bytes32 namespacedEffectiveSalt =
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, sender, emittedSalt));
+        assertEq(
+            clone,
+            Clones.predictDeterministicAddress(emittedImplementation, namespacedEffectiveSalt, address(I_CLONE_FACTORY))
+        );
+
+        bytes32 openEffectiveSalt =
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, emittedSalt, keccak256(emittedData)));
+        assertTrue(
+            clone
+                != Clones.predictDeterministicAddress(
+                    emittedImplementation, openEffectiveSalt, address(I_CLONE_FACTORY)
+                )
+        );
     }
 
     /// An implementation that initializes to a non-success code reverts

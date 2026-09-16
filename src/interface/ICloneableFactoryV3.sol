@@ -18,15 +18,29 @@ pragma solidity ^0.8.18;
 /// deploy), a `cloneDeterministic` address is identical on every chain for the
 /// same caller, implementation and salt.
 interface ICloneableFactoryV3 {
-    /// Emitted upon each `cloneDeterministic`. Carries the full deterministic
-    /// deploy so an indexer can reconstruct it from the event alone — without
-    /// reading calldata or relying on the implementation to emit its own init
-    /// event: the clone address is a pure function of `(implementation, sender,
-    /// salt)`, and the clone's initial state is a function of `data`.
-    /// @param sender The `msg.sender` that called `cloneDeterministic`.
+    /// Emitted once per clone deploy, by `cloneDeterministic` and by every
+    /// other clone entry point a factory implementing this interface offers.
+    /// Carries the full deterministic deploy so an indexer can reconstruct it
+    /// from the event alone — without reading calldata or relying on the
+    /// implementation to emit its own init event: every caller-supplied input
+    /// is here, the clone address is a pure function of some subset of them
+    /// plus the emitting factory, and the clone's initial state is a function
+    /// of `data`.
+    ///
+    /// WHICH subset is a property of the entry point that emitted, not of the
+    /// event. From `cloneDeterministic` the address is a pure function of
+    /// `(implementation, sender, salt)` and `data` plays no part in it. A
+    /// factory that also implements `ICloneableFactoryV4` emits this same event
+    /// from `cloneDeterministicOpenSalt`, where the address is a pure function
+    /// of `(implementation, salt, data)` and `sender` is only whoever paid for
+    /// the deploy. Recomputing the address from this event therefore means
+    /// first knowing which entry point emitted it — see the events note on
+    /// `ICloneableFactoryV4.cloneDeterministicOpenSalt`.
+    /// @param sender The `msg.sender` of the emitting call.
     /// @param implementation The reference bytecode cloned as a proxy.
     /// @param clone The address of the new proxy contract.
-    /// @param salt The caller-supplied salt (before `msg.sender` namespacing).
+    /// @param salt The caller-supplied salt, raw: never the effective `CREATE2`
+    /// salt, whatever the emitting entry point derived that from.
     /// @param data The initialization data forwarded to `ICloneableV2.initialize`.
     event NewClone(address sender, address implementation, address clone, bytes32 salt, bytes data);
 
