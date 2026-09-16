@@ -19,6 +19,8 @@ import {
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
 import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
+import {TestCloneableObserved} from "test/concrete/TestCloneableObserved.sol";
+import {TestInitializeObserver} from "test/concrete/TestInitializeObserver.sol";
 
 /// @title LibICloneableFactoryV4CloneDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV4.cloneDeterministicOpenSalt` /
@@ -71,6 +73,59 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
             abi.encodePacked(hex"363d3d373d3d3d363d73", address(implementation), hex"5af43d82803e903d91602b57fd5bf3")
         );
         assertEq(TestCloneable(child).sData(), data);
+    }
+
+    /// The interface's "non-zero code means the clone asked for, initialized
+    /// with the bytes asked for" is an end-of-transaction claim, and the window
+    /// it excludes is real: from the factory's `CREATE2` until `initialize`
+    /// returns, the predicted address holds the full 45-byte EIP-1167 runtime
+    /// and none of the state `initialize` sets. A third party that
+    /// `initialize` reaches sees exactly that — the pinned address, code of
+    /// the deployed length, `sInitialized` false and `sData` empty — and the
+    /// same address read after the transaction is the initialized clone.
+    function testCloneDeterministicOpenSaltCodeBeforeStateDuringInitialize(bytes32 salt, bytes memory data) external {
+        TestInitializeObserver observer = new TestInitializeObserver();
+        TestCloneableObserved implementation = new TestCloneableObserved(observer, keccak256("ICloneableV2.initialize"));
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        assertEq(child, predicted);
+
+        // Inside the window: code without state.
+        assertEq(observer.sObserved(), predicted);
+        assertEq(observer.sCodeLength(), 45);
+        assertEq(observer.sInitialized(), false);
+        assertEq(observer.sData(), "");
+
+        // After the transaction: the same code, now with the state.
+        assertEq(child.code.length, 45);
+        assertEq(TestCloneableObserved(child).sInitialized(), true);
+        assertEq(TestCloneableObserved(child).sData(), data);
+    }
+
+    /// What a third party writes down from inside the window persists only if
+    /// `initialize` then succeeds. When it does not, the factory reverts the
+    /// deploying transaction and the observer's record goes with it: the
+    /// address is left without code AND nobody durably saw code there. So a
+    /// durable "there is code at the predicted address", from any vantage,
+    /// is always paired with the initialized clone.
+    function testCloneDeterministicOpenSaltObservationRevertsWithFailedInitialize(
+        bytes32 notSuccess,
+        bytes32 salt,
+        bytes memory data
+    ) external {
+        vm.assume(notSuccess != ICLONEABLE_V2_SUCCESS);
+        TestInitializeObserver observer = new TestInitializeObserver();
+        TestCloneableObserved implementation = new TestCloneableObserved(observer, notSuccess);
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+
+        vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(predicted.code.length, 0);
+        assertEq(observer.sObserved(), address(0));
+        assertEq(observer.sCodeLength(), 0);
     }
 
     /// THE POINT OF THIS VARIANT. The same `(implementation, data, salt)` from
