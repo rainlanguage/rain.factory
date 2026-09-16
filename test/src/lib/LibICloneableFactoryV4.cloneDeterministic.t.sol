@@ -141,6 +141,29 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(TestCloneable(child).sData(), data);
     }
 
+    /// A second deploy at an already-taken `(deployer, salt)` reverts
+    /// `CloneDeploymentFailed` even with DIFFERENT `data`, because `data` is
+    /// not in the namespaced derivation and so cannot move the address. The
+    /// occupant at the predicted address is the FIRST deploy's clone,
+    /// initialized with the first deploy's bytes, not the bytes the reverting
+    /// call asked for; the failed deploy initializes nothing.
+    function testCloneDeterministicSecondDeployDifferentDataReverts(
+        bytes32 salt,
+        bytes memory dataA,
+        bytes memory dataB
+    ) external {
+        vm.assume(keccak256(dataA) != keccak256(dataB));
+        TestCloneable implementation = new TestCloneable();
+
+        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataA, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
+
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataB, salt);
+
+        assertEq(TestCloneable(child).sData(), dataA);
+    }
+
     /// `NewClone` is emitted with the caller, implementation, child, salt and
     /// data — the full deterministic deploy, reconstructable from the event
     /// alone. The salt is the RAW caller salt, not the effective one.

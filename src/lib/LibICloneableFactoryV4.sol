@@ -14,11 +14,17 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when the `CREATE2` deploy of the clone itself fails. With the tiny
-/// fixed EIP-1167 initcode the only realistic cause is that the effective salt
-/// is already taken: the exact clone asked for is already at the address, so
-/// the caller can never mistake an already-initialized contract for their own
-/// fresh deploy.
+/// Thrown when the `CREATE2` deploy of the clone itself fails: the effective
+/// salt is already taken (the address has code or a nonzero nonce) or the
+/// create ran out of gas. Either way the caller gets a revert, never a handback
+/// of a contract they did not deploy: nothing is initialized and no `NewClone`
+/// is emitted, so an already-initialized contract can never be mistaken for a
+/// fresh deploy. What an occupant was initialized with depends on the
+/// derivation. The open salt hashes `data`, so the occupant is the exact clone
+/// asked for. The namespaced salt does not, so the occupant is the clone the
+/// same `deployer` deployed at the same `salt` earlier, initialized with
+/// whatever `data` THAT call passed, which need not be what this call passed.
+/// See `ICloneableFactoryV4` for what each derivation commits to.
 error CloneDeploymentFailed();
 
 /// Thrown when initialization fails: `ICloneableV2.initialize` on the fresh
