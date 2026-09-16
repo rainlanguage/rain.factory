@@ -32,6 +32,33 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         I_CLONE_FACTORY = new TestCloneFactory();
     }
 
+    /// EIP-1014 over the EIP-1167 creation code, both written out literally
+    /// around `implementation`, for a `CREATE2` from `I_CLONE_FACTORY` at
+    /// `effectiveSalt`. The oracle for where the implementation address sits
+    /// in the derivation.
+    function eip1014CloneAddress(address implementation, bytes32 effectiveSalt) internal view returns (address) {
+        return address(
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            hex"ff",
+                            address(I_CLONE_FACTORY),
+                            effectiveSalt,
+                            keccak256(
+                                abi.encodePacked(
+                                    hex"3d602d80600a3d3981f3363d3d373d3d3d363d73",
+                                    implementation,
+                                    hex"5af43d82803e903d91602b57fd5bf3"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    }
+
     /// The effective `CREATE2` salt is exactly the derivation
     /// `ICloneableFactoryV4` fixes:
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt))`.
@@ -99,6 +126,47 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(childBob, predictedBob);
 
         assertTrue(childAlice != childBob);
+    }
+
+    /// The implementation ADDRESS is in the derivation, via the EIP-1167
+    /// creation code `CREATE2` hashes: two deploys of the same implementation
+    /// contract — identical runtime code, different addresses — put the same
+    /// caller and salt on the same factory at two different clone addresses,
+    /// each equal to the EIP-1014 formula over the EIP-1167 creation code
+    /// written out literally around its own implementation. This is the
+    /// cross-network condition `ICloneableFactoryV3` states: the factory at
+    /// the same address on two chains is not enough, the implementation must
+    /// be too.
+    function testCloneDeterministicImplementationAddressInDerivation(bytes32 salt, bytes memory data, address deployer)
+        external
+    {
+        TestCloneable implA = new TestCloneable();
+        TestCloneable implB = new TestCloneable();
+        assertTrue(address(implA) != address(implB));
+        assertEq(address(implA).code, address(implB).code);
+
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt));
+        address expectedA = eip1014CloneAddress(address(implA), effectiveSalt);
+        address expectedB = eip1014CloneAddress(address(implB), effectiveSalt);
+        assertTrue(expectedA != expectedB);
+
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(address(implA), salt, deployer), expectedA);
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(address(implB), salt, deployer), expectedB);
+
+        vm.prank(deployer);
+        address childA = I_CLONE_FACTORY.cloneDeterministic(address(implA), data, salt);
+        vm.prank(deployer);
+        address childB = I_CLONE_FACTORY.cloneDeterministic(address(implB), data, salt);
+        assertEq(childA, expectedA);
+        assertEq(childB, expectedB);
+        assertEq(
+            childA.code,
+            abi.encodePacked(hex"363d3d373d3d3d363d73", address(implA), hex"5af43d82803e903d91602b57fd5bf3")
+        );
+        assertEq(
+            childB.code,
+            abi.encodePacked(hex"363d3d373d3d3d363d73", address(implB), hex"5af43d82803e903d91602b57fd5bf3")
+        );
     }
 
     /// `data` is NOT in the derivation: the same caller and salt with two

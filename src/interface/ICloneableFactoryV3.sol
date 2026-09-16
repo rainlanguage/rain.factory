@@ -13,10 +13,15 @@ pragma solidity ^0.8.18;
 /// on the minimal `ICloneableV2` interface being implemented on the reference
 /// bytecode.
 ///
-/// Cross-network determinism is inherited from the factory: when the factory is
-/// itself deployed at the same address on every chain (a Zoltu deterministic
-/// deploy), a `cloneDeterministic` address is identical on every chain for the
-/// same caller, implementation and salt.
+/// Cross-network determinism is NOT inherited from the factory alone. `CREATE2`
+/// hashes the deploying factory's address, and the EIP-1167 creation code it
+/// hashes contains the implementation's address, so a `cloneDeterministic`
+/// address is identical on two chains for the same caller and salt only when
+/// BOTH the factory and the implementation are at the same address on both —
+/// each deployed deterministically (Zoltu-style), all the way down. The same
+/// implementation CONTRACT deployed by an ordinary nonce-dependent `CREATE` on
+/// each chain is at a different address per chain, and so is every clone of
+/// it, however the factory was deployed.
 interface ICloneableFactoryV3 {
     /// Emitted upon each `cloneDeterministic`. Carries the full deterministic
     /// deploy so an indexer can reconstruct it from the event alone — without
@@ -57,8 +62,9 @@ interface ICloneableFactoryV3 {
 
     /// The address `cloneDeterministic(implementation, _, salt)` deploys to when
     /// called by `deployer`. A pure function of its inputs and this factory, so it
-    /// is computable (and pinnable) before deploying, and identical on every chain
-    /// this factory exists at the same address on.
+    /// is computable (and pinnable) before deploying. Identical across chains only
+    /// where both this factory and `implementation` are at the same address on
+    /// each — see the cross-network note on this interface.
     /// @param implementation The contract to clone.
     /// @param salt The caller-chosen salt.
     /// @param deployer The account that will call `cloneDeterministic`.
