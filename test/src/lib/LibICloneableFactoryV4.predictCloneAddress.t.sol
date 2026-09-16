@@ -55,4 +55,36 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         }
         assertEq(child, predicted);
     }
+
+    /// Boundary factories are supported, distinct cases: `address(0)` and
+    /// `address(type(uint160).max)` enter the `CREATE2` preimage as their raw
+    /// 20 bytes exactly as any other factory does, with no special-casing at
+    /// either end of the address domain. Checked against OZ `Clones`, a
+    /// foreign implementation of the same prediction.
+    function testPredictCloneAddressBoundaryFactories(address implementation, bytes32 derivedSalt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(address(0), implementation, derivedSalt),
+            Clones.predictDeterministicAddress(implementation, derivedSalt, address(0))
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(address(type(uint160).max), implementation, derivedSalt),
+            Clones.predictDeterministicAddress(implementation, derivedSalt, address(type(uint160).max))
+        );
+    }
+
+    /// Boundary implementations are supported, distinct cases: `address(0)`
+    /// and `address(type(uint160).max)` are embedded in the creation code
+    /// whose hash enters the `CREATE2` preimage exactly as any other
+    /// implementation is, with no special-casing at either end of the address
+    /// domain. Checked against OZ `Clones`.
+    function testPredictCloneAddressBoundaryImplementations(address factory, bytes32 derivedSalt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, address(0), derivedSalt),
+            Clones.predictDeterministicAddress(address(0), derivedSalt, factory)
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, address(type(uint160).max), derivedSalt),
+            Clones.predictDeterministicAddress(address(type(uint160).max), derivedSalt, factory)
+        );
+    }
 }

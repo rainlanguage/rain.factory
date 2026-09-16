@@ -125,4 +125,72 @@ contract LibICloneableFactoryV4Test is Test {
                 != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
         );
     }
+
+    /// Boundary caller salts are supported, distinct cases of the namespaced
+    /// derivation: `bytes32(0)` and `bytes32(type(uint256).max)` go through
+    /// the formula exactly as any other salt does, with no special-casing at
+    /// either end. Pinned as fixed cases so both ends of the salt domain are
+    /// asserted on every run, not only when the fuzzer draws them.
+    function testEffectiveSaltBoundarySalts(address deployer) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(0)),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(0)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(type(uint256).max)),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(type(uint256).max)))
+        );
+    }
+
+    /// Boundary deployers are supported, distinct cases of the namespaced
+    /// derivation: `address(0)` and `address(type(uint160).max)` are
+    /// left-padded into word 1 exactly as any other deployer is, with no
+    /// special-casing at either end of the address domain.
+    function testEffectiveSaltBoundaryDeployers(bytes32 salt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(address(0), salt),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(address(type(uint160).max), salt),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(type(uint160).max), salt))
+        );
+    }
+
+    /// `data` enters the open-salt derivation by hash at every length. The
+    /// lengths where an implementation could plausibly branch — one byte,
+    /// exactly one word, one word plus a byte, and many words — are pinned as
+    /// fixed cases alongside the empty case `testEffectiveOpenSaltEmptyData`
+    /// pins, so the length domain is asserted on every run. The bytes
+    /// themselves are fuzzed.
+    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 b) external pure {
+        bytes memory oneByte = abi.encodePacked(b);
+        bytes memory oneWord = abi.encodePacked(word);
+        bytes memory oneWordPlusOne = abi.encodePacked(word, b);
+        bytes memory manyWords = new bytes(0);
+        for (uint256 i = 0; i < 64; i++) {
+            manyWords = abi.encodePacked(manyWords, word);
+        }
+        assertEq(oneByte.length, 1);
+        assertEq(oneWord.length, 32);
+        assertEq(oneWordPlusOne.length, 33);
+        assertEq(manyWords.length, 2048);
+
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneByte),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneByte)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWord),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWord)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWordPlusOne),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWordPlusOne)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, manyWords),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(manyWords)))
+        );
+    }
 }

@@ -38,4 +38,22 @@ contract LibICloneableFactoryV4CloneCreationCodeTest is Test {
             abi.encodePacked(hex"363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3");
         assertEq(child.code, expectedRuntime);
     }
+
+    /// Boundary implementations are supported, distinct cases: `address(0)`
+    /// and `address(type(uint160).max)` are embedded as their raw 20 bytes
+    /// between the same prefix and suffix as any other implementation, with
+    /// no special-casing at either end of the address domain. The expected
+    /// bytes are written out literally.
+    function testCloneCreationCodeBoundaryImplementations() external pure {
+        assertEq(
+            LibICloneableFactoryV4.cloneCreationCode(address(0)),
+            hex"3d602d80600a3d3981f3363d3d373d3d3d363d73" hex"0000000000000000000000000000000000000000"
+            hex"5af43d82803e903d91602b57fd5bf3"
+        );
+        assertEq(
+            LibICloneableFactoryV4.cloneCreationCode(address(type(uint160).max)),
+            hex"3d602d80600a3d3981f3363d3d373d3d3d363d73" hex"ffffffffffffffffffffffffffffffffffffffff"
+            hex"5af43d82803e903d91602b57fd5bf3"
+        );
+    }
 }
