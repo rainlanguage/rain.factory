@@ -13,6 +13,7 @@ import {
 import {
     LibICloneableFactoryV4,
     CloneDeploymentFailed,
+    DelegatedImplementation,
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
@@ -370,5 +371,29 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         vm.assume(implementation.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+    }
+
+    /// An EIP-7702 delegated account as implementation reverts
+    /// `DelegatedImplementation` and deploys nothing at the predicted address,
+    /// whatever it delegates to and whoever calls: the open-salt address
+    /// commits to `(implementation, data, salt)`, which for a delegated account
+    /// says nothing about the code that would initialize the clone.
+    function testCloneDeterministicOpenSaltDelegatedImplementation(
+        address implementation,
+        address delegate,
+        address deployer,
+        bytes memory data,
+        bytes32 salt
+    ) external {
+        vm.assume(implementation.code.length == 0);
+        vm.assume(uint160(implementation) > 0x0a);
+        vm.etch(implementation, abi.encodePacked(hex"ef0100", delegate));
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
+
+        vm.prank(deployer);
+        vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+
+        assertEq(predicted.code.length, 0);
     }
 }
