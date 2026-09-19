@@ -59,12 +59,8 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// `NewClone` event carrying the RAW caller salt, is the spec for everything
 /// here.
 ///
-/// `msg.sender` is read INSIDE this library — `cloneDeterministic` namespaces
-/// by it and `NewClone` reports it — and the internal functions execute in the
-/// factory's own call context, so a delegating concrete cannot get either
-/// wrong: there is no sender parameter to misroute `tx.origin` into. Likewise
-/// the predictions read `address(this)`, the factory the library is inlined
-/// into.
+/// `msg.sender` is read inside this library: `cloneDeterministic` namespaces
+/// by it and `NewClone` reports it. The predictions read `address(this)`.
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
@@ -186,9 +182,7 @@ library LibICloneableFactoryV4 {
     }
 
     /// `ICloneableFactoryV3.cloneDeterministic`, whole: `effectiveSalt` over
-    /// `msg.sender` — read here, not passed, so a delegating concrete cannot
-    /// namespace by anything else — then the shared clone-initialize-verify
-    /// flow.
+    /// `msg.sender`, then the shared clone-initialize-verify flow.
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`.
     /// @param salt The caller-chosen salt.

@@ -45,8 +45,7 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   the interface), the implementation-code guard, EIP1167 creation code + CREATE2
   prediction (no external cloning dependency), and the atomic
   clone-initialize-verify flow with the typed errors and `NewClone`.
-  `msg.sender` and `address(this)` are read inside the library, so a delegating
-  concrete cannot misroute them.
+  `msg.sender` and `address(this)` are read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V3`). Still
   published for consumers pinned to them; do not use for new work. When a new

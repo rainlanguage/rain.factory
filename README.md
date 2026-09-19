@@ -34,11 +34,10 @@ CREATE2 address prediction (constructed from the standard's own bytes, so the
 published `src/` depends on no external cloning code), and the atomic
 clone-initialize-verify flow with its typed errors and the `NewClone` event.
 `msg.sender` and `address(this)` are read inside the library, so a concrete
-factory is nothing but one delegation per entry point and cannot misroute
-either. The tests live here under `test/src/lib/`: they recompute both salt
-formulas independently to pin them to the interface's spec byte for byte, and
-pin the EIP1167 construction against OpenZeppelin `Clones` as a foreign
-implementation of the same standard.
+factory is one delegation per entry point. The tests live here under
+`test/src/lib/`: they recompute both salt formulas independently to pin them to
+the interface's spec byte for byte, and pin the EIP1167 construction against
+OpenZeppelin `Clones` as a foreign implementation of the same standard.
 
 ## Interfaces
 
