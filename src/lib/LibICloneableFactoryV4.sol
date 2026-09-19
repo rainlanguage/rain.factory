@@ -21,8 +21,8 @@ error ZeroImplementationCodeSize();
 /// fresh deploy.
 error CloneDeploymentFailed();
 
-/// Thrown when initialization fails: `ICloneableV2.initialize` on the fresh
-/// clone returned something other than `ICLONEABLE_V2_SUCCESS`.
+/// Thrown when the fresh clone's `ICloneableV2.initialize` answers anything but
+/// the 32-byte `ICLONEABLE_V2_SUCCESS`. A revert with data bubbles verbatim.
 error InitializationFailed();
 
 /// @dev The EIP-1167 creation code up to the implementation address: the
@@ -163,7 +163,14 @@ library LibICloneableFactoryV4 {
         emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
         // Checking the return value of initialize is mandatory as per
         // ICloneableFactoryV3 and ICloneableFactoryV4.
-        if (ICloneableV2(child).initialize(data) != ICLONEABLE_V2_SUCCESS) {
+        // slither-disable-next-line low-level-calls
+        (bool success, bytes memory returnData) = child.call(abi.encodeCall(ICloneableV2.initialize, (data)));
+        if (!success && returnData.length > 0) {
+            assembly ("memory-safe") {
+                revert(add(returnData, 0x20), mload(returnData))
+            }
+        }
+        if (returnData.length != 32 || abi.decode(returnData, (bytes32)) != ICLONEABLE_V2_SUCCESS) {
             revert InitializationFailed();
         }
         return child;
