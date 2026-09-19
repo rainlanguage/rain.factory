@@ -218,8 +218,7 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// A non-zero code size at the returned address means this exact
     /// `(implementation, data, salt)` has already been deployed by somebody and
     /// `cloneDeterministicOpenSalt` will revert there. Since nothing else can
-    /// be deployed there, what occupies it is the clone that was asked for,
-    /// initialized with the bytes that were asked for.
+    /// be deployed there, what occupies it is the clone that was asked for.
     ///
     /// @param implementation The contract to clone.
     /// @param data The initialization data that will be passed to
