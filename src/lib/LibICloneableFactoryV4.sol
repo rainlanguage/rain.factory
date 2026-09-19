@@ -169,11 +169,8 @@ library LibICloneableFactoryV4 {
         }
         emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
         // Checking the return value of initialize is mandatory as per
-        // ICloneableFactoryV3 and ICloneableFactoryV4. A low-level call so the
-        // shape of the answer is checked here rather than by the ABI decoder:
-        // the decoder reverts with no data on a short return, which is also
-        // what a proxy with no `initialize` produces, and neither would reach
-        // the sentinel comparison.
+        // ICloneableFactoryV3 and ICloneableFactoryV4. A low-level call, so
+        // every answer, revert or return, reaches the checks below.
         // slither-disable-next-line low-level-calls
         (bool success, bytes memory returnData) = child.call(abi.encodeCall(ICloneableV2.initialize, (data)));
         if (!success && returnData.length > 0) {

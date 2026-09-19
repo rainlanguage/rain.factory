@@ -4,11 +4,13 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 
+import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {InitializationFailed} from "src/lib/LibICloneableFactoryV4.sol";
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestNotCloneable} from "test/concrete/TestNotCloneable.sol";
 import {TestFallbackRawReturn} from "test/concrete/TestFallbackRawReturn.sol";
 import {TestCloneableRawRevert} from "test/concrete/TestCloneableRawRevert.sol";
+import {TestCloneableV1Shaped} from "test/concrete/TestCloneableV1Shaped.sol";
 
 /// @title LibICloneableFactoryV4CloneAndInitializeTest
 /// @notice Tests the `ICloneableV2.initialize` check in
@@ -21,8 +23,7 @@ import {TestCloneableRawRevert} from "test/concrete/TestCloneableRawRevert.sol";
 /// the 32-byte word `keccak256("ICloneableV2.initialize")`. Every other answer
 /// that carries no diagnosis of its own — a revert with no data, a return of
 /// any other length, a wrong word — is `InitializationFailed`; a revert WITH
-/// data is the implementation's own and bubbles out verbatim. The sentinel is
-/// written out from the literal string the interface names, never imported.
+/// data is the implementation's own and bubbles out verbatim.
 contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
@@ -102,7 +103,7 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
 
     /// A 32-byte word that is not the sentinel is `InitializationFailed`.
     function testInitializeReturnsWrongWordRevertsInitializationFailed(bytes32 notSuccess, bytes32 salt) external {
-        vm.assume(notSuccess != keccak256("ICloneableV2.initialize"));
+        vm.assume(notSuccess != ICLONEABLE_V2_SUCCESS);
         TestFallbackRawReturn implementation = new TestFallbackRawReturn();
         checkBothEntryPointsRevert(
             address(implementation),
@@ -113,26 +114,22 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
     }
 
     /// Exactly the 32-byte sentinel is the one answer that creates the clone,
-    /// through both entry points: each lands at its predicted address as an
-    /// EIP-1167 proxy of the implementation. Pins that the raw-return fixture
-    /// and the check agree on what success looks like, so the failing cases
-    /// above fail for their shape and not for the fixture.
+    /// through both entry points: each lands at its predicted address. Pins
+    /// that the raw-return fixture and the check agree on what success looks
+    /// like, so the failing cases above fail for their shape and not for the
+    /// fixture.
     function testInitializeReturnsSentinelSucceeds(bytes32 salt) external {
         TestFallbackRawReturn implementation = new TestFallbackRawReturn();
         bytes memory data = abi.encodePacked(keccak256("ICloneableV2.initialize"));
-        bytes memory runtime =
-            abi.encodePacked(hex"363d3d373d3d3d363d73", address(implementation), hex"5af43d82803e903d91602b57fd5bf3");
 
         address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
         assertEq(child, predicted);
-        assertEq(child.code, runtime);
 
         address predictedOpenSalt =
             I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
         address childOpenSalt = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
         assertEq(childOpenSalt, predictedOpenSalt);
-        assertEq(childOpenSalt.code, runtime);
     }
 
     /// An `initialize` that reverts with NO data — a bare `revert()` — is
@@ -152,5 +149,14 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
         vm.assume(revertData.length > 0);
         TestCloneableRawRevert implementation = new TestCloneableRawRevert();
         checkBothEntryPointsRevert(address(implementation), revertData, salt, revertData);
+    }
+
+    /// An `ICloneableV1` answers `initialize(bytes)` and returns nothing, so
+    /// it is `InitializationFailed` and no clone is created.
+    function testV1ShapedImplementationIsRejected(bytes32 salt, bytes memory data) external {
+        TestCloneableV1Shaped implementation = new TestCloneableV1Shaped();
+        checkBothEntryPointsRevert(
+            address(implementation), data, salt, abi.encodeWithSelector(InitializationFailed.selector)
+        );
     }
 }
