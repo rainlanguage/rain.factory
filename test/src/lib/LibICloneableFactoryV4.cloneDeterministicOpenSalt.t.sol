@@ -12,7 +12,7 @@ import {
 } from "src/interface/ICloneableFactoryV4.sol";
 import {
     LibICloneableFactoryV4,
-    CloneDeploymentFailed,
+    CloneAddressOccupied,
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
@@ -297,14 +297,8 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         assertTrue(child1 != child2);
     }
 
-    /// A second deploy at an already-taken open salt REVERTS with the
-    /// library's own typed error. Since `data` is in the derivation, repeating
-    /// the whole `(implementation, data, salt)` is now the ONLY way to aim at
-    /// an address somebody else already took, and even that does not silently
-    /// return the existing clone: a caller can never mistake an
-    /// already-initialized contract for their own fresh deploy. What the
-    /// reverting caller would have deployed is byte-identical to what is
-    /// already there, so the loss is the gas and nothing else.
+    /// A second deploy of the same `(implementation, data, salt)`, from any
+    /// caller, reverts `CloneAddressOccupied` with the predicted address.
     function testCloneDeterministicOpenSaltSecondDeployReverts(
         bytes32 salt,
         bytes memory data,
@@ -316,9 +310,10 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
 
         vm.prank(alice);
         address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt));
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
 
         // The first deploy's state is untouched by the failed second one.

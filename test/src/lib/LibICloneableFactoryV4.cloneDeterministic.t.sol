@@ -8,6 +8,7 @@ import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "src/interface/ICloneableFactoryV4.sol";
 import {
+    CloneAddressOccupied,
     CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
@@ -128,19 +129,50 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(TestCloneable(childB).sData(), dataB);
     }
 
-    /// A second deploy at an already-taken `(deployer, salt)` reverts with the
-    /// library's own typed error: a caller can never mistake an
-    /// already-initialized contract for their own fresh deploy.
+    /// A second deploy at a taken `(deployer, salt)` reverts
+    /// `CloneAddressOccupied` with the predicted address.
     function testCloneDeterministicSecondDeployReverts(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
 
-        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
 
         // The first deploy's state is untouched by the failed second one.
         assertEq(TestCloneable(child).sData(), data);
+    }
+
+    /// A second deploy at a taken `(deployer, salt)` with different `data`
+    /// reverts `CloneAddressOccupied`; the occupant keeps the first `data`.
+    function testCloneDeterministicSecondDeployDifferentDataReverts(
+        bytes32 salt,
+        bytes memory dataA,
+        bytes memory dataB
+    ) external {
+        vm.assume(keccak256(dataA) != keccak256(dataB));
+        TestCloneable implementation = new TestCloneable();
+
+        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataA, salt);
+        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
+
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
+        I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataB, salt);
+
+        assertEq(TestCloneable(child).sData(), dataA);
+    }
+
+    /// A codeless clone address with a nonzero nonce fails the `CREATE2`
+    /// itself: `CloneDeploymentFailed`.
+    function testCloneDeterministicNonceOnlyCollisionReverts(bytes32 salt, bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        vm.setNonce(predicted, 1);
+
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
     }
 
     /// `NewClone` is emitted with the caller, implementation, child, salt and
@@ -183,15 +215,9 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
     }
 
-    /// The implementation-code guard runs BEFORE the `CREATE2`, not after it.
-    /// The ordering is only observable when both failure conditions hold at
-    /// once — the effective salt is already taken AND the implementation is
-    /// codeless — so that is the state built here: an ordinary deploy takes
-    /// the salt, then the implementation loses its code. Guarding first, the
-    /// caller is told the mistake they actually made
-    /// (`ZeroImplementationCodeSize`); a guard that ran after the deploy would
-    /// report the occupied address (`CloneDeploymentFailed`) instead and send
-    /// them looking for a salt collision that is not their problem.
+    /// The implementation-code guard runs before the occupancy check: with the
+    /// salt taken and the implementation codeless, `ZeroImplementationCodeSize`
+    /// reverts, not `CloneAddressOccupied`.
     function testCloneDeterministicCodeGuardRunsBeforeCreate2(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
