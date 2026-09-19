@@ -55,4 +55,40 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         }
         assertEq(child, predicted);
     }
+
+    /// Factory `0` and `max` predict as OZ `Clones` does.
+    function testPredictCloneAddressBoundaryFactories(address implementation, bytes32 derivedSalt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(address(0), implementation, derivedSalt),
+            Clones.predictDeterministicAddress(implementation, derivedSalt, address(0))
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(address(type(uint160).max), implementation, derivedSalt),
+            Clones.predictDeterministicAddress(implementation, derivedSalt, address(type(uint160).max))
+        );
+    }
+
+    /// Implementation `0` and `max` predict as OZ `Clones` does.
+    function testPredictCloneAddressBoundaryImplementations(address factory, bytes32 derivedSalt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, address(0), derivedSalt),
+            Clones.predictDeterministicAddress(address(0), derivedSalt, factory)
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, address(type(uint160).max), derivedSalt),
+            Clones.predictDeterministicAddress(address(type(uint160).max), derivedSalt, factory)
+        );
+    }
+
+    /// Derived salt `0` and `max` predict as OZ `Clones` does.
+    function testPredictCloneAddressBoundarySalts(address factory, address implementation) external pure {
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(0)),
+            Clones.predictDeterministicAddress(implementation, bytes32(0), factory)
+        );
+        assertEq(
+            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(type(uint256).max)),
+            Clones.predictDeterministicAddress(implementation, bytes32(type(uint256).max), factory)
+        );
+    }
 }
