@@ -56,11 +56,7 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         assertEq(child, predicted);
     }
 
-    /// Boundary factories are supported, distinct cases: `address(0)` and
-    /// `address(type(uint160).max)` enter the `CREATE2` preimage as their raw
-    /// 20 bytes exactly as any other factory does, with no special-casing at
-    /// either end of the address domain. Checked against OZ `Clones`, a
-    /// foreign implementation of the same prediction.
+    /// Factory `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundaryFactories(address implementation, bytes32 derivedSalt) external pure {
         assertEq(
             LibICloneableFactoryV4.predictCloneAddress(address(0), implementation, derivedSalt),
@@ -72,11 +68,7 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         );
     }
 
-    /// Boundary implementations are supported, distinct cases: `address(0)`
-    /// and `address(type(uint160).max)` are embedded in the creation code
-    /// whose hash enters the `CREATE2` preimage exactly as any other
-    /// implementation is, with no special-casing at either end of the address
-    /// domain. Checked against OZ `Clones`.
+    /// Implementation `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundaryImplementations(address factory, bytes32 derivedSalt) external pure {
         assertEq(
             LibICloneableFactoryV4.predictCloneAddress(factory, address(0), derivedSalt),
@@ -88,10 +80,7 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         );
     }
 
-    /// Boundary derived salts are supported, distinct cases: `bytes32(0)` and
-    /// `bytes32(type(uint256).max)` enter the `CREATE2` preimage exactly as any
-    /// other salt does, with no special-casing at either end. Checked against
-    /// OZ `Clones`.
+    /// Derived salt `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundarySalts(address factory, address implementation) external pure {
         assertEq(
             LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(0)),

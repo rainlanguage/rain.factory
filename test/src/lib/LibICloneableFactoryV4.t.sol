@@ -126,10 +126,7 @@ contract LibICloneableFactoryV4Test is Test {
         );
     }
 
-    /// Boundary caller salts are supported, distinct cases of the namespaced
-    /// derivation: `bytes32(0)` and `bytes32(type(uint256).max)` go through
-    /// the formula exactly as any other salt does, with no special-casing at
-    /// either end.
+    /// `effectiveSalt` at salt `0` and `max` is the formula.
     function testEffectiveSaltBoundarySalts(address deployer) external pure {
         assertEq(
             LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(0)),
@@ -141,10 +138,7 @@ contract LibICloneableFactoryV4Test is Test {
         );
     }
 
-    /// Boundary deployers are supported, distinct cases of the namespaced
-    /// derivation: `address(0)` and `address(type(uint160).max)` are
-    /// left-padded into word 1 exactly as any other deployer is, with no
-    /// special-casing at either end of the address domain.
+    /// `effectiveSalt` at deployer `0` and `max` is the formula.
     function testEffectiveSaltBoundaryDeployers(bytes32 salt) external pure {
         assertEq(
             LibICloneableFactoryV4.effectiveSalt(address(0), salt),
@@ -156,9 +150,7 @@ contract LibICloneableFactoryV4Test is Test {
         );
     }
 
-    /// `data` enters the open-salt derivation by hash at every length: one
-    /// byte, exactly one word, one word plus a byte, and many words (empty is
-    /// `testEffectiveOpenSaltEmptyData`). The bytes themselves are fuzzed.
+    /// `effectiveOpenSalt` over 1, 32, 33 and 2048 bytes of `data` is the formula.
     function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 b) external pure {
         bytes memory oneByte = abi.encodePacked(b);
         bytes memory oneWord = abi.encodePacked(word);
@@ -167,10 +159,6 @@ contract LibICloneableFactoryV4Test is Test {
         for (uint256 i = 0; i < 64; i++) {
             manyWords = abi.encodePacked(manyWords, word);
         }
-        assertEq(oneByte.length, 1);
-        assertEq(oneWord.length, 32);
-        assertEq(oneWordPlusOne.length, 33);
-        assertEq(manyWords.length, 2048);
 
         assertEq(
             LibICloneableFactoryV4.effectiveOpenSalt(salt, oneByte),
@@ -190,10 +178,7 @@ contract LibICloneableFactoryV4Test is Test {
         );
     }
 
-    /// Boundary caller salts are supported, distinct cases of the open-salt
-    /// derivation: `bytes32(0)` and `bytes32(type(uint256).max)` go through
-    /// the formula exactly as any other salt does, with no special-casing at
-    /// either end.
+    /// `effectiveOpenSalt` at salt `0` and `max` is the formula.
     function testEffectiveOpenSaltBoundarySalts(bytes memory data) external pure {
         assertEq(
             LibICloneableFactoryV4.effectiveOpenSalt(bytes32(0), data),

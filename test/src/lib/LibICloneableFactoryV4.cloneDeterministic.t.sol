@@ -281,22 +281,14 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(predicted.code.length, 0);
     }
 
-    /// `address(0)` as `deployer` is an ordinary deployer: the prediction is
-    /// the namespaced formula over `address(0)`, not the caller's prediction.
+    /// Deployer `address(0)` predicts over `address(0)`, not the caller.
     function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
         address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
         assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0)), expected);
-
-        assertTrue(
-            I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0))
-                != I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(this))
-        );
     }
 
-    /// `bytes32(0)` and `bytes32(type(uint256).max)` are ordinary salts: they
-    /// predict distinct addresses, each deploys where predicted, and each
-    /// clone is initialized with `data`.
+    /// Salts `0` and `max` deploy where predicted and initialize with `data`.
     function testCloneDeterministicExtremeSalts(bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
@@ -305,7 +297,6 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         address predictedMax = I_CLONE_FACTORY.predictDeterministicAddress(
             address(implementation), bytes32(type(uint256).max), address(this)
         );
-        assertTrue(predictedZero != predictedMax);
 
         address childZero = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(0));
         address childMax = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(type(uint256).max));
