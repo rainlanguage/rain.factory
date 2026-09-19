@@ -235,12 +235,14 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// frame records persists only if `initialize` then succeeds. A durable
     /// observation of code at this address is therefore always of the
     /// initialized clone; a synchronous read from inside the window is not,
-    /// and code size cannot tell the two apart. The deployer has no hand in
-    /// this: `implementation` is in the address, so which `initialize` runs,
-    /// and whether it reaches anything at all, is fixed by the address a
-    /// consumer pinned. Keeping the clone's own functions safe, or reverting,
-    /// before initialization is the implementation's obligation under
-    /// `ICloneableV2`.
+    /// and code size cannot tell the two apart. The address a consumer pinned
+    /// fixes which `initialize` runs and with which `data`; whether that
+    /// `initialize` reaches any other frame is the implementation's own logic
+    /// and can depend on the chain state it observes, which the deployer
+    /// picks by choosing WHEN the deploy lands (the one lever
+    /// `cloneDeterministicOpenSalt` leaves the deployer). Keeping the clone's
+    /// own functions safe, or reverting, before initialization is the
+    /// implementation's obligation under `ICloneableV2`.
     ///
     /// @param implementation The contract to clone.
     /// @param data The initialization data that will be passed to
