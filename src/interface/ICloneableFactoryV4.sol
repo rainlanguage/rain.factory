@@ -220,30 +220,6 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// `cloneDeterministicOpenSalt` will revert there. Since nothing else can
     /// be deployed there, what occupies it is the clone that was asked for.
     ///
-    /// Whether it is also initialized with the bytes that were asked for
-    /// depends on WHEN the code is seen. The clone gets its code from the
-    /// factory's `CREATE2` and its state from the `initialize` call that
-    /// follows, and the two are atomic only at the transaction boundary: a
-    /// failed `initialize` reverts the deploy with it. So from any
-    /// transaction other than the deploying one, non-zero code at this address
-    /// IS the clone initialized with `data`. Inside the deploying transaction
-    /// there is a window, from the `CREATE2` until `initialize` returns, in
-    /// which the address holds the full EIP-1167 runtime and none of the state
-    /// `initialize` sets. The only frames that can look into it are the ones
-    /// `initialize` itself reaches, directly or transitively, because the
-    /// factory calls nothing else on the proxy first; and whatever such a
-    /// frame records persists only if `initialize` then succeeds. A durable
-    /// observation of code at this address is therefore always of the
-    /// initialized clone; a synchronous read from inside the window is not,
-    /// and code size cannot tell the two apart. The address a consumer pinned
-    /// fixes which `initialize` runs and with which `data`; whether that
-    /// `initialize` reaches any other frame is the implementation's own logic
-    /// and can depend on the chain state it observes, which the deployer
-    /// picks by choosing WHEN the deploy lands (the one lever
-    /// `cloneDeterministicOpenSalt` leaves the deployer). Keeping the clone's
-    /// own functions safe, or reverting, before initialization is the
-    /// implementation's obligation under `ICloneableV2`.
-    ///
     /// @param implementation The contract to clone.
     /// @param data The initialization data that will be passed to
     /// `ICloneableV2.initialize`.
