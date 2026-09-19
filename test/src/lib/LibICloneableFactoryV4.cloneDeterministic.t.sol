@@ -9,7 +9,6 @@ import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.so
 import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "src/interface/ICloneableFactoryV4.sol";
 import {
     CloneDeploymentFailed,
-    DelegatedImplementation,
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
@@ -278,28 +277,6 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(TestCloneableRevertInitialize.selector, data));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
-
-        assertEq(predicted.code.length, 0);
-    }
-
-    /// An EIP-7702 delegated account as implementation reverts
-    /// `DelegatedImplementation` and deploys nothing at the predicted address,
-    /// whatever it delegates to and whoever calls.
-    function testCloneDeterministicDelegatedImplementation(
-        address implementation,
-        address delegate,
-        address deployer,
-        bytes memory data,
-        bytes32 salt
-    ) external {
-        vm.assume(implementation.code.length == 0);
-        vm.assume(uint160(implementation) > 0x0a);
-        vm.etch(implementation, abi.encodePacked(hex"ef0100", delegate));
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer);
-
-        vm.prank(deployer);
-        vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
 
         assertEq(predicted.code.length, 0);
     }

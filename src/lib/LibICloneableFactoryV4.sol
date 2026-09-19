@@ -14,14 +14,8 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when an implementation's code begins with `0xef`. EIP-3541 forbids
-/// deploying such code, so an account holds it only as an EIP-7702 delegation
-/// designator, `0xef0100 ++ delegate`: not code but a pointer, which the
-/// account holder can repoint or revoke by signing a new authorization at any
-/// time, after clones exist. A clone of it would delegate every call to
-/// whatever the holder last chose — nothing at all, once revoked — and the
-/// open-salt claim that an occupied address holds the clone that was asked
-/// for, initialized by the code that was asked for, would not hold.
+/// Thrown when an implementation's code begins with `0xef`: an EIP-7702
+/// delegated account.
 error DelegatedImplementation();
 
 /// Thrown when the `CREATE2` deploy of the clone itself fails. With the tiny
@@ -135,13 +129,7 @@ library LibICloneableFactoryV4 {
     }
 
     /// Reverts with `ZeroImplementationCodeSize` if `implementation` has no
-    /// code and with `DelegatedImplementation` if its code begins with `0xef`.
-    /// Both are always a mistake: a codeless implementation gives a clone that
-    /// delegates every call to nothing, and `0xef`-leading code is
-    /// undeployable under EIP-3541, so an account holds it only as an EIP-7702
-    /// delegation designator — a pointer the account holder can repoint or
-    /// revoke after clones exist. Passing means `implementation` holds
-    /// deployed contract code, which is what an EIP-1167 proxy assumes.
+    /// code, or `DelegatedImplementation` if its code begins with `0xef`.
     /// @param implementation The contract to clone.
     function checkImplementationCode(address implementation) internal view {
         if (implementation.code.length == 0) {
@@ -149,7 +137,6 @@ library LibICloneableFactoryV4 {
         }
         uint256 firstByte;
         assembly ("memory-safe") {
-            // Only the first byte of code is needed; it lands in scratch space.
             extcodecopy(implementation, 0, 0, 1)
             firstByte := byte(0, mload(0))
         }
