@@ -48,14 +48,9 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   `msg.sender` and `address(this)` are read inside the library, so a delegating
   concrete cannot misroute them.
 - `src/interface/deprecated/` — Every interface that is not the newest version
-  of itself: `ICloneableV1`, `IFactory`, and the factory interfaces older than
-  `ICloneableFactoryV4` — `ICloneableFactoryV1`, `ICloneableFactoryV2`
-  (nonce-dependent `clone`) and `ICloneableFactoryV3` (deterministic-only:
-  CREATE2, salt namespaced by `msg.sender`; standalone, does NOT extend V2).
-  Still published for consumers pinned to them. Do not use for new work.
-  `ICloneableFactoryV3` still declares the namespaced pair and `NewClone` that
-  `ICloneableFactoryV4` inherits. When a new version of an interface lands, the
-  one it supersedes moves here.
+  of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V3`). Still
+  published for consumers pinned to them; do not use for new work. When a new
+  version lands, the one it supersedes moves here.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV4` extends `ICloneableFactoryV3`), which is what
