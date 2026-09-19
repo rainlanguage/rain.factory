@@ -58,9 +58,9 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// `msg.sender` is read INSIDE this library — `cloneDeterministic` namespaces
 /// by it and `NewClone` reports it — and the internal functions execute in the
 /// factory's own call context, so a delegating concrete cannot get either
-/// wrong: there is no sender parameter to misroute `tx.origin` into. Likewise
-/// the predictions read `address(this)`, the factory the library is inlined
-/// into.
+/// wrong: neither function that deploys takes a sender or an effective salt.
+/// Likewise the predictions read `address(this)`, the factory the library is
+/// inlined into.
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
@@ -148,7 +148,7 @@ library LibICloneableFactoryV4 {
     /// @param salt The caller-chosen salt, emitted raw in `NewClone`.
     /// @return The deployed and initialized child contract address.
     function cloneAndInitialize(address implementation, bytes32 derivedSalt, bytes memory data, bytes32 salt)
-        internal
+        private
         returns (address)
     {
         checkImplementationCode(implementation);
