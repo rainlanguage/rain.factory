@@ -130,6 +130,31 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         assertEq(predictedAlice, expected);
     }
 
+    /// The address depends on no chain state: a funded factory at an arbitrary
+    /// block and timestamp predicts and deploys at the derivation's address.
+    function testCloneDeterministicOpenSaltAddressIgnoresChainState(
+        bytes32 salt,
+        bytes memory data,
+        uint256 balance,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        balance = bound(balance, 1, type(uint256).max);
+        timestamp = bound(timestamp, 2, type(uint64).max);
+        blockNumber = bound(blockNumber, 2, type(uint64).max);
+        TestCloneable implementation = new TestCloneable();
+        vm.deal(address(I_CLONE_FACTORY), balance);
+        vm.warp(timestamp);
+        vm.roll(blockNumber);
+
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        address expected =
+            Clones.predictDeterministicAddress(address(implementation), effectiveSalt, address(I_CLONE_FACTORY));
+
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt), expected);
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt), expected);
+    }
+
     /// `data` IS IN THE DERIVATION, which is what makes losing the
     /// `msg.sender` namespacing safe. Two different `data` at the SAME
     /// `(implementation, salt)` are two different addresses, and both clones

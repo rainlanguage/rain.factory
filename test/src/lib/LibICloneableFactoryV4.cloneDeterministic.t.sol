@@ -322,6 +322,31 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer), expected);
     }
 
+    /// The address depends on no chain state: a funded factory at an arbitrary
+    /// block and timestamp predicts and deploys at the derivation's address.
+    function testCloneDeterministicAddressIgnoresChainState(
+        bytes32 salt,
+        bytes memory data,
+        uint256 balance,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        balance = bound(balance, 1, type(uint256).max);
+        timestamp = bound(timestamp, 2, type(uint64).max);
+        blockNumber = bound(blockNumber, 2, type(uint64).max);
+        TestCloneable implementation = new TestCloneable();
+        vm.deal(address(I_CLONE_FACTORY), balance);
+        vm.warp(timestamp);
+        vm.roll(blockNumber);
+
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(this), salt));
+        address expected =
+            Clones.predictDeterministicAddress(address(implementation), effectiveSalt, address(I_CLONE_FACTORY));
+
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)), expected);
+        assertEq(I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt), expected);
+    }
+
     /// Deployer `address(0)` predicts over `address(0)`, not the caller.
     function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
