@@ -39,16 +39,18 @@ contract ICloneableV2InitializeTest is Test {
 
     /// The typed overload of `initialize` reverts `InitializeSignatureFn`
     /// always: on the never-initialized implementation, and on a clone the
-    /// factory has initialized.
+    /// factory has initialized, for `value`, `0` and `type(uint256).max`.
     function testTypedOverloadRevertsInitializeSignatureFn(bytes32 salt, bytes memory data, uint256 value) external {
         TestCloneable implementation = new TestCloneable();
-
-        vm.expectRevert(abi.encodeWithSelector(ICloneableV2.InitializeSignatureFn.selector));
-        implementation.initialize(value);
-
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
 
-        vm.expectRevert(abi.encodeWithSelector(ICloneableV2.InitializeSignatureFn.selector));
-        TestCloneable(child).initialize(value);
+        uint256[3] memory values = [value, 0, type(uint256).max];
+        for (uint256 i = 0; i < values.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(ICloneableV2.InitializeSignatureFn.selector));
+            implementation.initialize(values[i]);
+
+            vm.expectRevert(abi.encodeWithSelector(ICloneableV2.InitializeSignatureFn.selector));
+            TestCloneable(child).initialize(values[i]);
+        }
     }
 }

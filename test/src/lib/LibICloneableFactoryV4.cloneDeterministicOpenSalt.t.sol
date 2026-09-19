@@ -107,8 +107,8 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
 
     /// The prediction takes no deployer, so it cannot vary with one.
     /// Predicting the same `(implementation, data, salt)` from two different
-    /// callers returns the same address — a caller pinning an address offchain
-    /// does not need to know who will deploy it.
+    /// callers returns the same address, the derivation's — a caller pinning
+    /// an address offchain does not need to know who will deploy it.
     function testCloneDeterministicOpenSaltPredictCallerIndependent(
         address implementation,
         bytes memory data,
@@ -117,6 +117,8 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         address bob
     ) external {
         vm.assume(alice != bob);
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
 
         vm.prank(alice);
         address predictedAlice = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
@@ -125,6 +127,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         address predictedBob = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
 
         assertEq(predictedAlice, predictedBob);
+        assertEq(predictedAlice, expected);
     }
 
     /// `data` IS IN THE DERIVATION, which is what makes losing the

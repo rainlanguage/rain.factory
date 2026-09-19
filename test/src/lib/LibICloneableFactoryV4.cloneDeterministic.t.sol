@@ -307,6 +307,21 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(predicted.code.length, 0);
     }
 
+    /// The prediction reads `deployer`, never the caller: from any account it
+    /// is the derivation's address.
+    function testCloneDeterministicPredictCallerIndependent(
+        address implementation,
+        bytes32 salt,
+        address deployer,
+        address caller
+    ) external {
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
+
+        vm.prank(caller);
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer), expected);
+    }
+
     /// Deployer `address(0)` predicts over `address(0)`, not the caller.
     function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
