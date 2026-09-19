@@ -371,4 +371,65 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
     }
+
+    /// Empty `data` predicts, deploys where predicted and initializes to
+    /// empty, at an address distinct from any non-empty `data` at the same
+    /// salt.
+    function testCloneDeterministicOpenSaltEmptyData(bytes32 salt, bytes memory data) external {
+        vm.assume(data.length > 0);
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedEmpty = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), "", salt);
+        address childEmpty = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), "", salt);
+
+        assertEq(childEmpty, predictedEmpty);
+        assertEq(TestCloneable(childEmpty).sData(), "");
+        assertEq(TestCloneable(childEmpty).sData().length, 0);
+
+        assertTrue(
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt) != predictedEmpty
+        );
+    }
+
+    /// 10,000 bytes of `data` predict, deploy where predicted and initialize
+    /// like any other length, and changing its last byte changes the address.
+    function testCloneDeterministicOpenSaltLargeData(bytes32 salt, bytes1 fill) external {
+        TestCloneable implementation = new TestCloneable();
+
+        bytes memory data = new bytes(10_000);
+        for (uint256 i = 0; i < data.length; ++i) {
+            data[i] = fill;
+        }
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(child, predicted);
+        assertEq(TestCloneable(child).sData(), data);
+
+        data[9_999] = ~fill;
+        assertTrue(
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt) != predicted
+        );
+    }
+
+    /// `bytes32(0)` and `bytes32(type(uint256).max)` are ordinary salts on the
+    /// open-salt path: they predict distinct addresses and each deploys where
+    /// predicted.
+    function testCloneDeterministicOpenSaltExtremeSalts(bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedZero =
+            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, bytes32(0));
+        address predictedMax = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(
+            address(implementation), data, bytes32(type(uint256).max)
+        );
+        assertTrue(predictedZero != predictedMax);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, bytes32(0)), predictedZero);
+        assertEq(
+            I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, bytes32(type(uint256).max)),
+            predictedMax
+        );
+    }
 }

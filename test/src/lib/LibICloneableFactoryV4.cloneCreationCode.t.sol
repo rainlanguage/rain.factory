@@ -4,12 +4,17 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 
-import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
+import {
+    LibICloneableFactoryV4,
+    EIP1167_CREATION_CODE_PREFIX,
+    EIP1167_CREATION_CODE_SUFFIX
+} from "src/lib/LibICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV4CloneCreationCodeTest
-/// @notice Tests `LibICloneableFactoryV4.cloneCreationCode` against the EIP-1167
-/// bytes written out literally here, from the EIP, so the library's constants
-/// are pinned against the standard rather than against themselves.
+/// @notice Tests `LibICloneableFactoryV4.cloneCreationCode`. The canonical-bytes
+/// tests compare against the EIP-1167 bytes written out literally here, from
+/// the EIP, so the library's constants are pinned against the standard rather
+/// than against themselves.
 contract LibICloneableFactoryV4CloneCreationCodeTest is Test {
     /// The creation code is the canonical 55-byte EIP-1167 sequence: the
     /// 10-byte deploy preamble, the 10-byte runtime prefix, the 20-byte
@@ -39,21 +44,25 @@ contract LibICloneableFactoryV4CloneCreationCodeTest is Test {
         assertEq(child.code, expectedRuntime);
     }
 
-    /// Boundary implementations are supported, distinct cases: `address(0)`
-    /// and `address(type(uint160).max)` are embedded as their raw 20 bytes
-    /// between the same prefix and suffix as any other implementation, with
-    /// no special-casing at either end of the address domain. The expected
-    /// bytes are written out literally.
+    /// `address(0)` and `address(type(uint160).max)` are embedded as their raw
+    /// 20 bytes between the EIP-1167 prefix and suffix, exactly as any other
+    /// implementation is.
     function testCloneCreationCodeBoundaryImplementations() external pure {
         assertEq(
             LibICloneableFactoryV4.cloneCreationCode(address(0)),
-            hex"3d602d80600a3d3981f3363d3d373d3d3d363d73" hex"0000000000000000000000000000000000000000"
-            hex"5af43d82803e903d91602b57fd5bf3"
+            abi.encodePacked(
+                EIP1167_CREATION_CODE_PREFIX,
+                hex"0000000000000000000000000000000000000000",
+                EIP1167_CREATION_CODE_SUFFIX
+            )
         );
         assertEq(
             LibICloneableFactoryV4.cloneCreationCode(address(type(uint160).max)),
-            hex"3d602d80600a3d3981f3363d3d373d3d3d363d73" hex"ffffffffffffffffffffffffffffffffffffffff"
-            hex"5af43d82803e903d91602b57fd5bf3"
+            abi.encodePacked(
+                EIP1167_CREATION_CODE_PREFIX,
+                hex"ffffffffffffffffffffffffffffffffffffffff",
+                EIP1167_CREATION_CODE_SUFFIX
+            )
         );
     }
 }
