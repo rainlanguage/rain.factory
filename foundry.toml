@@ -16,6 +16,9 @@ cbor_metadata = false
 
 libs = ["dependencies"]
 
+# Tests read compiled ABIs from `out` (test/lib/LibPublishedAbi.sol).
+fs_permissions = [{ access = "read", path = "./out" }]
+
 [fuzz]
 runs = 2048
 
