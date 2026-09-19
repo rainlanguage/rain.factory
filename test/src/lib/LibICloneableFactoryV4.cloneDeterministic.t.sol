@@ -228,15 +228,16 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
     }
 
-    /// The implementation-code guard runs BEFORE the `CREATE2`, not after it.
-    /// The ordering is only observable when both failure conditions hold at
-    /// once — the effective salt is already taken AND the implementation is
-    /// codeless — so that is the state built here: an ordinary deploy takes
-    /// the salt, then the implementation loses its code. Guarding first, the
-    /// caller is told the mistake they actually made
-    /// (`ZeroImplementationCodeSize`); a guard that ran after the deploy would
-    /// report the occupied address (`CloneDeploymentFailed`) instead and send
-    /// them looking for a salt collision that is not their problem.
+    /// The implementation-code guard runs BEFORE the occupancy check and the
+    /// `CREATE2`, not after them. The ordering is only observable when both
+    /// failure conditions hold at once — the effective salt is already taken
+    /// AND the implementation is codeless — so that is the state built here:
+    /// an ordinary deploy takes the salt, then the implementation loses its
+    /// code. Guarding first, the caller is told the mistake they actually made
+    /// (`ZeroImplementationCodeSize`); a guard that ran after the occupancy
+    /// check would report the occupied address (`CloneAddressOccupied`)
+    /// instead and send them looking for a salt collision that is not their
+    /// problem.
     function testCloneDeterministicCodeGuardRunsBeforeCreate2(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
