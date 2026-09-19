@@ -3,6 +3,11 @@
 pragma solidity ^0.8.18;
 
 /// @title ICloneableFactoryV3
+/// @custom:deprecated Superseded by `ICloneableFactoryV4`, the current factory
+/// interface. New factories and consumers MUST use `ICloneableFactoryV4`, not
+/// this interface on its own. `ICloneableFactoryV4` extends this interface and
+/// inherits `cloneDeterministic`, `predictDeterministicAddress` and `NewClone`
+/// from it, so their spec still lives here.
 /// @notice Creates EIP-1167 proxy clones of a reference bytecode at a
 /// deterministic, pre-computable address, and emits events so indexers can
 /// discover them. Supersedes `ICloneableFactoryV2`, whose `clone` deployed via

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../interface/ICloneableV2.sol";
-import {ICloneableFactoryV3} from "../interface/ICloneableFactoryV3.sol";
+import {ICloneableFactoryV3} from "../interface/deprecated/ICloneableFactoryV3.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
