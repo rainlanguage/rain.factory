@@ -57,14 +57,10 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 ///
 /// `msg.sender` is read INSIDE this library — `cloneDeterministic` namespaces
 /// by it and `NewClone` reports it — and the internal functions execute in the
-/// factory's own call context, so a concrete built on this library cannot get
-/// either wrong. The only functions here that deploy are the two whole entry
-/// points, and neither takes a sender or an effective salt: the shared
-/// clone-initialize-verify tail that does take the effective salt is private
-/// to the library, so nothing a concrete can reach deploys at an effective
-/// salt of the concrete's choosing and `tx.origin` has nowhere to be misrouted
-/// into. `effectiveSalt` takes a `deployer` for prediction only. Likewise the
-/// predictions read `address(this)`, the factory the library is inlined into.
+/// factory's own call context, so a delegating concrete cannot get either
+/// wrong: neither function that deploys takes a sender or an effective salt.
+/// Likewise the predictions read `address(this)`, the factory the library is
+/// inlined into.
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
@@ -137,9 +133,7 @@ library LibICloneableFactoryV4 {
         }
     }
 
-    /// The shared tail of both clone entry points, private so they are its
-    /// only callers and no code outside the library can deploy at a
-    /// `derivedSalt` of its own choosing: guard the implementation,
+    /// The shared tail of both clone entry points: guard the implementation,
     /// `CREATE2` the EIP-1167 clone at `derivedSalt`, emit `NewClone` with
     /// the RAW caller salt, then run the mandatory `ICloneableV2.initialize`
     /// check — atomically, with nothing else called on the proxy first, and
