@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.18;
 
-import {ICloneableFactoryV3} from "./ICloneableFactoryV3.sol";
+import {ICloneableFactoryV3} from "./deprecated/ICloneableFactoryV3.sol";
 
 /// @dev Domain tag hashed as the FIRST word of the `cloneDeterministic` /
 /// `predictDeterministicAddress` effective `CREATE2` salt on a factory that
