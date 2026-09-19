@@ -280,4 +280,30 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
         assertEq(predicted.code.length, 0);
     }
+
+    /// Deployer `address(0)` predicts over `address(0)`, not the caller.
+    function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0)), expected);
+    }
+
+    /// Salts `0` and `max` deploy where predicted and initialize with `data`.
+    function testCloneDeterministicExtremeSalts(bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedZero =
+            I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), bytes32(0), address(this));
+        address predictedMax = I_CLONE_FACTORY.predictDeterministicAddress(
+            address(implementation), bytes32(type(uint256).max), address(this)
+        );
+
+        address childZero = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(0));
+        address childMax = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(type(uint256).max));
+
+        assertEq(childZero, predictedZero);
+        assertEq(childMax, predictedMax);
+        assertEq(TestCloneable(childZero).sData(), data);
+        assertEq(TestCloneable(childMax).sData(), data);
+    }
 }
