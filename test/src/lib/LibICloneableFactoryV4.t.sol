@@ -125,4 +125,68 @@ contract LibICloneableFactoryV4Test is Test {
                 != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
         );
     }
+
+    /// `effectiveSalt` at salt `0` and `max` is the formula.
+    function testEffectiveSaltBoundarySalts(address deployer) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(0)),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(0)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(type(uint256).max)),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(type(uint256).max)))
+        );
+    }
+
+    /// `effectiveSalt` at deployer `0` and `max` is the formula.
+    function testEffectiveSaltBoundaryDeployers(bytes32 salt) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(address(0), salt),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveSalt(address(type(uint160).max), salt),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(type(uint160).max), salt))
+        );
+    }
+
+    /// `effectiveOpenSalt` over 1, 32, 33 and 2048 bytes of `data` is the formula.
+    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 b) external pure {
+        bytes memory oneByte = abi.encodePacked(b);
+        bytes memory oneWord = abi.encodePacked(word);
+        bytes memory oneWordPlusOne = abi.encodePacked(word, b);
+        bytes memory manyWords = new bytes(0);
+        for (uint256 i = 0; i < 64; i++) {
+            manyWords = abi.encodePacked(manyWords, word);
+        }
+
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneByte),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneByte)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWord),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWord)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWordPlusOne),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWordPlusOne)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(salt, manyWords),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(manyWords)))
+        );
+    }
+
+    /// `effectiveOpenSalt` at salt `0` and `max` is the formula.
+    function testEffectiveOpenSaltBoundarySalts(bytes memory data) external pure {
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(0), data),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(0), keccak256(data)))
+        );
+        assertEq(
+            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(type(uint256).max), data),
+            keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(type(uint256).max), keccak256(data)))
+        );
+    }
 }
