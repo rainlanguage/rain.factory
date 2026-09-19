@@ -34,14 +34,8 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
 
 - `src/interface/ICloneableV2.sol` — Cloneable contracts. `initialize(bytes)`
   must return `ICLONEABLE_V2_SUCCESS` on success.
-- `src/interface/ICloneableFactoryV2.sol` — Legacy factory interface
-  (nonce-dependent `clone`). Still published for other consumers.
-- `src/interface/ICloneableFactoryV3.sol` — Deterministic-only factory interface
-  (CREATE2, salt namespaced by `msg.sender`). Standalone — does NOT extend V2;
-  the non-deterministic `clone()` was intentionally dropped. Still published for
-  consumers pinned to it.
 - `src/interface/ICloneableFactoryV4.sol` — Current factory interface. Extends
-  `ICloneableFactoryV3` and defines the open-salt pair
+  the deprecated `ICloneableFactoryV3` and defines the open-salt pair
   `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`. Both
   derivations are pinned to exact bytes, each `keccak256`-ing a 96-byte preimage
   led by a distinct string-derived domain tag, so the two images are disjoint by
@@ -53,8 +47,10 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   clone-initialize-verify flow with the typed errors and `NewClone`.
   `msg.sender` and `address(this)` are read inside the library, so a delegating
   concrete cannot misroute them.
-- `src/interface/deprecated/` — Legacy interfaces (`ICloneableV1`,
-  `ICloneableFactoryV1`, `IFactory`). Do not use for new work.
+- `src/interface/deprecated/` — Every interface that is not the newest version
+  of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V3`). Still
+  published for consumers pinned to them; do not use for new work. When a new
+  version lands, the one it supersedes moves here.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV4` extends `ICloneableFactoryV3`), which is what
