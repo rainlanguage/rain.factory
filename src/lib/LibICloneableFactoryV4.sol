@@ -182,9 +182,7 @@ library LibICloneableFactoryV4 {
     }
 
     /// `ICloneableFactoryV3.cloneDeterministic`, whole: `effectiveSalt` over
-    /// `msg.sender` — read here, not passed, so a delegating concrete cannot
-    /// namespace by anything else — then the shared clone-initialize-verify
-    /// flow.
+    /// `msg.sender`, then the shared clone-initialize-verify flow.
     /// @param implementation The contract to clone.
     /// @param data As per `ICloneableV2`.
     /// @param salt The caller-chosen salt.
