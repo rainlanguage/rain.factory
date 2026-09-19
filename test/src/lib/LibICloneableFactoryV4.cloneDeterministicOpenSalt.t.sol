@@ -153,6 +153,39 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         assertEq(TestCloneable(childB).sData(), dataB);
     }
 
+    /// The implementation's address, not its code, is in the derivation: two
+    /// implementations with identical runtime code at different addresses
+    /// predict two different clone addresses for the same `(data, salt)`, and
+    /// each clone deploys at its own prediction.
+    function testCloneDeterministicOpenSaltImplementationIsByAddress(bytes32 salt, bytes memory data) external {
+        TestCloneable implementationA = new TestCloneable();
+        TestCloneable implementationB = new TestCloneable();
+        assertEq(address(implementationA).code, address(implementationB).code);
+        assertTrue(address(implementationA) != address(implementationB));
+
+        address predictedA = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementationA), data, salt);
+        address predictedB = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementationB), data, salt);
+        assertTrue(predictedA != predictedB);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementationA), data, salt), predictedA);
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementationB), data, salt), predictedB);
+    }
+
+    /// The factory's address is in the derivation: the same
+    /// `(implementation, data, salt)` predicts two different clone addresses on
+    /// two factories, and each factory deploys at its own prediction.
+    function testCloneDeterministicOpenSaltFactoryScoped(bytes32 salt, bytes memory data) external {
+        TestCloneFactory otherFactory = new TestCloneFactory();
+        TestCloneable implementation = new TestCloneable();
+
+        address predictedHere = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        address predictedThere = otherFactory.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        assertTrue(predictedHere != predictedThere);
+
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt), predictedHere);
+        assertEq(otherFactory.cloneDeterministicOpenSalt(address(implementation), data, salt), predictedThere);
+    }
+
     /// The two derivations are disjoint under freely varying inputs on BOTH
     /// sides: no `(data, openSalt)` open-salt address is any `(namespacedSalt,
     /// deployer)` sender-namespaced address. Adding the open variant therefore
