@@ -14,6 +14,10 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
+/// Thrown when an implementation's code begins with `0xef`: an EIP-7702
+/// delegated account.
+error DelegatedImplementation();
+
 /// Thrown when the `CREATE2` deploy of the clone itself fails. With the tiny
 /// fixed EIP-1167 initcode the only realistic cause is that the effective salt
 /// is already taken: the exact clone asked for is already at the address, so
@@ -125,11 +129,19 @@ library LibICloneableFactoryV4 {
     }
 
     /// Reverts with `ZeroImplementationCodeSize` if `implementation` has no
-    /// code. Always a mistake: the clone would delegate every call to nothing.
+    /// code, or `DelegatedImplementation` if its code begins with `0xef`.
     /// @param implementation The contract to clone.
     function checkImplementationCode(address implementation) internal view {
         if (implementation.code.length == 0) {
             revert ZeroImplementationCodeSize();
+        }
+        uint256 firstByte;
+        assembly ("memory-safe") {
+            extcodecopy(implementation, 0, 0, 1)
+            firstByte := byte(0, mload(0))
+        }
+        if (firstByte == 0xef) {
+            revert DelegatedImplementation();
         }
     }
 
