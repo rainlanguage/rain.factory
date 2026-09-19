@@ -15,15 +15,12 @@ interface ICloneableV2 {
     /// Initialize is intended to work like constructors but for cloneable
     /// proxies. The `ICloneableV2` contract MUST ensure that initialize can NOT
     /// be called more than once. The `ICloneableV2` contract is designed to be
-    /// deployed by a factory implementing one of the `ICloneableFactory`
-    /// interfaces (`ICloneableFactoryV2` onwards, every version of which calls
-    /// `initialize` atomically with the clone and checks the returned hash) but
-    /// MUST NOT assume that it will be. It is possible for someone to directly
-    /// deploy an `ICloneableV2` and fail to call initialize before other
-    /// functions are called, and end users MAY NOT realise or know how to
-    /// confirm a safe deployment state. The `ICloneableV2` MUST take
-    /// appropriate measures to ensure that functions called before initialize
-    /// are safe to do so, or revert.
+    /// deployed by an `ICloneableFactoryV4` but MUST NOT assume that it will be.
+    /// It is possible for someone to directly deploy an `ICloneableV2` and fail
+    /// to call initialize before other functions are called, and end users MAY
+    /// NOT realise or know how to confirm a safe deployment state. The
+    /// `ICloneableV2` MUST take appropriate measures to ensure that functions
+    /// called before initialize are safe to do so, or revert.
     ///
     /// To be fully generic, `initialize` accepts `bytes` and so MUST ABI decode
     /// within the initialize function. This allows a single factory to service
@@ -40,15 +37,14 @@ interface ICloneableV2 {
     ///
     /// If initialization is successful the `ICloneableV2` MUST return the
     /// keccak256 hash of the string "ICloneableV2.initialize". This avoids false
-    /// positives where a contract building a proxy, such as any
-    /// `ICloneableFactory` from `ICloneableFactoryV2` onwards, may incorrectly
-    /// believe that the clone has been initialized but the implementation
-    /// doesn't support `ICloneableV2`.
+    /// positives where a contract building a proxy, such as an
+    /// `ICloneableFactoryV4`, may incorrectly believe that the clone has been
+    /// initialized but the implementation doesn't support `ICloneableV2`.
     ///
-    /// @dev The `ICloneableV2` interface differs from `ICloneableV1` in that
-    /// `initialize` returns a `bytes32` success hash, and in adding the
-    /// `InitializeSignatureFn` error that a typed `initialize` overload MUST
-    /// always revert with.
+    /// @dev The `ICloneableV2` interface differs from the deprecated
+    /// `ICloneableV1` in that `initialize` returns a `bytes32` success hash, and
+    /// in adding the `InitializeSignatureFn` error that a typed `initialize`
+    /// overload MUST always revert with.
     /// @param data The initialization data.
     /// @return success keccak256("ICloneableV2.initialize") if successful.
     function initialize(bytes calldata data) external returns (bytes32 success);

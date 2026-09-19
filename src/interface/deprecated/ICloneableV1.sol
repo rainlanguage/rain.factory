@@ -9,12 +9,13 @@ interface ICloneableV1 {
     /// Initialize is intended to work like constructors but for cloneable
     /// proxies. The `ICloneableV1` contract MUST ensure that initialize can NOT
     /// be called more than once. The `ICloneableV1` contract is designed to be
-    /// deployed by an `ICloneableFactoryV1` but MUST NOT assume that it will
-    /// be. It is possible for someone to directly deploy an `ICloneableV1` and
-    /// fail to call initialize before other functions are called, and end users
-    /// MAY NOT realise or know how to confirm a safe deployment state. The
-    /// `ICloneableV1` MUST take appropriate measures to ensure that functions
-    /// called before initialize are safe to do so, or revert.
+    /// deployed by the deprecated `ICloneableFactoryV1` but MUST NOT assume
+    /// that it will be. It is possible for someone to directly deploy an
+    /// `ICloneableV1` and fail to call initialize before other functions are
+    /// called, and end users MAY NOT realise or know how to confirm a safe
+    /// deployment state. The `ICloneableV1` MUST take appropriate measures to
+    /// ensure that functions called before initialize are safe to do so, or
+    /// revert.
     ///
     /// To be fully generic `initialize` accepts `bytes` and so MUST ABI decode
     /// within the initialize function. This allows the factory to service
