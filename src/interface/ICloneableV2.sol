@@ -41,8 +41,10 @@ interface ICloneableV2 {
     /// `ICloneableFactoryV4`, may incorrectly believe that the clone has been
     /// initialized but the implementation doesn't support `ICloneableV2`.
     ///
-    /// @dev The `ICloneableV2` interface is identical to `ICloneableV1` except
-    /// that it returns a `bytes32` success hash.
+    /// @dev The `ICloneableV2` interface differs from `ICloneableV1` in that
+    /// `initialize` returns a `bytes32` success hash, and in adding the
+    /// `InitializeSignatureFn` error that a typed `initialize` overload MUST
+    /// always revert with.
     /// @param data The initialization data.
     /// @return success keccak256("ICloneableV2.initialize") if successful.
     function initialize(bytes calldata data) external returns (bytes32 success);
