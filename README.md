@@ -84,20 +84,29 @@ The current interfaces in this repository are for
   implementations MUST NOT read `tx.origin` — and the address-registry pairing
   it is intended for are spelled out in the NatSpec on
   `ICloneableFactoryV4.cloneDeterministicOpenSalt`
-- `ICloneableFactoryV3`, deterministic-only (`cloneDeterministic` +
-  `predictDeterministicAddress`, CREATE2 with the salt namespaced by
-  `msg.sender`). Superseded by `ICloneableFactoryV4`, still published for
-  consumers pinned to it. Standalone rather than extending
-  `ICloneableFactoryV2`, because the non-deterministic `clone()` was
-  intentionally dropped
-- `ICloneableFactoryV2` that is expected to clone proxies from a reference
-  implementation. Superseded by `ICloneableFactoryV3` for the concrete factory,
-  still published for other consumers
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
 
 ### Legacy
+
+Every interface that is not the newest version of itself is deprecated and lives
+in `src/interface/deprecated/`. They are still published for consumers pinned to
+them. New work uses the current interfaces above.
+
+#### `ICloneableFactoryV3`
+
+Deterministic-only (`cloneDeterministic` + `predictDeterministicAddress`,
+CREATE2 with the salt namespaced by `msg.sender`). Superseded by
+`ICloneableFactoryV4`, which extends it, so the namespaced pair and `NewClone`
+are still declared in `ICloneableFactoryV3` and inherited from there. Standalone
+rather than extending `ICloneableFactoryV2`, because the non-deterministic
+`clone()` was intentionally dropped.
+
+#### `ICloneableFactoryV2`
+
+Clones proxies from a reference implementation with a non-deterministic
+`clone()`. Superseded by `ICloneableFactoryV4`.
 
 #### `ICloneableV1`
 

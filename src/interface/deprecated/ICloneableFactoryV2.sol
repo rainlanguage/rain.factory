@@ -3,7 +3,12 @@
 pragma solidity ^0.8.18;
 
 /// @title ICloneableFactoryV2
-/// @notice A minimal interface to create proxy clones of a reference bytecode
+/// @notice DEPRECATED: superseded by `ICloneableFactoryV4`, the current
+/// factory interface. New factories and consumers MUST use
+/// `ICloneableFactoryV4`; this interface stays published only for consumers
+/// pinned to it.
+///
+/// A minimal interface to create proxy clones of a reference bytecode
 /// and emit events so that indexers can discover it. `ICloneableFactoryV2` knows
 /// nothing about the contracts that it clones, instead relying only on the
 /// minimal `ICloneableV2` interface being implemented on the reference bytecode.
