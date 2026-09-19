@@ -21,15 +21,8 @@ error ZeroImplementationCodeSize();
 /// fresh deploy.
 error CloneDeploymentFailed();
 
-/// Thrown when the fresh clone did not answer `ICloneableV2.initialize` with
-/// exactly the 32-byte word `ICLONEABLE_V2_SUCCESS`: the call reverted with
-/// no data (no `initialize(bytes)` and no fallback, a bare `revert()`, out of
-/// gas), returned other than exactly 32 bytes (a silent fallback, a short or
-/// an over-long return), or returned a 32-byte word that is not the sentinel.
-/// These are the shapes of "the implementation doesn't support
-/// `ICloneableV2`" that the sentinel exists to catch. A revert that carries
-/// data is the implementation's own diagnosis of a call it did handle and is
-/// bubbled out verbatim instead.
+/// Thrown when the fresh clone's `ICloneableV2.initialize` answers anything but
+/// the 32-byte `ICLONEABLE_V2_SUCCESS`. A revert with data bubbles verbatim.
 error InitializationFailed();
 
 /// @dev The EIP-1167 creation code up to the implementation address: the
@@ -169,18 +162,15 @@ library LibICloneableFactoryV4 {
         }
         emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
         // Checking the return value of initialize is mandatory as per
-        // ICloneableFactoryV3 and ICloneableFactoryV4. A low-level call, so
-        // every answer, revert or return, reaches the checks below.
+        // ICloneableFactoryV3 and ICloneableFactoryV4.
         // slither-disable-next-line low-level-calls
         (bool success, bytes memory returnData) = child.call(abi.encodeCall(ICloneableV2.initialize, (data)));
         if (!success && returnData.length > 0) {
-            // The implementation handled the call and reverted with a reason
-            // of its own, which is more specific than `InitializationFailed`.
             assembly ("memory-safe") {
                 revert(add(returnData, 0x20), mload(returnData))
             }
         }
-        if (!success || returnData.length != 32 || abi.decode(returnData, (bytes32)) != ICLONEABLE_V2_SUCCESS) {
+        if (returnData.length != 32 || abi.decode(returnData, (bytes32)) != ICLONEABLE_V2_SUCCESS) {
             revert InitializationFailed();
         }
         return child;
