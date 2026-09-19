@@ -14,11 +14,15 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when the `CREATE2` deploy of the clone itself fails. With the tiny
-/// fixed EIP-1167 initcode the only realistic cause is that the effective salt
-/// is already taken: the exact clone asked for is already at the address, so
-/// the caller can never mistake an already-initialized contract for their own
-/// fresh deploy.
+/// Thrown when the clone address already has code. On the open-salt path the
+/// occupant is the exact clone asked for; on the namespaced path it is the
+/// clone the same deployer deployed at that salt, with whatever `data` that
+/// call passed.
+/// @param clone The occupied address.
+error CloneAddressOccupied(address clone);
+
+/// Thrown when the clone `CREATE2` fails at an address with no code: out of
+/// gas, or a nonzero nonce there.
 error CloneDeploymentFailed();
 
 /// Thrown when the fresh clone's `ICloneableV2.initialize` answers anything but
@@ -134,6 +138,7 @@ library LibICloneableFactoryV4 {
     }
 
     /// The shared tail of both clone entry points: guard the implementation,
+    /// revert `CloneAddressOccupied` if the predicted address already has code,
     /// `CREATE2` the EIP-1167 clone at `derivedSalt`, emit `NewClone` with
     /// the RAW caller salt, then run the mandatory `ICloneableV2.initialize`
     /// check — atomically, with nothing else called on the proxy first, and
@@ -152,6 +157,10 @@ library LibICloneableFactoryV4 {
         returns (address)
     {
         checkImplementationCode(implementation);
+        address predicted = predictCloneAddress(address(this), implementation, derivedSalt);
+        if (predicted.code.length != 0) {
+            revert CloneAddressOccupied(predicted);
+        }
         bytes memory creationCode = cloneCreationCode(implementation);
         address child;
         assembly ("memory-safe") {
