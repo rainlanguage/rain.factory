@@ -43,6 +43,25 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         LibICloneableFactoryV4.checkImplementationCode(implementation);
     }
 
+    /// One byte of code passes when that byte is not `0xef`, including the
+    /// bytes either side of it.
+    function testCheckImplementationCodeSingleByte() external {
+        bytes1[4] memory codes = [bytes1(0x00), 0xee, 0xf0, 0xff];
+        for (uint256 i = 0; i < codes.length; i++) {
+            address implementation = makeAddr(string.concat("single-byte-", vm.toString(i)));
+            vm.etch(implementation, abi.encodePacked(codes[i]));
+            this.checkImplementationCodeExternal(implementation);
+        }
+    }
+
+    /// One byte of code that is `0xef` reverts `DelegatedImplementation`.
+    function testCheckImplementationCodeSingleByteEf() external {
+        address implementation = makeAddr("single-byte-ef");
+        vm.etch(implementation, hex"ef");
+        vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
+        this.checkImplementationCodeExternal(implementation);
+    }
+
     /// An EIP-7702 delegation designator reverts `DelegatedImplementation`.
     function testCheckImplementationCodeEip7702Designator(address delegated, address delegate) external {
         vm.assume(delegated.code.length == 0);
