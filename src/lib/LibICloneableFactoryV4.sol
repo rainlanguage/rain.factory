@@ -14,24 +14,15 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when the address the clone would deploy to already has code, so the
-/// `CREATE2` there can only fail. Which clone occupies it depends on the
-/// derivation. The open salt hashes `data`, so the occupant is the exact clone
-/// asked for: the idempotent-deploy case. The namespaced salt does not, so the
-/// occupant is the clone the same `deployer` deployed at the same `salt`
-/// earlier, whose `initialize` was passed THAT call's `data`, which need not be
-/// this call's. For what code at a clone address says about the occupant's
-/// initialized state, see
-/// `ICloneableFactoryV4.predictDeterministicAddressOpenSalt`.
-/// @param clone The occupied address: what the matching `predict...` function
-/// returns for this call's inputs.
+/// Thrown when the clone address already has code. On the open-salt path the
+/// occupant is the exact clone asked for; on the namespaced path it is the
+/// clone the same deployer deployed at that salt, with whatever `data` that
+/// call passed.
+/// @param clone The occupied address.
 error CloneAddressOccupied(address clone);
 
-/// Thrown when the `CREATE2` deploy of the clone fails at an address that had
-/// no code: the create ran out of gas, or the address collides on a nonzero
-/// nonce (or nonempty storage) while holding no code. An address that already
-/// has code is caught before the create and reverts `CloneAddressOccupied`
-/// instead.
+/// Thrown when the clone `CREATE2` fails at an address with no code: out of
+/// gas, or a nonzero nonce there.
 error CloneDeploymentFailed();
 
 /// Thrown when initialization fails: `ICloneableV2.initialize` on the fresh
