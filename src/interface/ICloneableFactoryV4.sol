@@ -115,7 +115,7 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// occupied and nobody can redeploy over it.
     ///
     /// That is only dangerous if the first deployer has anything to vary.
-    /// Because `data` is inside the derivation, they do not:
+    /// Because `data` is inside the derivation, they cannot vary it:
     ///
     /// - A front-runner passing DIFFERENT `data` derives a DIFFERENT address.
     ///   The address anyone pinned is untouched; the front-runner has deployed
@@ -128,9 +128,9 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// (Zoltu-style) deployment harmless — a Zoltu deploy has no arguments, so
     /// front-running it produces byte-for-byte the intended contract — reached
     /// WITH arguments, by putting the arguments in the address rather than by
-    /// having none. It is a property of this signature, not a condition on the
-    /// implementation being cloned, so there is no per-implementation audit of
-    /// "could a squatter pass something worse" to get wrong.
+    /// having none. This commits what a squatter can PASS. It does not commit
+    /// what the implementation runs — the derivation fixes its ADDRESS, not its
+    /// code — nor anything else `initialize` reads. Those are below.
     ///
     /// # What the address does NOT fix, which implementations MUST respect
     ///
@@ -166,6 +166,13 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   that names things instead of naming addresses. `data` MAY be empty, and
     ///   an implementation that resolves everything from the registry will pass
     ///   empty `data`.
+    /// - The implementation MUST NOT delegate onward to a target anyone can
+    ///   change. The derivation fixes the implementation's ADDRESS, not its
+    ///   code, and the clone delegates to that address forever, so a beacon
+    ///   proxy as implementation leaves the clone's behaviour — at deploy and
+    ///   afterwards — with whoever retargets the beacon.
+    ///   `LibICloneableFactoryV4.checkImplementationCode` rejects only the
+    ///   `0xef` (EIP-7702) form.
     ///
     /// # Obligation on the factory, not on the consumer
     ///
