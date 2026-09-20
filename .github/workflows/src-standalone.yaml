@@ -1,0 +1,17 @@
+name: src-standalone
+on: [push]
+jobs:
+  src-standalone:
+    runs-on: ubuntu-latest
+    steps:
+      # Repo-local rather than a rainix reusable step: the invariant is this
+      # repo's, not the org's. Sibling callers of rainix-sol.yaml publish a
+      # `src/` that does import external soldeer packages — rain.erc4626.words'
+      # `src/abstract/ERC4626Extern.sol` imports `rainlang-0.2.6/` and
+      # `rain-lib-typecast-0.1.4/` — so a shared step would be permanently red
+      # for them, and a no-op-when-clean variant would disable itself in the
+      # one case it exists to catch. Only the shared nix preamble is reused.
+      - uses: rainlanguage/rainix/.github/actions/nix-cachix-setup@main
+        with:
+          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - run: nix develop .#sol-shell -c ./.github/build-src-standalone.sh
