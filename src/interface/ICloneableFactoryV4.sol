@@ -135,10 +135,10 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// # What the address does NOT fix, which implementations MUST respect
     ///
     /// The address fixes `data`. It cannot fix anything else `initialize`
-    /// observes, so the state `initialize` leaves behind MUST depend only on
-    /// `data` and on chain state at the block the deploy lands in. The deployer
-    /// then keeps exactly one lever: WHEN it lands, and therefore which chain
-    /// state `initialize` observes.
+    /// observes, and the deployer authors the whole transaction the deploy sits
+    /// in, not merely the block it lands in. So the state `initialize` leaves
+    /// behind MUST depend only on `data` and on state no third party can set
+    /// within a transaction.
     ///
     /// - The implementation MUST NOT read `tx.origin`, directly or through
     ///   anything it calls during initialization. `tx.origin` is the deployer,
@@ -151,17 +151,18 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   than be caught and defaulted, and `gasleft()` MUST NOT branch.
     ///   Otherwise a front-runner pins a fallback state at the address, with
     ///   the intended `data`.
-    /// - Anything else `initialize` resolves from chain state resolves the same
-    ///   way for every caller at a given block. An address registry — such as
-    ///   rain.deploy's — is the intended shape here: `initialize` resolves the
-    ///   admin by NAME from the registry rather than taking an admin address,
-    ///   and the name, being part of `data`, is committed to by the address.
-    ///   A front-runner resolves the same admin the intended deployer would
-    ///   have. While the name is unbound the registry read reverts, so the
-    ///   clone cannot be deployed at all, and the front-running window only
-    ///   opens once the binding exists. A clone that resolves once during
-    ///   `initialize` and stores the answer is unaffected by any later
-    ///   rebinding.
+    /// - Anything else `initialize` resolves from chain state MUST NOT be
+    ///   settable within a transaction by a third party. A pool price a
+    ///   front-runner can skew, deploy against and restore atomically fails
+    ///   this. An address registry — such as rain.deploy's, where only a
+    ///   compile-time root may bind — is the intended shape here: `initialize`
+    ///   resolves the admin by NAME from the registry rather than taking an
+    ///   admin address, and the name, being part of `data`, is committed to by
+    ///   the address, so a front-runner resolves the same admin the intended
+    ///   deployer would have. While the name is unbound the registry read
+    ///   reverts, so the front-running window only opens once the binding
+    ///   exists. A clone that resolves once during `initialize` and stores the
+    ///   answer is unaffected by any later rebinding.
     /// - Registry-resolved authority is the ordinary case: it is simply `data`
     ///   that names things instead of naming addresses. `data` MAY be empty, and
     ///   an implementation that resolves everything from the registry will pass
