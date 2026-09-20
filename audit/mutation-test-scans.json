@@ -1,0 +1,29 @@
+[
+  {
+    "timestamp": "2026-09-20T04:00:00Z",
+    "commit": "5a633508643e345fc72c11133f782214f60db9b5",
+    "testsAfterCommit": "34506fcba245ca2439975009fee2c7163d87ecf9",
+    "publishedTag": "0.1.20",
+    "commitsAheadOfTag": 0,
+    "scope": "LibICloneableFactoryV4, ICloneableFactoryV4, ICloneableV2 and the test fixtures they rely on, in three groups: g1-derivations (both salt derivations, the domain tags, cloneCreationCode, predictCloneAddress), g2-clone-tail (checkImplementationCode, cloneAndInitialize, ICLONEABLE_V2_SUCCESS), g3-entry-points (the four clone and predict entry points, ICloneableV2 fixture conformance). src/interface/deprecated/ is excluded: it is frozen for pinned consumers.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 299,
+      "killedByPreexistingSuite": 276,
+      "killedAfter": 288,
+      "survivedAfter": 0,
+      "equivalent": 11,
+      "groups": {
+        "g1-derivations": {"mutants": 111, "killedByPreexistingSuite": 106, "killedAfter": 106, "survivedAfter": 0, "equivalent": 5, "coveragePr": null},
+        "g2-clone-tail": {"mutants": 75, "killedByPreexistingSuite": 67, "killedAfter": 72, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#98"},
+        "g3-entry-points": {"mutants": 113, "killedByPreexistingSuite": 103, "killedAfter": 110, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#99"}
+      },
+      "testsBefore": 68,
+      "testsAfter": 78,
+      "filed": ["#95", "#96", "#97"]
+    }
+  }
+]
