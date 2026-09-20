@@ -61,6 +61,12 @@ makes this half a standalone publish.
   different `0.8.x` still compile them; the library floats `^0.8.25`; tests pin
   `=0.8.25`, as do the concretes and scripts in rain.factory.deploy.
 - No named return values.
+- Imports: `src/` files import each other RELATIVE (`../interface/X.sol`) —
+  `remappings.txt` is not published, so a root-rooted `src/...` import resolves
+  to the consumer's own `src/` downstream. Tests use root-rooted `src/...` and
+  `test/...`. Dependency imports carry the pinned version
+  (`forge-std-1.16.1/src/Test.sol`); a bump in `foundry.toml` must be mirrored
+  into every import path.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
