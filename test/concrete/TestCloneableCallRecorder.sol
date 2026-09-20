@@ -15,6 +15,11 @@ import {ICloneableV2} from "src/interface/ICloneableV2.sol";
 /// `NewClone` against the clone's own initialization. This fixture makes both
 /// observable — `selectors()` is the whole call sequence, and `Initializing`
 /// lands in the log stream at the moment `initialize` runs.
+///
+/// It refuses nothing — no once-only guard on `initialize`, no typed overload
+/// — so a call the factory should not have made is recorded rather than cut
+/// short by a revert. It is therefore NOT a conforming `ICloneableV2`;
+/// `TestCloneable` is.
 contract TestCloneableCallRecorder is ICloneableV2 {
     /// Emitted from inside `initialize`, so the log stream orders the
     /// factory's `NewClone` against the initialization call itself.

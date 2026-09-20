@@ -10,11 +10,13 @@ import {ICloneableV2} from "src/interface/ICloneableV2.sol";
 error TestCloneableAlreadyInitialized();
 
 /// @title TestCloneable
-/// @notice THE conforming `ICloneableV2` fixture. Every test that needs a
-/// clone that initializes successfully uses this one, so there is a single
-/// place where "what a correct `ICloneableV2` does" is written down, and every
-/// flow test in the suite is run against something that actually honours the
-/// interface rather than against the minimum the factory happens to check.
+/// @notice THE conforming `ICloneableV2` fixture: the single place where "what
+/// a correct `ICloneableV2` does" is written down, and what a flow test runs
+/// against instead of the minimum the factory happens to check. The one
+/// exception is `TestCloneableCallRecorder`, which also initializes
+/// successfully but refuses nothing — no once-only guard, no typed overload —
+/// because it exists to record the factory's call sequence rather than to
+/// model an implementation.
 ///
 /// Three properties, each load bearing:
 ///
