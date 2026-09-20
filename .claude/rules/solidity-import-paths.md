@@ -8,10 +8,10 @@ paths:
 
 `src/` files import each other RELATIVE (`../interface/X.sol`,
 `./ICloneableFactoryV3.sol`). `.soldeerignore` excludes `/remappings.txt`, so
-the published package carries no remappings of its own: a root-rooted
-`src/...` import inside a `src/` file resolves against the CONSUMER's project
-root and binds the consumer's `src/`, not this package's. Both forms compile
-here, so nothing local catches it and the break lands downstream.
+the published package carries no remappings of its own: a root-rooted `src/...`
+import inside a `src/` file resolves against the CONSUMER's project root and
+binds the consumer's `src/`, not this package's. Both forms compile here, so
+nothing local catches it and the break lands downstream.
 
 Tests use the root-rooted form, `src/...` and `test/...`.
 
