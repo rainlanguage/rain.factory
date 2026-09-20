@@ -7,6 +7,11 @@ This repo is the **library** half of the library/deploy split
 `ICloneable*` interface surface and the `LibICloneableFactoryV4` library that
 implements it. It publishes to Soldeer as `rain-factory`.
 
+Soldeer `rain-factory` 0.1.5 and earlier are the pre-split package, carrying the
+concrete `CloneFactory` and its deploy pins; 0.1.6 dropped them. The `v0.1.0`,
+`v0.1.1`, `sol-v0.1.2`, `sol-v0.1.3` and `sol-v0.1.5` tags here are those
+pre-split releases, not revisions of this library.
+
 ## Concrete implementations
 
 `CloneFactory` — the concrete that implements these interfaces, letting any
