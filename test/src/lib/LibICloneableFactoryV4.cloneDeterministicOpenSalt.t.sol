@@ -107,8 +107,8 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
 
     /// The prediction takes no deployer, so it cannot vary with one.
     /// Predicting the same `(implementation, data, salt)` from two different
-    /// callers returns the same address — a caller pinning an address offchain
-    /// does not need to know who will deploy it.
+    /// callers returns the same address, the derivation's — a caller pinning
+    /// an address offchain does not need to know who will deploy it.
     function testCloneDeterministicOpenSaltPredictCallerIndependent(
         address implementation,
         bytes memory data,
@@ -117,6 +117,8 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         address bob
     ) external {
         vm.assume(alice != bob);
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
 
         vm.prank(alice);
         address predictedAlice = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
@@ -125,6 +127,32 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         address predictedBob = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
 
         assertEq(predictedAlice, predictedBob);
+        assertEq(predictedAlice, expected);
+    }
+
+    /// The address depends on no chain state: a funded factory at an arbitrary
+    /// block and timestamp predicts and deploys at the derivation's address.
+    function testCloneDeterministicOpenSaltAddressIgnoresChainState(
+        bytes32 salt,
+        bytes memory data,
+        uint256 balance,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        balance = bound(balance, 1, type(uint256).max);
+        timestamp = bound(timestamp, 2, type(uint64).max);
+        blockNumber = bound(blockNumber, 2, type(uint64).max);
+        TestCloneable implementation = new TestCloneable();
+        vm.deal(address(I_CLONE_FACTORY), balance);
+        vm.warp(timestamp);
+        vm.roll(blockNumber);
+
+        bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        address expected =
+            Clones.predictDeterministicAddress(address(implementation), effectiveSalt, address(I_CLONE_FACTORY));
+
+        assertEq(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt), expected);
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt), expected);
     }
 
     /// `data` IS IN THE DERIVATION, which is what makes losing the

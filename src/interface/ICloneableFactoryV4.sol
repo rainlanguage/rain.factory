@@ -137,15 +137,23 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///
     /// # What the address does NOT fix, which implementations MUST respect
     ///
-    /// The address fixes `data`. It cannot fix anything `initialize` reads that
-    /// is not `data`, so the deployer keeps exactly one lever: WHEN the deploy
-    /// lands, and therefore which chain state `initialize` observes.
+    /// The address fixes `data`. It cannot fix anything else `initialize`
+    /// observes, so the state `initialize` leaves behind MUST depend only on
+    /// `data` and on chain state at the block the deploy lands in. The deployer
+    /// then keeps exactly one lever: WHEN it lands, and therefore which chain
+    /// state `initialize` observes.
     ///
     /// - The implementation MUST NOT read `tx.origin`, directly or through
     ///   anything it calls during initialization. `tx.origin` is the deployer,
-    ///   and it is the one remaining channel by which the deployer could reach
-    ///   initial state. (`msg.sender` during `initialize` is the factory, which
-    ///   is the same for every caller and therefore harmless.)
+    ///   so it is a channel by which the deployer could reach initial state.
+    ///   (`msg.sender` during `initialize` is the factory, which is the same
+    ///   for every caller and therefore harmless.)
+    /// - The gas `initialize` is given MUST NOT select state. The factory
+    ///   forwards whatever gas the caller left it, and the deployer chooses
+    ///   that. A sub-call that runs out of gas MUST revert `initialize` rather
+    ///   than be caught and defaulted, and `gasleft()` MUST NOT branch.
+    ///   Otherwise a front-runner pins a fallback state at the address, with
+    ///   the intended `data`.
     /// - Anything else `initialize` resolves from chain state resolves the same
     ///   way for every caller at a given block. An address registry — such as
     ///   rain.deploy's — is the intended shape here: `initialize` resolves the
