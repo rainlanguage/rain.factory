@@ -19,7 +19,8 @@ deploy-pin snapshots and its deploy script. That repo publishes as
 
 Depend on `rain-factory` if you need the interfaces or the library. Depend on
 `rain-factory-deploy` if you need the deployed address or codehash of a live
-`CloneFactory`.
+`CloneFactory`. A live `CloneFactory` behaves as the `rain-factory` revision
+that repo pins, which may lag this one.
 
 ## Library
 

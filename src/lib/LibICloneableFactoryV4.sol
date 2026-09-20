@@ -48,7 +48,8 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// This is the library half of the library/deploy split
 /// (rainlanguage/rain.factory#46): the derivations, guards and the
 /// clone-initialize-verify flow live here, unit tested; the deploy half's
-/// concrete `CloneFactory` adds no behaviour of its own.
+/// concrete `CloneFactory` adds no behaviour of its own, at whichever revision
+/// of this library it pins.
 ///
 /// The library opens with the executable form of the two
 /// effective-`CREATE2`-salt derivations that `ICloneableFactoryV4` pins to

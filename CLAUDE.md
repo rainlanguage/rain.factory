@@ -17,7 +17,9 @@ codehash pins (`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
 `script/Deploy.sol` all live in
 [`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
 publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
-and library; on `rain-factory-deploy` for the deployed pins.
+and library; on `rain-factory-deploy` for the deployed pins. The contracts those
+pins name behave as the `rain-factory` revision that repo pins, which may lag
+this one.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
 SPDX headers.
