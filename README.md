@@ -1,7 +1,5 @@
 # rain.factory
 
-Docs at https://rainprotocol.github.io/rain.factory
-
 This repo is the **library** half of the library/deploy split
 ([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
 `ICloneable*` interface surface and the `LibICloneableFactoryV4` library that
