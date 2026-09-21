@@ -93,11 +93,10 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// address that does not depend on the caller and does depend on the
     /// initialization data.
     ///
-    /// The factory MUST use
-    /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`
-    /// as the `CREATE2` salt, so the deployed address is a pure function of
-    /// `(factory, implementation, salt, data)`. The factory MUST NOT mix
-    /// `msg.sender`, `tx.origin`, or any other caller-derived value into it.
+    /// The factory MUST use the open-salt derivation pinned at the top of this
+    /// interface as the `CREATE2` salt, so the deployed address is a pure
+    /// function of `(factory, implementation, salt, data)`. The factory MUST NOT
+    /// mix `msg.sender`, `tx.origin`, or any other caller-derived value into it.
     ///
     /// Initialization MUST be atomic with the clone, per the shared spec in
     /// `ICloneableFactoryV3.cloneDeterministic`: the factory MUST call
@@ -178,18 +177,14 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// that does.
     ///
     /// They do not overlap, by construction. Both preimages are 96 bytes whose
-    /// FIRST word is a fixed domain tag no caller can set:
-    /// `cloneDeterministic` hashes
-    /// `abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt)`
-    /// and this function hashes
-    /// `abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data))`.
-    /// The two domain constants are distinct `keccak256` outputs, so the two
-    /// preimage sets are disjoint in their first word alone. A caller on the
-    /// namespaced path chooses only words 1 and 2 (`msg.sender` and `salt`); a
-    /// caller here chooses only words 1 and 2 (`salt` and `keccak256(data)`);
-    /// neither can place the other derivation's tag in word 0, so neither can
-    /// aim its entry point at an address the other produces. The disjointness is
-    /// a property of the two fixed tags.
+    /// FIRST word is a fixed domain tag no caller can set — see the derivations
+    /// at the top of this interface. The two domain constants are distinct
+    /// `keccak256` outputs, so the two preimage sets are disjoint in their first
+    /// word alone. A caller on the namespaced path chooses only words 1 and 2
+    /// (`msg.sender` and `salt`); a caller here chooses only words 1 and 2
+    /// (`salt` and `keccak256(data)`); neither can place the other derivation's
+    /// tag in word 0, so neither can aim its entry point at an address the other
+    /// produces. The disjointness is a property of the two fixed tags.
     ///
     /// # Events
     ///
