@@ -17,7 +17,7 @@ The concrete `CloneFactory`, its deployed address + codehash pins
 [`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
 publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
 and library; on `rain-factory-deploy` for the deployed pins, which embed the
-`rain-factory` revision that repo pins and may lag this one.
+`rain-factory` revision that repo pins.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
 SPDX headers.

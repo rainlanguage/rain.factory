@@ -45,9 +45,7 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// @title LibICloneableFactoryV4
 /// @notice The whole of an `ICloneableFactoryV4` factory as internal library
 /// logic, so a concrete factory is nothing but one delegation per entry point.
-/// This is the library half of the library/deploy split; the deploy half's
-/// concrete `CloneFactory` adds no behaviour of its own, at whichever revision
-/// of this library it pins.
+/// This is the library half of the library/deploy split.
 ///
 /// `ICloneableFactoryV4` is the spec for everything here: what each salt
 /// commits to, the atomic clone-and-initialize, and the `NewClone` event

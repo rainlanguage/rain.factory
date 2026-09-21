@@ -17,8 +17,7 @@ deploy-pin snapshots and its deploy script. That repo publishes as
 
 Depend on `rain-factory` for the interfaces and the library; on
 `rain-factory-deploy` for a live `CloneFactory`'s address or codehash. A live
-`CloneFactory` embeds the `rain-factory` revision that repo pins, which may lag
-this one.
+`CloneFactory` embeds the `rain-factory` revision that repo pins.
 
 ## Library
 
