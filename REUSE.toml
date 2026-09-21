@@ -3,6 +3,7 @@ version = 1
 [[annotations]]
 path = [
   ".gas-snapshot",
+  ".claude/**/",
   ".github/workflows/**/",
   ".vscode/**/",
   ".coderabbitai.yaml",
