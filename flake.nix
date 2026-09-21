@@ -8,7 +8,7 @@
 
   outputs =
     { rainix, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system: rec {
+    flake-utils.lib.eachDefaultSystem (system: {
       packages = rainix.packages.${system};
       devShells = rainix.devShells.${system};
     });
