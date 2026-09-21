@@ -109,63 +109,42 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// # Why hashing `data` into the salt is the whole point
     ///
     /// Without the `msg.sender` namespacing, anybody can deploy at this address
-    /// before the party that intended to, and since clone-and-initialize is
-    /// atomic and `initialize` runs exactly once, whoever gets there first sets
-    /// the clone's state permanently. There is no recovery: the address is
-    /// occupied and nobody can redeploy over it.
-    ///
-    /// That is only dangerous if the first deployer has anything to vary.
-    /// Because `data` is inside the derivation, they do not:
+    /// before the party that intended to, and whoever gets there first sets the
+    /// clone's state permanently. That is only dangerous if the first deployer
+    /// has anything to vary. Because `data` is inside the derivation, they
+    /// cannot vary it:
     ///
     /// - A front-runner passing DIFFERENT `data` derives a DIFFERENT address.
-    ///   The address anyone pinned is untouched; the front-runner has deployed
-    ///   their own contract at their own address, at their own expense.
     /// - A front-runner passing the SAME `data` produces the contract that was
-    ///   intended, initialized with the bytes that were intended, and has done
-    ///   nothing but pay the gas.
+    ///   intended, initialized with the bytes that were intended.
     ///
-    /// This is the same position that makes permissionless deterministic
-    /// (Zoltu-style) deployment harmless — a Zoltu deploy has no arguments, so
-    /// front-running it produces byte-for-byte the intended contract — reached
-    /// WITH arguments, by putting the arguments in the address rather than by
-    /// having none. It is a property of this signature, not a condition on the
-    /// implementation being cloned, so there is no per-implementation audit of
-    /// "could a squatter pass something worse" to get wrong.
+    /// This commits what a squatter can PASS. It does not commit what the
+    /// implementation runs — the derivation fixes its ADDRESS, not its code —
+    /// nor anything else `initialize` reads. Those are below.
     ///
     /// # What the address does NOT fix, which implementations MUST respect
     ///
     /// The address fixes `data`. It cannot fix anything else `initialize`
     /// observes, so the state `initialize` leaves behind MUST depend only on
-    /// `data` and on chain state at the block the deploy lands in. The deployer
-    /// then keeps exactly one lever: WHEN it lands, and therefore which chain
-    /// state `initialize` observes.
+    /// `data` and on state no third party can set within a transaction.
     ///
     /// - The implementation MUST NOT read `tx.origin`, directly or through
-    ///   anything it calls during initialization. `tx.origin` is the deployer,
-    ///   so it is a channel by which the deployer could reach initial state.
-    ///   (`msg.sender` during `initialize` is the factory, which is the same
-    ///   for every caller and therefore harmless.)
-    /// - The gas `initialize` is given MUST NOT select state. The factory
-    ///   forwards whatever gas the caller left it, and the deployer chooses
-    ///   that. A sub-call that runs out of gas MUST revert `initialize` rather
-    ///   than be caught and defaulted, and `gasleft()` MUST NOT branch.
-    ///   Otherwise a front-runner pins a fallback state at the address, with
-    ///   the intended `data`.
-    /// - Anything else `initialize` resolves from chain state resolves the same
-    ///   way for every caller at a given block. An address registry — such as
-    ///   rain.deploy's — is the intended shape here: `initialize` resolves the
-    ///   admin by NAME from the registry rather than taking an admin address,
-    ///   and the name, being part of `data`, is committed to by the address.
-    ///   A front-runner resolves the same admin the intended deployer would
-    ///   have. While the name is unbound the registry read reverts, so the
-    ///   clone cannot be deployed at all, and the front-running window only
-    ///   opens once the binding exists. A clone that resolves once during
-    ///   `initialize` and stores the answer is unaffected by any later
-    ///   rebinding.
-    /// - Registry-resolved authority is the ordinary case: it is simply `data`
-    ///   that names things instead of naming addresses. `data` MAY be empty, and
-    ///   an implementation that resolves everything from the registry will pass
-    ///   empty `data`.
+    ///   anything it calls during initialization.
+    /// - The gas `initialize` is given MUST NOT select state. A sub-call that
+    ///   runs out of gas MUST revert `initialize` rather than be caught and
+    ///   defaulted, and `gasleft()` MUST NOT branch.
+    /// - Anything else `initialize` resolves from chain state MUST NOT be
+    ///   settable within a transaction by a third party. A pool price a
+    ///   front-runner can skew, deploy against and restore atomically fails
+    ///   this. An address registry — such as rain.deploy's, where only a
+    ///   compile-time root may bind — is the intended shape here: `initialize`
+    ///   resolves the admin by NAME from the registry rather than taking an
+    ///   admin address, and the name, being part of `data`, is committed to by
+    ///   the address.
+    /// - The implementation MUST NOT delegate onward to a target anyone can
+    ///   change. The derivation fixes the implementation's ADDRESS, not its
+    ///   code, so a beacon proxy as implementation leaves the clone's behaviour
+    ///   with whoever retargets the beacon.
     ///
     /// # Obligation on the factory, not on the consumer
     ///

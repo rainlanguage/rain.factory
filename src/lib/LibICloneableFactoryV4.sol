@@ -15,7 +15,8 @@ import {
 error ZeroImplementationCodeSize();
 
 /// Thrown when an implementation's code begins with `0xef`: an EIP-7702
-/// delegated account.
+/// delegated account. The only mutable-code shape detectable here; an
+/// implementation that delegates onward to a mutable target is not.
 error DelegatedImplementation();
 
 /// Thrown when the clone address already has code. On the open-salt path the
