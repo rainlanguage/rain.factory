@@ -14,10 +14,10 @@ import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
 /// @notice How `cloneAndInitialize` guards the implementation and treats each
 /// `initialize` answer, through both clone entry points.
 contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
+    TestCloneFactory internal immutable iCloneFactory;
 
     constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
+        iCloneFactory = new TestCloneFactory();
     }
 
     /// Both entry points revert with exactly `expected` when `initialize`
@@ -28,9 +28,9 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
         address implementation = address(new TestCloneableRawAnswer());
         bytes memory data = abi.encode(reverts, answer);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// An empty return, as from an `ICloneableV1`, is `InitializationFailed`.
@@ -102,9 +102,9 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
         address implementation = makeAddr("delegated-implementation");
         vm.etch(implementation, abi.encodePacked(hex"ef0100", delegate));
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// A clone address that holds ETH but no code deploys through both entry
@@ -113,14 +113,14 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
         balance = bound(balance, 1, type(uint128).max);
         address implementation = address(new TestCloneable());
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(implementation, salt, address(this));
         vm.deal(predicted, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt), predicted);
+        assertEq(iCloneFactory.cloneDeterministic(implementation, data, salt), predicted);
         assertEq(predicted.balance, balance);
 
-        address predictedOpenSalt = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
+        address predictedOpenSalt = iCloneFactory.predictDeterministicAddressOpenSalt(implementation, data, salt);
         vm.deal(predictedOpenSalt, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
+        assertEq(iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
         assertEq(predictedOpenSalt.balance, balance);
     }
 }

@@ -15,10 +15,10 @@ import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/Test
 contract ICloneableV2InitializeTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
+    TestCloneFactory internal immutable iCloneFactory;
 
     constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
+        iCloneFactory = new TestCloneFactory();
     }
 
     /// `initialize` can NOT be called more than once: the factory's call is
@@ -28,7 +28,7 @@ contract ICloneableV2InitializeTest is Test {
     function testInitializeOnlyOnce(bytes32 salt, bytes memory data, bytes memory otherData) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertEq(TestCloneable(child).sData(), data);
 
         vm.expectRevert(abi.encodeWithSelector(TestCloneableAlreadyInitialized.selector));
@@ -42,7 +42,7 @@ contract ICloneableV2InitializeTest is Test {
     /// factory has initialized, for `value`, `0` and `type(uint256).max`.
     function testTypedOverloadRevertsInitializeSignatureFn(bytes32 salt, bytes memory data, uint256 value) external {
         TestCloneable implementation = new TestCloneable();
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         uint256[3] memory values = [value, 0, type(uint256).max];
         for (uint256 i = 0; i < values.length; i++) {
