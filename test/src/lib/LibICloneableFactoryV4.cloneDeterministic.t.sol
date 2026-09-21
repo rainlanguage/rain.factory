@@ -253,9 +253,9 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
     /// thing: "MUST NOT call any other functions on the cloned proxy before
     /// `initialize` completes successfully". `TestCloneable` only exposes its
     /// end state, so the recorder is used instead — it appends the selector of
-    /// every call the proxy receives, including ones whose result the factory
-    /// would discard, and the whole recorded sequence is asserted rather than
-    /// just its first entry.
+    /// every call the proxy receives other than its own two view accessors,
+    /// including ones whose result the factory would discard, and the whole
+    /// recorded sequence is asserted rather than just its first entry.
     function testCloneDeterministicInitializeIsTheOnlyCall(bytes32 salt, bytes memory data) external {
         TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
 
