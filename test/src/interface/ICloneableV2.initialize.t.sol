@@ -2,25 +2,15 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
-
 import {ICloneableV2} from "src/interface/ICloneableV2.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {CloneFactoryTest} from "test/abstract/CloneFactoryTest.sol";
 import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
 
 /// @title ICloneableV2InitializeTest
 /// @notice `ICloneableV2`'s two MUSTs on `initialize`, exercised on
 /// `TestCloneable` and on clones of it that `TestCloneFactory` deployed and
 /// initialized.
-contract ICloneableV2InitializeTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract ICloneableV2InitializeTest is CloneFactoryTest {
     /// `initialize` can NOT be called more than once: the factory's call is
     /// the one that succeeds, a second call on the clone reverts
     /// `TestCloneableAlreadyInitialized`, and the clone keeps the data the

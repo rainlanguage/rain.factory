@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
+import {Vm} from "forge-std-1.16.1/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
@@ -16,7 +16,7 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {CloneFactoryTest} from "test/abstract/CloneFactoryTest.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
 import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
 
@@ -29,15 +29,7 @@ import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
 /// guarantees. So the two derivations are also tested against each other here,
 /// including the one squat that the pair of distinct domain tags exists to
 /// close.
-contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is CloneFactoryTest {
     /// The effective `CREATE2` salt is exactly the derivation
     /// `ICloneableFactoryV4` fixes:
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`.
@@ -363,9 +355,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
     }
 
     /// An implementation that initializes to a non-success code reverts
