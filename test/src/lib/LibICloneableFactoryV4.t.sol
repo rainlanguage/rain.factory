@@ -151,10 +151,10 @@ contract LibICloneableFactoryV4Test is Test {
     }
 
     /// `effectiveOpenSalt` over 1, 32, 33 and 2048 bytes of `data` is the formula.
-    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 b) external pure {
-        bytes memory oneByte = abi.encodePacked(b);
+    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 tailByte) external pure {
+        bytes memory oneByte = abi.encodePacked(tailByte);
         bytes memory oneWord = abi.encodePacked(word);
-        bytes memory oneWordPlusOne = abi.encodePacked(word, b);
+        bytes memory oneWordPlusOne = abi.encodePacked(word, tailByte);
         bytes memory manyWords = new bytes(0);
         for (uint256 i = 0; i < 64; i++) {
             manyWords = abi.encodePacked(manyWords, word);
