@@ -11,8 +11,7 @@ import {TestCloneable} from "test/concrete/TestCloneable.sol";
 import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
 
 /// @title LibICloneableFactoryV4CloneAndInitializeTest
-/// @notice How `cloneAndInitialize` guards the implementation and treats each
-/// `initialize` answer, through both clone entry points.
+/// @notice How `cloneAndInitialize` behaves through both clone entry points.
 contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
     TestCloneFactory internal immutable I_CLONE_FACTORY;
 
