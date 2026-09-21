@@ -18,10 +18,7 @@ error ZeroImplementationCodeSize();
 /// delegated account.
 error DelegatedImplementation();
 
-/// Thrown when the clone address already has code. On the open-salt path the
-/// occupant is the exact clone asked for; on the namespaced path it is the
-/// clone the same deployer deployed at that salt, with whatever `data` that
-/// call passed.
+/// Thrown when the clone address already has code.
 /// @param clone The occupied address.
 error CloneAddressOccupied(address clone);
 
