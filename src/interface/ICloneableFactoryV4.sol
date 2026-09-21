@@ -16,11 +16,10 @@ bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.facto
 
 /// @dev Domain tag hashed as the FIRST word of the `cloneDeterministicOpenSalt`
 /// / `predictDeterministicAddressOpenSalt` effective `CREATE2` salt.
-/// String-derived so the literal is its own documentation. Pairs with
-/// `ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN`: the two are distinct fixed words,
-/// so the open-salt and namespaced images cannot overlap and no other entry
-/// point on the factory can be aimed at an open-salt address. See
-/// `ICloneableFactoryV4`.
+/// String-derived so the literal is its own documentation. A tag constrains
+/// only the derivations that hash it: keeping every OTHER entry point off
+/// open-salt addresses is the factory's MUST NOT on
+/// `ICloneableFactoryV4.cloneDeterministicOpenSalt`.
 bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factory.clone.opensalt");
 
 /// @title ICloneableFactoryV4
