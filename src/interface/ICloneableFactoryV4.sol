@@ -109,28 +109,18 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// # Why hashing `data` into the salt is the whole point
     ///
     /// Without the `msg.sender` namespacing, anybody can deploy at this address
-    /// before the party that intended to, and since clone-and-initialize is
-    /// atomic and `initialize` runs exactly once, whoever gets there first sets
-    /// the clone's state permanently. There is no recovery: the address is
-    /// occupied and nobody can redeploy over it.
-    ///
-    /// That is only dangerous if the first deployer has anything to vary.
-    /// Because `data` is inside the derivation, they cannot vary it:
+    /// before the party that intended to, and whoever gets there first sets the
+    /// clone's state permanently. That is only dangerous if the first deployer
+    /// has anything to vary. Because `data` is inside the derivation, they
+    /// cannot vary it:
     ///
     /// - A front-runner passing DIFFERENT `data` derives a DIFFERENT address.
-    ///   The address anyone pinned is untouched; the front-runner has deployed
-    ///   their own contract at their own address, at their own expense.
     /// - A front-runner passing the SAME `data` produces the contract that was
-    ///   intended, initialized with the bytes that were intended, and has done
-    ///   nothing but pay the gas.
+    ///   intended, initialized with the bytes that were intended.
     ///
-    /// This is the same position that makes permissionless deterministic
-    /// (Zoltu-style) deployment harmless — a Zoltu deploy has no arguments, so
-    /// front-running it produces byte-for-byte the intended contract — reached
-    /// WITH arguments, by putting the arguments in the address rather than by
-    /// having none. This commits what a squatter can PASS. It does not commit
-    /// what the implementation runs — the derivation fixes its ADDRESS, not its
-    /// code — nor anything else `initialize` reads. Those are below.
+    /// This commits what a squatter can PASS. It does not commit what the
+    /// implementation runs — the derivation fixes its ADDRESS, not its code —
+    /// nor anything else `initialize` reads. Those are below.
     ///
     /// # What the address does NOT fix, which implementations MUST respect
     ///
@@ -162,17 +152,10 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   opens once the binding exists. A clone that resolves once during
     ///   `initialize` and stores the answer is unaffected by any later
     ///   rebinding.
-    /// - Registry-resolved authority is the ordinary case: it is simply `data`
-    ///   that names things instead of naming addresses. `data` MAY be empty, and
-    ///   an implementation that resolves everything from the registry will pass
-    ///   empty `data`.
     /// - The implementation MUST NOT delegate onward to a target anyone can
     ///   change. The derivation fixes the implementation's ADDRESS, not its
-    ///   code, and the clone delegates to that address forever, so a beacon
-    ///   proxy as implementation leaves the clone's behaviour — at deploy and
-    ///   afterwards — with whoever retargets the beacon.
-    ///   `LibICloneableFactoryV4.checkImplementationCode` rejects only the
-    ///   `0xef` (EIP-7702) form.
+    ///   code, so a beacon proxy as implementation leaves the clone's behaviour
+    ///   with whoever retargets the beacon.
     ///
     /// # Obligation on the factory, not on the consumer
     ///
