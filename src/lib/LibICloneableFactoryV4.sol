@@ -45,10 +45,6 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// @title LibICloneableFactoryV4
 /// @notice The whole of an `ICloneableFactoryV4` factory as internal library
 /// logic, so a concrete factory is nothing but one delegation per entry point.
-/// This is the library half of the library/deploy split
-/// (rainlanguage/rain.factory#46): the derivations, guards and the
-/// clone-initialize-verify flow live here, unit tested; the deploy half's
-/// concrete `CloneFactory` adds no behaviour of its own.
 ///
 /// The library opens with the executable form of the two
 /// effective-`CREATE2`-salt derivations that `ICloneableFactoryV4` pins to
