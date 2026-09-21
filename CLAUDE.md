@@ -48,8 +48,8 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   `msg.sender` and `address(this)` are read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V3`). Still
-  published for consumers pinned to them; do not use for new work. When a new
-  version lands, the one it supersedes moves here.
+  published for consumers pinned to them, so FROZEN: never edit one. Do not use
+  for new work. When a new version lands, the one it supersedes moves here.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV4` extends `ICloneableFactoryV3`), which is what
