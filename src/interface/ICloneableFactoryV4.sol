@@ -70,24 +70,15 @@ bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factor
 ///   initialized with the same bytes, because varying either input lands
 ///   somewhere else.
 ///
-/// Neither dominates. Open-salt costs the ability to choose an address before
-/// the initialization data is final: the address is not knowable until `data`
-/// is, and re-deploying "the same" clone with corrected `data` is a different
-/// address. Sender-namespacing costs portability across accounts. A consumer
-/// pinning an open-salt address must be able to reproduce the exact `data`
-/// bytes, ABI encoding and all, since a byte of difference is a different
-/// address.
+/// Open-salt costs the ability to choose an address before the initialization
+/// data is final: the address is not knowable until `data` is, and re-deploying
+/// "the same" clone with corrected `data` is a different address.
+/// Sender-namespacing costs portability across accounts. A consumer pinning an
+/// open-salt address must be able to reproduce the exact `data` bytes, ABI
+/// encoding and all, since a byte of difference is a different address.
 ///
-/// Cross-network determinism is NOT a property of either derivation on its own.
-/// `CREATE2` hashes the deploying factory's address, and the EIP-1167 creation
-/// code it hashes contains the implementation's address, so an open-salt clone
-/// is at the same address on two chains only when BOTH the factory and the
-/// implementation are at the same address on both — each deployed
-/// deterministically (Zoltu-style), all the way down. Dropping `msg.sender` from
-/// the derivation removes the deployer as a third thing that has to match; it
-/// does not make the other two match. If the implementation is deployed by an
-/// ordinary nonce-dependent `CREATE` on each chain, its address differs per
-/// chain and so does every clone of it, on both derivations.
+/// Cross-network determinism needs this factory AND `implementation` at the
+/// same address on both chains; neither derivation supplies it.
 interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// Deploys an EIP-1167 proxy clone of `implementation` via `CREATE2` at an
     /// address that does not depend on the caller and does depend on the
@@ -106,8 +97,6 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// `initialize` returns keccak256("ICloneableV2.initialize"). MUST emit
     /// `NewClone`.
     ///
-    /// # Why hashing `data` into the salt is the whole point
-    ///
     /// Without the `msg.sender` namespacing, anybody can deploy at this address
     /// before the party that intended to, and since clone-and-initialize is
     /// atomic and `initialize` runs exactly once, whoever gets there first sets
@@ -124,15 +113,9 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   intended, initialized with the bytes that were intended, and has done
     ///   nothing but pay the gas.
     ///
-    /// This is the same position that makes permissionless deterministic
-    /// (Zoltu-style) deployment harmless — a Zoltu deploy has no arguments, so
-    /// front-running it produces byte-for-byte the intended contract — reached
-    /// WITH arguments, by putting the arguments in the address rather than by
-    /// having none. It is a property of this signature, not a condition on the
-    /// implementation being cloned, so there is no per-implementation audit of
-    /// "could a squatter pass something worse" to get wrong.
-    ///
-    /// # What the address does NOT fix, which implementations MUST respect
+    /// It is a property of this signature, not a condition on the implementation
+    /// being cloned, so there is no per-implementation audit of "could a
+    /// squatter pass something worse" to get wrong.
     ///
     /// The address fixes `data`. It cannot fix anything else `initialize`
     /// observes, so the state `initialize` leaves behind MUST depend only on
@@ -152,30 +135,20 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   Otherwise a front-runner pins a fallback state at the address, with
     ///   the intended `data`.
     /// - Anything else `initialize` resolves from chain state resolves the same
-    ///   way for every caller at a given block. An address registry — such as
-    ///   rain.deploy's — is the intended shape here: `initialize` resolves the
-    ///   admin by NAME from the registry rather than taking an admin address,
-    ///   and the name, being part of `data`, is committed to by the address.
-    ///   A front-runner resolves the same admin the intended deployer would
-    ///   have. While the name is unbound the registry read reverts, so the
-    ///   clone cannot be deployed at all, and the front-running window only
-    ///   opens once the binding exists. A clone that resolves once during
-    ///   `initialize` and stores the answer is unaffected by any later
-    ///   rebinding.
-    /// - Registry-resolved authority is the ordinary case: it is simply `data`
-    ///   that names things instead of naming addresses. `data` MAY be empty, and
-    ///   an implementation that resolves everything from the registry will pass
-    ///   empty `data`.
+    ///   way for every caller at a given block. Naming things in `data` and
+    ///   resolving the names onchain is such a case: the name, being part of
+    ///   `data`, is committed to by the address.
     ///
-    /// # Obligation on the factory, not on the consumer
-    ///
-    /// The guarantee above holds only while no OTHER entry point on the same
-    /// factory can `CREATE2` at an effective salt in this derivation's image
-    /// with caller-supplied initialization data. The inherited
-    /// `cloneDeterministic` is exactly such an entry point — it takes arbitrary
-    /// `data` — so the two derivations MUST NOT share an effective-salt image,
-    /// and a factory implementing this interface MUST NOT expose any entry point
-    /// that does.
+    /// The guarantee above holds only while every entry point on the same
+    /// factory that can `CREATE2` at an effective salt in this derivation's
+    /// image initializes the clone with exactly the `data` hashed into that
+    /// salt, wherever those bytes come from. One that initializes from a
+    /// constant, from storage, or not at all occupies the pinned address with a
+    /// clone the address does not describe. The inherited `cloneDeterministic`
+    /// is such an entry point, since its `data` is outside its own derivation,
+    /// so the two derivations MUST NOT share an effective-salt image, and a
+    /// factory implementing this interface MUST NOT expose any entry point that
+    /// reaches this one's image without that agreement.
     ///
     /// They do not overlap, by construction. Both preimages are 96 bytes whose
     /// FIRST word is a fixed domain tag no caller can set:
@@ -190,8 +163,6 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// neither can place the other derivation's tag in word 0, so neither can
     /// aim its entry point at an address the other produces. The disjointness is
     /// a property of the two fixed tags.
-    ///
-    /// # Events
     ///
     /// `NewClone` is shared with `cloneDeterministic` and is emitted
     /// identically, with the caller-supplied `salt` — NOT the effective salt.
