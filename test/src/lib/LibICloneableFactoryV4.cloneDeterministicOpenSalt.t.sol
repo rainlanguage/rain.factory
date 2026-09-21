@@ -364,7 +364,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
 
         assertEq(entries.length, 1);
         assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
+        assertEq(entries[0].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
         assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
     }
 
