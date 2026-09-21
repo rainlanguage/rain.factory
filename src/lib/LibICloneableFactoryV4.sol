@@ -46,26 +46,11 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// @title LibICloneableFactoryV4
 /// @notice The whole of an `ICloneableFactoryV4` factory as internal library
 /// logic, so a concrete factory is nothing but one delegation per entry point.
-/// This is the library half of the library/deploy split
-/// (rainlanguage/rain.factory#46): the derivations, guards and the
-/// clone-initialize-verify flow live here, unit tested; the deploy half's
-/// concrete `CloneFactory` adds no behaviour of its own.
+/// This is the library half of the library/deploy split.
 ///
-/// The library opens with the executable form of the two
-/// effective-`CREATE2`-salt derivations that `ICloneableFactoryV4` pins to
-/// exact bytes, so a factory, an indexer or a consumer predicting a clone
-/// address computes them from one place instead of re-deriving the formulas
-/// inline. Each function reproduces its interface formula byte for byte and
-/// reads its domain tag from the interface, so the tags have a single source of
-/// truth and the derivation cannot drift from the spec. The entry points below
-/// them consume the derivations from here and nowhere else. See
-/// `ICloneableFactoryV4` for what each salt commits to and why the two images
-/// are disjoint — its NatSpec, with the atomic clone-and-initialize and the
-/// `NewClone` event carrying the RAW caller salt, is the spec for everything
-/// here.
-///
-/// `msg.sender` is read inside this library: `cloneDeterministic` namespaces
-/// by it and `NewClone` reports it. The predictions read `address(this)`.
+/// `ICloneableFactoryV4` is the spec for everything here: what each salt
+/// commits to, the atomic clone-and-initialize, and the `NewClone` event
+/// carrying the RAW caller salt.
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen

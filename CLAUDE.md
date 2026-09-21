@@ -11,13 +11,13 @@ factories in the Rain ecosystem: the `ICloneable*` interface surface and the
 the library/deploy split (rainlanguage/rain.factory#46) — no concrete contract,
 no deploy pins, no deploy script.
 
-The concrete `CloneFactory` — meant to be a pure delegation into
-`LibICloneableFactoryV4`, one call per entry point — its deployed address +
-codehash pins (`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
+The concrete `CloneFactory`, its deployed address + codehash pins
+(`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
 `script/Deploy.sol` all live in
 [`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
 publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
-and library; on `rain-factory-deploy` for the deployed pins.
+and library; on `rain-factory-deploy` for the deployed pins, which embed the
+`rain-factory` revision that repo pins.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
 SPDX headers.
