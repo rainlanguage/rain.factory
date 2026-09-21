@@ -64,7 +64,8 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// here.
 ///
 /// `msg.sender` is read inside this library: `cloneDeterministic` namespaces
-/// by it and `NewClone` reports it. The predictions read `address(this)`.
+/// by it and `NewClone` reports it. `cloneAndInitialize` and the predictions
+/// read `address(this)`.
 library LibICloneableFactoryV4 {
     /// The effective `CREATE2` salt for the namespaced derivation
     /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
