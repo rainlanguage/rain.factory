@@ -1,9 +1,8 @@
 # rain.factory
 
-This repo is the **library** half of the library/deploy split
-([#46](https://github.com/rainlanguage/rain.factory/issues/46)): the
-`ICloneable*` interface surface and the `LibICloneableFactoryV4` library that
-implements it. It publishes to Soldeer as `rain-factory`.
+This repo is the **library** half of the library/deploy split: the `ICloneable*`
+interface surface and the `LibICloneableFactoryV4` library that implements it.
+It publishes to Soldeer as `rain-factory`.
 
 ## Concrete implementations
 
