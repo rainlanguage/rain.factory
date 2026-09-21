@@ -15,6 +15,7 @@ path = [
   "flake.nix",
   "foundry.toml",
   "slither.config.json",
+  "slither.db.json",
   "REUSE.toml",
   "soldeer.lock",
   ".soldeerignore",
