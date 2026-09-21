@@ -21,8 +21,7 @@ error TestCloneableAlreadyInitialized();
 /// - It stores whatever `data` it was initialized with in the public `sData`,
 ///   so a test can prove the bytes reached the clone verbatim.
 /// - `initialize` can NOT be called more than once — the interface's first
-///   normative MUST. The flag is written before the data so a re-entrant call
-///   cannot slip past the guard.
+///   normative MUST.
 /// - It returns the success sentinel written out from the LITERAL STRING
 ///   `ICloneableV2` names, NOT the imported `ICLONEABLE_V2_SUCCESS`. Importing
 ///   the constant would put both sides of the library's comparison in
