@@ -56,12 +56,11 @@ bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3
 /// address computes them from one place instead of re-deriving the formulas
 /// inline. Each function reproduces its interface formula byte for byte and
 /// reads its domain tag from the interface, so the tags have a single source of
-/// truth and the derivation cannot drift from the spec. The entry points below
-/// them consume the derivations from here and nowhere else. See
-/// `ICloneableFactoryV4` for what each salt commits to and why the two images
-/// are disjoint — its NatSpec, with the atomic clone-and-initialize and the
-/// `NewClone` event carrying the RAW caller salt, is the spec for everything
-/// here.
+/// truth. The entry points below them consume the derivations from here and
+/// nowhere else. See `ICloneableFactoryV4` for what each salt commits to and
+/// why the two images are disjoint — its NatSpec, with the atomic
+/// clone-and-initialize and the `NewClone` event carrying the RAW caller salt,
+/// is the spec for everything here.
 ///
 /// `msg.sender` is read inside this library: `cloneDeterministic` namespaces
 /// by it and `NewClone` reports it. The predictions read `address(this)`.
