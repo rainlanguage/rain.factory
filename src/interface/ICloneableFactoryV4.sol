@@ -56,13 +56,13 @@ bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factor
 /// initialization data the clone's address commits to:
 ///
 /// - `cloneDeterministic` derives its salt from `msg.sender` and `salt` (behind
-///   the namespaced tag). The address commits to WHO deployed and not to WHAT
-///   was deployed. It buys squat-resistance — nobody but that account can reach
-///   that address — and pays with an identity baked into an address: retire the
-///   deploying account and every address derived from it becomes unreachable,
-///   so a pinned address can never be re-established from a different account.
-///   It also leaves `data` outside the derivation, so the deployer alone
-///   decides the clone's initial state at an address that says nothing about it.
+///   the namespaced tag). The address commits to WHO deployed and to
+///   `implementation`, but not to `data`. It buys squat-resistance — nobody but
+///   that account can reach that address — and pays with an identity baked into
+///   an address: retire the deploying account and every address derived from it
+///   becomes unreachable, so a pinned address can never be re-established from
+///   a different account. The deployer alone decides the clone's initial state
+///   at an address that says nothing about it.
 /// - `cloneDeterministicOpenSalt` derives its salt from `salt` and `data`
 ///   (behind the open-salt tag). The address commits to WHAT was deployed and
 ///   not to WHO deployed it. Every account reaches the same address — and so
