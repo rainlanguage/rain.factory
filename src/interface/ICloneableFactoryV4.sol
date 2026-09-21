@@ -169,13 +169,16 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///
     /// # Obligation on the factory, not on the consumer
     ///
-    /// The guarantee above holds only while no OTHER entry point on the same
-    /// factory can `CREATE2` at an effective salt in this derivation's image
-    /// with caller-supplied initialization data. The inherited
-    /// `cloneDeterministic` is exactly such an entry point — it takes arbitrary
-    /// `data` — so the two derivations MUST NOT share an effective-salt image,
-    /// and a factory implementing this interface MUST NOT expose any entry point
-    /// that does.
+    /// The guarantee above holds only while every entry point on the same
+    /// factory that can `CREATE2` at an effective salt in this derivation's
+    /// image initializes the clone with exactly the `data` hashed into that
+    /// salt, wherever those bytes come from. One that initializes from a
+    /// constant, from storage, or not at all occupies the pinned address with a
+    /// clone the address does not describe. The inherited `cloneDeterministic`
+    /// is such an entry point, since its `data` is outside its own derivation,
+    /// so the two derivations MUST NOT share an effective-salt image, and a
+    /// factory implementing this interface MUST NOT expose any entry point that
+    /// reaches this one's image without that agreement.
     ///
     /// They do not overlap, by construction. Both preimages are 96 bytes whose
     /// FIRST word is a fixed domain tag no caller can set:
