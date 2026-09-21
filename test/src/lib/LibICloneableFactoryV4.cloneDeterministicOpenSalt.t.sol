@@ -232,6 +232,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         bytes memory data,
         bytes memory evilData
     ) external {
+        vm.assume(keccak256(evilData) != keccak256(data));
         TestCloneable implementation = new TestCloneable();
 
         // The open salt an honest party pinned, which happens to be the
@@ -285,6 +286,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         vm.prank(attacker);
         address childAttacker = I_CLONE_FACTORY.cloneDeterministic(address(implementation), evilData, attackerSalt);
         assertEq(childAttacker, namespaced);
+        assertEq(TestCloneable(childAttacker).sData(), evilData);
         assertEq(open.code.length, 0);
 
         address childOpen = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, openSalt);
