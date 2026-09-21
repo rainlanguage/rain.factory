@@ -55,9 +55,8 @@ contract LibICloneableFactoryV4Test is Test {
     }
 
     /// No namespaced `(deployer, salt)` input collides with any open-salt
-    /// `(salt, data)` input: the distinct word-0 tags make the preimages
-    /// disjoint, so the images are too. Fuzzed over both input spaces at once,
-    /// including empty and non-empty data.
+    /// `(salt, data)` input. Fuzzed over both input spaces at once, including
+    /// empty and non-empty data.
     function testDerivationsDisjoint(address deployer, bytes32 namespacedSalt, bytes32 openSalt, bytes memory data)
         external
         pure
