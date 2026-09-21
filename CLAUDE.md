@@ -27,8 +27,9 @@ SPDX headers.
 Nix + Foundry. Enter the shell with `nix develop`, then run rainix tasks:
 `rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE), `rainix-sol-prelude`
 (deps, run first), `rainix-sol-test`, and `forge build` / `forge test` directly.
-Tests exercise the library through `TestCloneFactory`, a pure-delegation
-concrete, with OZ `Clones` as foreign EIP1167 oracle.
+Tests call the library directly, and through `TestCloneFactory` where
+`msg.sender`/`address(this)` must be real. OZ `Clones` is the foreign EIP1167
+oracle.
 
 ## Architecture
 
