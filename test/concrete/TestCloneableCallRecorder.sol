@@ -6,8 +6,9 @@ import {ICloneableV2} from "src/interface/ICloneableV2.sol";
 
 /// @title TestCloneableCallRecorder
 /// @notice An `ICloneableV2` that records the selector of every call the proxy
-/// receives, in order, and emits `Initializing` from inside `initialize`, so a
-/// test can read the call sequence and where `NewClone` falls in it.
+/// receives other than its own `selectors()` and `sData()` accessors, in order,
+/// and emits `Initializing` from inside `initialize`, so a test can read the
+/// call sequence and where `NewClone` falls in it.
 ///
 /// It refuses nothing: no once-only guard on `initialize`, no typed overload.
 /// A call the factory should not have made is recorded, not reverted, so this
@@ -18,9 +19,10 @@ contract TestCloneableCallRecorder is ICloneableV2 {
     /// @param data The initialization data as the clone received it.
     event Initializing(bytes data);
 
-    /// Every selector the proxy has been called with, in order. Storage lives
-    /// on the clone, not the implementation, because the factory reaches this
-    /// code through an EIP-1167 `DELEGATECALL` proxy.
+    /// Every selector the proxy has been called with, in order, except this
+    /// fixture's own `selectors()` and `sData()`. Storage lives on the clone,
+    /// not the implementation, because the factory reaches this code through an
+    /// EIP-1167 `DELEGATECALL` proxy.
     bytes4[] internal sSelectors;
 
     /// The data this clone was initialized with.
