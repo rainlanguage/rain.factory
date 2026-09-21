@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
+import {Vm} from "forge-std-1.16.1/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
@@ -13,7 +13,7 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {CloneFactoryTest} from "test/abstract/CloneFactoryTest.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "test/concrete/TestCloneableCallRecorder.sol";
 import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
@@ -26,15 +26,7 @@ import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/concrete/
 /// namespacing and the `NewClone` event only exist across an external call.
 /// The defining property is that the address commits to WHO deployed —
 /// `(deployer, salt)` — and not to WHAT was initialized.
-contract LibICloneableFactoryV4CloneDeterministicTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract LibICloneableFactoryV4CloneDeterministicTest is CloneFactoryTest {
     /// The effective `CREATE2` salt is exactly the derivation
     /// `ICloneableFactoryV4` fixes:
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt))`.
@@ -186,9 +178,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
     }
 
     /// An implementation that initializes to a non-success code reverts
@@ -281,9 +271,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
         assertEq(entries.length, 2);
 
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
 
         assertEq(entries[1].emitter, child);
         assertEq(entries[1].topics[0], keccak256("Initializing(bytes)"));

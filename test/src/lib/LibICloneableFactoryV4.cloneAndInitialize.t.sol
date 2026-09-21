@@ -2,24 +2,16 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
-
 import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {DelegatedImplementation, InitializationFailed} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
+import {CloneFactoryTest} from "test/abstract/CloneFactoryTest.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
 import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
 
 /// @title LibICloneableFactoryV4CloneAndInitializeTest
 /// @notice How `cloneAndInitialize` guards the implementation and treats each
 /// `initialize` answer, through both clone entry points.
-contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract LibICloneableFactoryV4CloneAndInitializeTest is CloneFactoryTest {
     /// Both entry points revert with exactly `expected` when `initialize`
     /// reverts with (`reverts`) or returns `answer`.
     function checkBothEntryPointsRevert(bool reverts, bytes memory answer, bytes32 salt, bytes memory expected)
