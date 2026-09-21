@@ -192,8 +192,13 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
     }
 
     /// An implementation that initializes to a non-success code reverts
-    /// `InitializationFailed`, so clone-and-initialize stays atomic and the
-    /// address is left free rather than occupied by an uninitialized clone.
+    /// `InitializationFailed`, and clone-and-initialize stays atomic: the
+    /// address is left free rather than occupied by an uninitialized clone, so
+    /// the same `(deployer, salt)` still deploys there afterwards. `data` is
+    /// outside the namespaced derivation, so the second attempt reaches the
+    /// same address with data this implementation initializes successfully on.
+    /// Reading `predicted.code.length` instead would assert nothing: the revert
+    /// has already rolled the `CREATE2` back whatever the library did.
     function testCloneDeterministicInitializeFailureFails(bytes32 notSuccess, bytes32 salt) external {
         vm.assume(notSuccess != ICLONEABLE_V2_SUCCESS);
         TestCloneableFailure implementation = new TestCloneableFailure();
@@ -203,7 +208,10 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), abi.encode(notSuccess), salt);
 
-        assertEq(predicted.code.length, 0);
+        assertEq(
+            I_CLONE_FACTORY.cloneDeterministic(address(implementation), abi.encode(ICLONEABLE_V2_SUCCESS), salt),
+            predicted
+        );
     }
 
     /// A zero-code implementation reverts `ZeroImplementationCodeSize`.
@@ -292,10 +300,14 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
     /// An implementation whose `initialize` REVERTS bubbles that revert
     /// verbatim — error selector and arguments — rather than being swallowed or
-    /// re-wrapped, and the clone-and-initialize stays atomic: the predicted
-    /// address is left codeless, so the salt is still free. `…InitializeFailureFails`
-    /// covers the other half of initialization failure, where `initialize`
-    /// returns a non-success value instead of refusing.
+    /// re-wrapped, and clone-and-initialize stays atomic: the salt is still
+    /// free, so the same `(deployer, salt)` deploys at the address it always
+    /// predicted once the implementation at that address initializes instead of
+    /// refusing. The clone address commits to the implementation's ADDRESS and
+    /// not to its code, which is what lets the code there be swapped without
+    /// moving the prediction. `…InitializeFailureFails` covers the other half
+    /// of initialization failure, where `initialize` returns a non-success
+    /// value instead of refusing.
     function testCloneDeterministicInitializeRevertBubbles(bytes32 salt, bytes memory data) external {
         TestCloneableRevert implementation = new TestCloneableRevert();
 
@@ -304,7 +316,9 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         vm.expectRevert(abi.encodeWithSelector(TestCloneableRevertInitialize.selector, data));
         I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
 
-        assertEq(predicted.code.length, 0);
+        vm.etch(address(implementation), address(new TestCloneable()).code);
+        assertEq(I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt), predicted);
+        assertEq(TestCloneable(predicted).sData(), data);
     }
 
     /// The prediction reads `deployer`, never the caller: from any account it
