@@ -113,9 +113,9 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     ///   intended, initialized with the bytes that were intended, and has done
     ///   nothing but pay the gas.
     ///
-    /// It is a property of this signature, not a condition on the
-    /// implementation being cloned, so there is no per-implementation audit of
-    /// "could a squatter pass something worse" to get wrong.
+    /// It is a property of this signature, not a condition on the implementation
+    /// being cloned, so there is no per-implementation audit of "could a
+    /// squatter pass something worse" to get wrong.
     ///
     /// The address fixes `data`. It cannot fix anything else `initialize`
     /// observes, so the state `initialize` leaves behind MUST depend only on
