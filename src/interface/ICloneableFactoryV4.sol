@@ -29,7 +29,8 @@ bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factor
 /// salt by `msg.sender`, and `predictDeterministicAddress`, which takes a
 /// `deployer` — is inherited from `ICloneableFactoryV3`. The open-salt pair,
 /// `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`, is
-/// defined here. A factory may offer both, and the caller picks per deploy.
+/// defined here. A factory implementing this interface offers both, and the
+/// caller picks per deploy.
 ///
 /// Both effective `CREATE2` salts are a `keccak256` over a 96-byte preimage
 /// whose FIRST word is a distinct, string-derived domain tag the caller cannot
