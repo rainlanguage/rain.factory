@@ -43,26 +43,6 @@ OpenZeppelin `Clones` as a foreign implementation of the same standard.
 
 Contains interfaces for working with Rain factories.
 
-Rain tooling/ecosystem generally tries to be as agnostic and low friction as
-possible on the implementation side.
-
-The ideal would be that "any" contract can call an interpreter and magically be
-supported but there's a lot that can go wrong, for example:
-
-- Contracts can self-destruct or even be
-  [redeployed with new bytecode](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e)
-- Proxies can point to new implementations and "upgrade"
-- Discoverability of ABIs and other metadata subject to indexer limitations
-
-Falling short of the ideal, we want to support:
-
-- Ability to (dis)trust contracts at the bytecode level NOT the human/key level
-- Support existing patterns such as EIP1167 for clones, etc.
-- Avoid introducing Rain-isms as much as possible
-
-The onchain tooling for analysis is found at
-https://github.com/rainprotocol/rain.extrospection
-
 The current interfaces in this repository are for
 
 - `ICloneableFactoryV4`, the current factory interface. Extends
