@@ -20,7 +20,8 @@ publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
 and library; on `rain-factory-deploy` for the deployed pins.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
-SPDX headers.
+SPDX headers. Other files need a `REUSE.toml` path entry, plus `.soldeerignore`
+unless they ship in the package.
 
 ## Build & Test Commands
 
