@@ -196,9 +196,9 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// `NewClone` is shared with `cloneDeterministic` and is emitted
     /// identically, with the caller-supplied `salt` — NOT the effective salt.
     /// Its `sender` field is only whoever paid for this deploy and is not part
-    /// of the address derivation, but `salt` and `data` together are the whole
-    /// of it, so the event still carries the full deterministic deploy that
-    /// `ICloneableFactoryV3.NewClone` promises. An indexer that wants to verify
+    /// of the address derivation, but `implementation`, `salt` and `data` — all
+    /// on the event — are the whole of it, so it still carries the full
+    /// deterministic deploy that `ICloneableFactoryV3.NewClone` promises. An indexer that wants to verify
     /// the address rather than take the emitted one MUST pick the derivation:
     /// the two cannot both produce the emitted `clone`, so trying both and
     /// keeping the match is well defined.
