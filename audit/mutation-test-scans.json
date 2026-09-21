@@ -3,7 +3,7 @@
     "timestamp": "2026-09-20T04:00:00Z",
     "commit": "5a633508643e345fc72c11133f782214f60db9b5",
     "testsAfterCommit": "34506fcba245ca2439975009fee2c7163d87ecf9",
-    "publishedTag": "0.1.20",
+    "publishedTag": "sol-v0.1.20",
     "commitsAheadOfTag": 0,
     "scope": "LibICloneableFactoryV4, ICloneableFactoryV4, ICloneableV2 and the test fixtures they rely on, in three groups: g1-derivations (both salt derivations, the domain tags, cloneCreationCode, predictCloneAddress), g2-clone-tail (checkImplementationCode, cloneAndInitialize, ICLONEABLE_V2_SUCCESS), g3-entry-points (the four clone and predict entry points, ICloneableV2 fixture conformance). src/interface/deprecated/ is excluded: it is frozen for pinned consumers.",
     "tool": "adversarial-mutation-test",
