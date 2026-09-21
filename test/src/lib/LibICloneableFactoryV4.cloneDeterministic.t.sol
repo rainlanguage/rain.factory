@@ -267,6 +267,39 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         assertEq(TestCloneableCallRecorder(child).sData(), data);
     }
 
+    /// The recorder's `fallback` is the whole of what makes
+    /// `…InitializeIsTheOnlyCall`'s `selectors.length == 1` an assertion about
+    /// the factory rather than about nothing, so the recording is proven to
+    /// fire: an arbitrary non-`initialize` call on a factory-deployed clone is
+    /// appended after the `initialize` the factory made, and leaves the data
+    /// the clone was initialized with alone. The fuzzed selector is kept off
+    /// the fixture's own declared functions, whose dispatch never reaches the
+    /// fallback, and `tail` carries argument bytes so the recording is proven
+    /// on calls that carry arguments too.
+    function testCallRecorderRecordsNonInitializeCalls(
+        bytes32 salt,
+        bytes memory data,
+        bytes4 selector,
+        bytes memory tail
+    ) external {
+        vm.assume(selector != ICloneableV2.initialize.selector);
+        vm.assume(selector != TestCloneableCallRecorder.selectors.selector);
+        vm.assume(selector != bytes4(keccak256("sData()")));
+        TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
+
+        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        assertEq(TestCloneableCallRecorder(child).selectors().length, 1);
+
+        (bool success,) = child.call(abi.encodePacked(selector, tail));
+        assertTrue(success);
+
+        bytes4[] memory selectors = TestCloneableCallRecorder(child).selectors();
+        assertEq(selectors.length, 2);
+        assertEq(selectors[0], ICloneableV2.initialize.selector);
+        assertEq(selectors[1], selector);
+        assertEq(TestCloneableCallRecorder(child).sData(), data);
+    }
+
     /// `NewClone` is emitted BEFORE `initialize` runs, so an indexer replaying
     /// the log stream sees the clone announced before anything the clone itself
     /// says about being initialized. The recorder logs from inside `initialize`,
