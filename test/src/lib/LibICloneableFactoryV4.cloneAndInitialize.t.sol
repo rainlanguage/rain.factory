@@ -8,6 +8,7 @@ import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {DelegatedImplementation, InitializationFailed} from "src/lib/LibICloneableFactoryV4.sol";
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {TestCloneableGasRecorder} from "test/concrete/TestCloneableGasRecorder.sol";
 import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
 
 /// @title LibICloneableFactoryV4CloneAndInitializeTest
@@ -105,6 +106,45 @@ contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
         I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+    }
+
+    /// Deploys a `TestCloneableGasRecorder` clone with exactly `gas` forwarded
+    /// to the entry point — the open-salt one when `openSalt`, the namespaced
+    /// one otherwise — and answers the gas the clone saw inside `initialize`.
+    function observeInitializeGas(bool openSalt, uint256 gas, address implementation, bytes memory data, bytes32 salt)
+        internal
+        returns (uint256)
+    {
+        address child = openSalt
+            ? I_CLONE_FACTORY.cloneDeterministicOpenSalt{gas: gas}(implementation, data, salt)
+            : I_CLONE_FACTORY.cloneDeterministic{gas: gas}(implementation, data, salt);
+        return TestCloneableGasRecorder(child).sInitializeGas();
+    }
+
+    /// The factory caps nothing: the gas `initialize` observes rises with the
+    /// budget the caller hands the entry point, on both paths. A `{gas: K}` on
+    /// the call to the clone would hold the two observations equal at every
+    /// budget above `K`. The budgets are an eighth and a half of what the test
+    /// itself has left — so they are derived at runtime rather than pinned, and
+    /// both are far above any `K` a chain's own gas limit would let a caller
+    /// supply, which is what makes an escaping cap implausible rather than
+    /// merely untested.
+    function testInitializeGasRisesWithCallerBudget(bytes32 salt, bytes memory data) external {
+        address implementation = address(new TestCloneableGasRecorder());
+
+        uint256 snapshot = vm.snapshotState();
+        uint256 low = observeInitializeGas(true, gasleft() / 8, implementation, data, salt);
+        vm.revertToState(snapshot);
+
+        snapshot = vm.snapshotState();
+        assertTrue(observeInitializeGas(true, gasleft() / 2, implementation, data, salt) > low, "open salt");
+        vm.revertToState(snapshot);
+
+        snapshot = vm.snapshotState();
+        low = observeInitializeGas(false, gasleft() / 8, implementation, data, salt);
+        vm.revertToState(snapshot);
+
+        assertTrue(observeInitializeGas(false, gasleft() / 2, implementation, data, salt) > low, "namespaced");
     }
 
     /// A clone address that holds ETH but no code deploys through both entry
