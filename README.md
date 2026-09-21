@@ -9,18 +9,16 @@ implements it. It publishes to Soldeer as `rain-factory`.
 
 ## Concrete implementations
 
-`CloneFactory` — the concrete that implements these interfaces, letting any
-compatible `ICloneableV2` contract be cloned as an EIP1167 proxy and initialized
-— lives in
+`CloneFactory` — the concrete that implements these interfaces — lives in
 [`rain.factory.deploy`](https://github.com/rainlanguage/rain.factory.deploy),
 together with its deployed address + codehash pins, its frozen per-release
 deploy-pin snapshots and its deploy script. That repo publishes as
 `rain-factory-deploy`.
 
-Depend on `rain-factory` if you need the interfaces or the library. Depend on
-`rain-factory-deploy` if you need the deployed address or codehash of a live
-`CloneFactory`. A live `CloneFactory` behaves as the `rain-factory` revision
-that repo pins, which may lag this one.
+Depend on `rain-factory` for the interfaces and the library; on
+`rain-factory-deploy` for a live `CloneFactory`'s address or codehash. A live
+`CloneFactory` embeds the `rain-factory` revision that repo pins, which may lag
+this one.
 
 ## Library
 
