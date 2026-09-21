@@ -9,9 +9,9 @@ import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
 
 /// @title ICloneableV2InitializeTest
-/// @notice `ICloneableV2`'s two MUSTs on `initialize`, exercised on
-/// `TestCloneable` and on clones of it that `TestCloneFactory` deployed and
-/// initialized.
+/// @notice `ICloneableV2`'s once-only and typed-overload MUSTs on
+/// `initialize`, exercised on `TestCloneable` and on clones of it that
+/// `TestCloneFactory` deployed and initialized.
 contract ICloneableV2InitializeTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
