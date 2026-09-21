@@ -64,8 +64,8 @@ makes this half a standalone publish.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
-  `soldeer.lock`, vendored under `dependencies/`). Everything there is
-  test-harness only: forge-std, plus `@openzeppelin-contracts` as the
-  equivalence oracle for the EIP1167 construction. `rain-deploy` and
-  `rain-sol-codegen` belong to the deploy half and must not be added here:
-  needing one means deploy-pin code has landed in a library repo.
+  `soldeer.lock`). Everything there is test-harness only: forge-std, plus
+  `@openzeppelin-contracts` as the equivalence oracle for the EIP1167
+  construction. `rain-deploy` and `rain-sol-codegen` belong to the deploy half
+  and must not be added here: needing one means deploy-pin code has landed in a
+  library repo.
