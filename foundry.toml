@@ -19,6 +19,9 @@ libs = ["dependencies"]
 [fuzz]
 runs = 2048
 
+[fmt]
+line_length = 120
+
 # Library repo: the ICloneable* interface surface plus the Lib* logic that
 # implements it. The concrete CloneFactory, its deploy-pin snapshots and deploy
 # scripts live in rain.factory.deploy (rainlanguage/rain.factory#46). The
