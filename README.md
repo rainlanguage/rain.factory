@@ -70,19 +70,10 @@ The current interfaces in this repository are for
   than restates — and adds a second deterministic derivation,
   `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, whose
   `CREATE2` salt hashes the caller-supplied salt together with the
-  initialization data and nothing about the caller. The two derivations differ
-  in what the clone's address commits to, and neither dominates: the V3 pair
-  namespaces the salt by `msg.sender`, so the address commits to WHO deployed
-  and not to WHAT — nobody else can reach the caller's address, but the
-  deploying account is baked into it forever and the deployer alone decides the
-  initial state. The open-salt pair commits to WHAT and not to WHO — every
-  account reaches the same address, and so can anyone, but everyone who reaches
-  it deploys the same contract initialized with the same bytes, because varying
-  either input lands somewhere else. Its cost is that the address is not
-  knowable until the data is final. The residual the address cannot fix —
-  implementations MUST NOT read `tx.origin` — and the address-registry pairing
-  it is intended for are spelled out in the NatSpec on
-  `ICloneableFactoryV4.cloneDeterministicOpenSalt`
+  initialization data and nothing about the caller. What each derivation's
+  address commits to, what the open-salt address does not fix, and the MUSTs
+  that places on implementations are the NatSpec on `ICloneableFactoryV4` and
+  `cloneDeterministicOpenSalt`
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
