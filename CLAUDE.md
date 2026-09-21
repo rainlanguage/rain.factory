@@ -60,7 +60,7 @@ makes this half a standalone publish.
 - Versions: interfaces float `^0.8.18` so downstream soldeer consumers on a
   different `0.8.x` still compile them; the library floats `^0.8.25`; tests pin
   `=0.8.25`, as do the concretes and scripts in rain.factory.deploy.
-- No named return values.
+- No named return values in implementations.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
