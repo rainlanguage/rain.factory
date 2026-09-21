@@ -78,7 +78,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
         address child1 = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt1);
         address child2 = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt2);
-        assertTrue(child1 != child2);
+        assertNotEq(child1, child2);
     }
 
     /// The same `(implementation, salt)` from different callers yields
@@ -91,7 +91,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
 
         address predictedAlice = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, alice);
         address predictedBob = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, bob);
-        assertTrue(predictedAlice != predictedBob);
+        assertNotEq(predictedAlice, predictedBob);
 
         vm.prank(alice);
         address childAlice = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
@@ -101,7 +101,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         address childBob = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
         assertEq(childBob, predictedBob);
 
-        assertTrue(childAlice != childBob);
+        assertNotEq(childAlice, childBob);
     }
 
     /// `data` is NOT in the derivation: the same caller and salt with two
@@ -222,7 +222,7 @@ contract LibICloneableFactoryV4CloneDeterministicTest is Test {
         TestCloneable implementation = new TestCloneable();
 
         address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
-        assertTrue(child.code.length > 0);
+        assertGt(child.code.length, 0);
 
         vm.etch(address(implementation), "");
         assertEq(address(implementation).code.length, 0);

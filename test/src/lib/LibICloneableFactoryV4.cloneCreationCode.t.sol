@@ -33,7 +33,7 @@ contract LibICloneableFactoryV4CloneCreationCodeTest is Test {
         assembly ("memory-safe") {
             child := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
         }
-        assertTrue(child != address(0));
+        assertNotEq(child, address(0));
         bytes memory expectedRuntime =
             abi.encodePacked(hex"363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3");
         assertEq(child.code, expectedRuntime);
