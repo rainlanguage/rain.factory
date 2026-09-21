@@ -21,9 +21,7 @@ error TestCloneableRevertInitialize(bytes data);
 /// library answers with its own `InitializationFailed`. This one REFUSES —
 /// what a real implementation does when its `data` does not decode or its
 /// invariants do not hold — and the library must let that revert through
-/// untouched instead of flattening it. A fixture that returns cannot exercise
-/// that, and a fixture that reverts cannot exercise the sentinel comparison,
-/// so both exist.
+/// untouched instead of flattening it.
 contract TestCloneableRevert is ICloneableV2 {
     /// @inheritdoc ICloneableV2
     function initialize(bytes memory data) external pure returns (bytes32) {
