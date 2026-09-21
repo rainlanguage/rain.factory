@@ -85,7 +85,8 @@ The current interfaces in this repository are for
   `ICloneableFactoryV4.cloneDeterministicOpenSalt`
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
-  constructor
+  constructor. `initialize` MUST return `ICLONEABLE_V2_SUCCESS`; an
+  `ICloneableFactoryV4` reverts the clone if it does not
 
 ### Legacy
 
