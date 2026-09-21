@@ -10,31 +10,14 @@ import {ICloneableV2} from "src/interface/ICloneableV2.sol";
 error TestCloneableAlreadyInitialized();
 
 /// @title TestCloneable
-/// @notice THE conforming `ICloneableV2` fixture. Every test that needs a
-/// clone that initializes successfully uses this one, so there is a single
-/// place where "what a correct `ICloneableV2` does" is written down, and every
-/// flow test in the suite is run against something that actually honours the
-/// interface rather than against the minimum the factory happens to check.
+/// @notice A conforming `ICloneableV2`. Stores the `data` it was initialized
+/// with in `sData`, reverts a second `initialize`, and reverts the typed
+/// overload with `InitializeSignatureFn`.
 ///
-/// Three properties, each load bearing:
-///
-/// - It stores whatever `data` it was initialized with in the public `sData`,
-///   so a test can prove the bytes reached the clone verbatim.
-/// - `initialize` can NOT be called more than once — the interface's first
-///   normative MUST. The flag is written before the data so a re-entrant call
-///   cannot slip past the guard.
-/// - It returns the success sentinel written out from the LITERAL STRING
-///   `ICloneableV2` names, NOT the imported `ICLONEABLE_V2_SUCCESS`. Importing
-///   the constant would put both sides of the library's comparison in
-///   lockstep: change the constant and every clone still initializes, because
-///   the fixture changed with it. A third party implementing `ICloneableV2`
-///   has no such luxury — the interface tells them to return
-///   `keccak256("ICloneableV2.initialize")` and they hard-code that value — so
-///   the fixture hard-codes it too, and a drift in the constant surfaces as a
-///   real `InitializationFailed` through a real factory.
-///
-/// It also carries the RECOMMENDED typed overload, which the interface
-/// requires to revert `InitializeSignatureFn` always.
+/// The success sentinel is the literal `keccak256("ICloneableV2.initialize")`,
+/// not the imported `ICLONEABLE_V2_SUCCESS`: importing it would move both
+/// sides of the library's comparison together, so a drift in the constant
+/// would still initialize.
 contract TestCloneable is ICloneableV2 {
     /// The data this clone was initialized with. Set once.
     bytes public sData;
