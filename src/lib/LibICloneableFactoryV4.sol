@@ -14,8 +14,7 @@ import {
 /// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when an implementation's code begins with `0xef`: an EIP-7702
-/// delegated account.
+/// Thrown when an implementation's code begins with `0xef`.
 error DelegatedImplementation();
 
 /// Thrown when the clone address already has code. On the open-salt path the
