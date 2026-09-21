@@ -6,15 +6,12 @@ import {ICloneableV2} from "src/interface/ICloneableV2.sol";
 
 /// @title TestCloneableCallRecorder
 /// @notice An `ICloneableV2` that records the selector of every call the proxy
-/// receives, in order, and emits a log of its own from inside `initialize`.
+/// receives, in order, and emits `Initializing` from inside `initialize`, so a
+/// test can read the call sequence and where `NewClone` falls in it.
 ///
-/// `TestCloneable` exposes only the END STATE of a clone, so two clauses of
-/// the shared factory spec are invisible through it: "MUST call `initialize`
-/// ... MUST NOT call any other functions on the cloned proxy before
-/// `initialize` completes successfully", and the ordering of the factory's
-/// `NewClone` against the clone's own initialization. This fixture makes both
-/// observable — `selectors()` is the whole call sequence, and `Initializing`
-/// lands in the log stream at the moment `initialize` runs.
+/// It refuses nothing: no once-only guard on `initialize`, no typed overload.
+/// A call the factory should not have made is recorded, not reverted, so this
+/// is not a conforming `ICloneableV2`.
 contract TestCloneableCallRecorder is ICloneableV2 {
     /// Emitted from inside `initialize`, so the log stream orders the
     /// factory's `NewClone` against the initialization call itself.
