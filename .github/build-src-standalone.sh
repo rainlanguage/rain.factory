@@ -3,12 +3,8 @@
 # SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 
 # Builds `src/` in a directory holding nothing but `src/` and this repo's
-# `foundry.toml`. `dependencies/` and `remappings.txt` are absent here and
-# excluded from the published package (`.soldeerignore`), so an import in
-# `src/` that is not an intra-repo relative path fails to resolve exactly as it
-# would in a consumer that installed `rain-factory`. Copying `foundry.toml`
-# rather than writing one keeps solc, EVM version and optimizer identical to
-# the repo's own build, so the absent dependency path is the only difference.
+# `foundry.toml`, so an import a consumer of the published package could not
+# resolve fails here.
 
 set -euo pipefail
 
