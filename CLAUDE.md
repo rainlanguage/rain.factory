@@ -19,8 +19,8 @@ codehash pins (`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
 publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
 and library; on `rain-factory-deploy` for the deployed pins.
 
-License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
-SPDX headers.
+License: LicenseRef-DCL-1.0 (DecentraLicense). Every `.sol` copies the two SPDX
+header lines its siblings carry.
 
 ## Build & Test Commands
 
