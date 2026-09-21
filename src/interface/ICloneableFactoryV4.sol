@@ -216,8 +216,7 @@ interface ICloneableFactoryV4 is ICloneableFactoryV3 {
 
     /// The address `cloneDeterministicOpenSalt(implementation, data, salt)`
     /// deploys to. Takes `data` because `data` is in the derivation, and takes
-    /// no `deployer` because the deployer is not — that is the entire
-    /// difference from `predictDeterministicAddress`. A pure function of its
+    /// no `deployer` because the deployer is not. A pure function of its
     /// inputs and this factory, so it is computable (and pinnable) before
     /// deploying, by anyone. Identical across chains only where both this
     /// factory and `implementation` are at the same address on each — see the
