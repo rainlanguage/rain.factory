@@ -107,6 +107,11 @@ rather than extending `ICloneableFactoryV2`, because the non-deterministic
 Clones proxies from a reference implementation with a non-deterministic
 `clone()`. Superseded by `ICloneableFactoryV4`.
 
+#### `ICloneableFactoryV1`
+
+The same non-deterministic `clone()` against `ICloneableV1` rather than
+`ICloneableV2`. Superseded by `ICloneableFactoryV4`.
+
 #### `ICloneableV1`
 
 This version of `ICloneable` did not have any explicit return value on success
