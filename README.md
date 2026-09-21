@@ -7,6 +7,23 @@ This repo is the **library** half of the library/deploy split
 `ICloneable*` interface surface and the `LibICloneableFactoryV4` library that
 implements it. It publishes to Soldeer as `rain-factory`.
 
+## Install
+
+```sh
+forge soldeer install rain-factory~<version>
+```
+
+## Development
+
+`dependencies/` and `remappings.txt` are gitignored, so fetch them after cloning
+or when `soldeer.lock` changes:
+
+```sh
+nix develop .#sol-shell -c forge soldeer install
+nix develop -c forge build
+nix develop -c forge test
+```
+
 ## Concrete implementations
 
 `CloneFactory` — the concrete that implements these interfaces, letting any
