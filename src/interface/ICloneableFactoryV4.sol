@@ -85,9 +85,7 @@ bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factor
 /// implementation are at the same address on both — each deployed
 /// deterministically (Zoltu-style), all the way down. Dropping `msg.sender` from
 /// the derivation removes the deployer as a third thing that has to match; it
-/// does not make the other two match. If the implementation is deployed by an
-/// ordinary nonce-dependent `CREATE` on each chain, its address differs per
-/// chain and so does every clone of it, on both derivations.
+/// does not make the other two match.
 interface ICloneableFactoryV4 is ICloneableFactoryV3 {
     /// Deploys an EIP-1167 proxy clone of `implementation` via `CREATE2` at an
     /// address that does not depend on the caller and does depend on the
