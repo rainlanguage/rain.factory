@@ -24,11 +24,12 @@ SPDX headers.
 
 ## Build & Test Commands
 
-Nix + Foundry. Enter the shell with `nix develop`, then run rainix tasks:
-`rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE), `rainix-sol-prelude`
-(deps, run first), `rainix-sol-test`, and `forge build` / `forge test` directly.
-Tests exercise the library through `TestCloneFactory`, a pure-delegation
-concrete, with OZ `Clones` as foreign EIP1167 oracle.
+Nix + Foundry. `nix develop`, then the commands CI runs, first
+`forge soldeer install` and then `forge test -vvv`, `slither .`,
+`forge fmt --check`, `forge lint -D warnings`, `reuse lint`,
+`pre-commit run --all-files`. Further gates are in rainix's
+`rainix-sol-static.yaml`. Tests exercise the library through `TestCloneFactory`,
+a pure-delegation concrete, with OZ `Clones` as foreign EIP1167 oracle.
 
 ## Architecture
 
