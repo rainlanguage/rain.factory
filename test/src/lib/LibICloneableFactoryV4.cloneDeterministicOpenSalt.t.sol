@@ -369,8 +369,14 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
     }
 
     /// An implementation that initializes to a non-success code reverts
-    /// `InitializationFailed`, so clone-and-initialize stays atomic and the
-    /// address is left free rather than occupied by an uninitialized clone.
+    /// `InitializationFailed`, and clone-and-initialize stays atomic: the
+    /// address is left free rather than occupied by an uninitialized clone, so
+    /// the same `(implementation, data, salt)` still deploys there afterwards.
+    /// `data` is inside this derivation and cannot change between the attempts,
+    /// but the clone address commits to the implementation's ADDRESS and not to
+    /// its code, so the code there is swapped for one that initializes instead.
+    /// Reading `predicted.code.length` instead would assert nothing: the revert
+    /// has already rolled the `CREATE2` back whatever the library did.
     function testCloneDeterministicOpenSaltInitializeFailureFails(bytes32 notSuccess, bytes32 salt) external {
         vm.assume(notSuccess != ICLONEABLE_V2_SUCCESS);
         TestCloneableFailure implementation = new TestCloneableFailure();
@@ -381,7 +387,9 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
         vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
         I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
 
-        assertEq(predicted.code.length, 0);
+        vm.etch(address(implementation), address(new TestCloneable()).code);
+        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt), predicted);
+        assertEq(TestCloneable(predicted).sData(), data);
     }
 
     /// A zero-code implementation reverts `ZeroImplementationCodeSize`.
