@@ -8,11 +8,8 @@ import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV4PredictCloneAddressTest
-/// @notice Tests `LibICloneableFactoryV4.predictCloneAddress` against two independent
-/// oracles: OpenZeppelin's `Clones.predictDeterministicAddress` — a foreign
-/// implementation of the same EIP-1167 CREATE2 prediction, so any divergence
-/// in our creation-code bytes or hashing shows up as a different address —
-/// and the raw CREATE2 formula computed longhand here.
+/// @notice Tests `LibICloneableFactoryV4.predictCloneAddress` against oracles
+/// independent of the library.
 contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
     /// Byte-for-byte equivalence with OZ Clones for every (factory,
     /// implementation, effectiveSalt): same creation code, same formula, same
