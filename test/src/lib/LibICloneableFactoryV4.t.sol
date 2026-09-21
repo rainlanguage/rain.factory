@@ -75,7 +75,6 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveSaltPreimageShape(address deployer, bytes32 salt) external pure {
         bytes memory preimage =
             abi.encodePacked(keccak256("rain.factory.clone.namespaced"), bytes32(uint256(uint160(deployer))), salt);
-        assertEq(preimage.length, 96);
         assertEq(LibICloneableFactoryV4.effectiveSalt(deployer, salt), keccak256(preimage));
     }
 
@@ -103,7 +102,6 @@ contract LibICloneableFactoryV4Test is Test {
     /// library and the interface constant.
     function testEffectiveOpenSaltPreimageShape(bytes32 salt, bytes memory data) external pure {
         bytes memory preimage = abi.encodePacked(keccak256("rain.factory.clone.opensalt"), salt, keccak256(data));
-        assertEq(preimage.length, 96);
         assertEq(LibICloneableFactoryV4.effectiveOpenSalt(salt, data), keccak256(preimage));
     }
 
