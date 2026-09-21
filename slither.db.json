@@ -1,0 +1,27 @@
+[
+  {
+    "id": "df117120e426edfa9afe215e2e500add431b1c9aad9258e9e82669af51d2b49a",
+    "check": "unindexed-event-address",
+    "description": "Event ICloneableFactoryV1.NewClone(address,address,address) (src/interface/deprecated/ICloneableFactoryV1.sol#15) has address parameters but no indexed parameters\n"
+  },
+  {
+    "id": "48e76ea53eccfa20534f2b98a300d92ee2bb4b391a7278e94e8466f587a94cd8",
+    "check": "unindexed-event-address",
+    "description": "Event ICloneableFactoryV2.NewClone(address,address,address) (src/interface/deprecated/ICloneableFactoryV2.sol#20) has address parameters but no indexed parameters\n"
+  },
+  {
+    "id": "e2d4b28b3b46dcfdf0f77dfe994a9923b5fe9402c4579509b9df1f9aadc64c19",
+    "check": "unindexed-event-address",
+    "description": "Event ICloneableFactoryV3.NewClone(address,address,address,bytes32,bytes) (src/interface/deprecated/ICloneableFactoryV3.sol#38) has address parameters but no indexed parameters\n"
+  },
+  {
+    "id": "63bbc6ba422ea2b3ecd1fcbe8b97d95996f4f236833b2ba094e742831ba38327",
+    "check": "unindexed-event-address",
+    "description": "Event IFactory.NewChild(address,address) (src/interface/deprecated/IFactory.sol#10) has address parameters but no indexed parameters\n"
+  },
+  {
+    "id": "b9ffe2631c81b8e07563b5482a5bf112514d706aeb9ade9da59d4e58cb643098",
+    "check": "unindexed-event-address",
+    "description": "Event IFactory.Implementation(address,address) (src/interface/deprecated/IFactory.sol#18) has address parameters but no indexed parameters\n"
+  }
+]

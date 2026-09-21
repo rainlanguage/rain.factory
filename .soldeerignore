@@ -17,5 +17,6 @@ CLAUDE.md
 /out
 /remappings.txt
 /slither.config.json
+/slither.db.json
 /soldeer.lock
 /REUSE.toml
