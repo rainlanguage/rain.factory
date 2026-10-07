@@ -42,10 +42,10 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   construction. The full spec is the NatSpec on the interface.
 - `src/lib/LibICloneableFactoryV4.sol` — The whole factory as internal library
   logic: both effective-salt derivations (pure, importing the domain tags from
-  the interface), the implementation-code guard, EIP1167 creation code + CREATE2
-  prediction (no external cloning dependency), and the atomic
-  clone-initialize-verify flow with the typed errors and `NewClone`.
-  `msg.sender` and `address(this)` are read inside the library.
+  the interface), the implementation-code guard, EIP1167 creation code, the
+  clone's runtime code + its code hash, CREATE2 prediction (no external cloning
+  dependency), and the atomic clone-initialize-verify flow with the typed errors
+  and `NewClone`. `msg.sender` and `address(this)` are read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V3`). Still
   published for consumers pinned to them; do not use for new work. When a new

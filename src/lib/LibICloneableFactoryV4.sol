@@ -39,6 +39,12 @@ error InitializationFailed();
 /// code) followed by the first 10 bytes of the runtime.
 bytes constant EIP1167_CREATION_CODE_PREFIX = hex"3d602d80600a3d3981f3363d3d373d3d3d363d73";
 
+/// @dev The EIP-1167 runtime code up to the implementation address: the
+/// trailing 10 bytes of `EIP1167_CREATION_CODE_PREFIX`, which is where the
+/// code the clone leaves on chain begins. The 10 bytes the preamble drops are
+/// the whole difference between the creation code and the runtime code.
+bytes constant EIP1167_RUNTIME_CODE_PREFIX = hex"363d3d373d3d3d363d73";
+
 /// @dev The EIP-1167 bytes after the implementation address, shared by the
 /// creation code and the runtime code.
 bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
@@ -87,6 +93,28 @@ library LibICloneableFactoryV4 {
     /// @return The creation code.
     function cloneCreationCode(address implementation) internal pure returns (bytes memory) {
         return abi.encodePacked(EIP1167_CREATION_CODE_PREFIX, implementation, EIP1167_CREATION_CODE_SUFFIX);
+    }
+
+    /// The canonical 45-byte EIP-1167 runtime code for `implementation`:
+    /// exactly what `CREATE2` leaves at the clone address, which is the
+    /// creation code without its 10-byte deploy preamble. That offset is this
+    /// library's layout to own, so a consumer that needs the deployed bytes —
+    /// to pin a code hash, or to declare the clone to a deploy framework —
+    /// never slices the initcode itself.
+    /// @param implementation The contract the deployed proxy will delegate to.
+    /// @return The runtime code.
+    function cloneRuntimeCode(address implementation) internal pure returns (bytes memory) {
+        return abi.encodePacked(EIP1167_RUNTIME_CODE_PREFIX, implementation, EIP1167_CREATION_CODE_SUFFIX);
+    }
+
+    /// `keccak256` of `cloneRuntimeCode`, which is the `codehash` the clone
+    /// reports once deployed. The implementation address is embedded in the
+    /// hashed bytes, so this hash identifies which implementation a clone
+    /// delegates into and is the value to pin a clone against.
+    /// @param implementation The contract the deployed proxy will delegate to.
+    /// @return The clone's deployed code hash.
+    function cloneRuntimeCodeHash(address implementation) internal pure returns (bytes32) {
+        return keccak256(cloneRuntimeCode(implementation));
     }
 
     /// The address `CREATE2` gives the EIP-1167 clone of `implementation` from
