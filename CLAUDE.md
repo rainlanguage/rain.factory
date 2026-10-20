@@ -39,7 +39,7 @@ concrete, with OZ `Clones` as foreign EIP1167 oracle.
   `cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`. Both
   derivations are pinned to exact bytes, each `keccak256`-ing a 96-byte preimage
   led by a distinct string-derived domain tag, so the two images are disjoint by
-  construction. The full spec is the NatSpec on the interface.
+  construction.
 - `src/lib/LibICloneableFactoryV4.sol` — The whole factory as internal library
   logic: both effective-salt derivations (pure, importing the domain tags from
   the interface), the implementation-code guard, EIP1167 creation code + CREATE2
@@ -61,6 +61,9 @@ makes this half a standalone publish.
   different `0.8.x` still compile them; the library floats `^0.8.25`; tests pin
   `=0.8.25`, as do the concretes and scripts in rain.factory.deploy.
 - No named return values.
+- NatSpec is terse: what an item does and non-obvious invariants only. rainix
+  `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
+  cut prose to fit, never exempt.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies are managed with Soldeer (`[dependencies]` in `foundry.toml` +
