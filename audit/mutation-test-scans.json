@@ -77,5 +77,33 @@
       "testsAfter": 108,
       "filed": []
     }
+  },
+  {
+    "timestamp": "2026-10-20T21:15:00Z",
+    "commit": "fc229cba0fcf62c97c90364fcb4e87d05326abcb",
+    "testsAfterCommit": "fc229cba0fcf62c97c90364fcb4e87d05326abcb",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 17,
+    "scope": "PR #271 whole diff at fc229cb, after the strict beacon calldata test: src (58 mutants) and script/Build.sol (4). B04 in Build.sol is an invalid mutant (compile failure). The pre-existing suite is the branch suite at the scanned commit.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 62,
+      "killedByPreexistingSuite": 58,
+      "killedAfter": 58,
+      "survivedAfter": 0,
+      "equivalent": 3,
+      "invalid": 1,
+      "equivalents": [
+        "V05: abi.encodePacked vs abi.encode over three bytes32 words",
+        "T20: returning predicted instead of child, which are equal after the deploy",
+        "V28 (V5-25): checkBeacon's if (!success) guarded on non-empty revert data, see audit/known-false-positives.md"
+      ],
+      "testsBefore": 108,
+      "testsAfter": 109,
+      "filed": []
+    }
   }
 ]
