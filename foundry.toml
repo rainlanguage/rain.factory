@@ -32,6 +32,8 @@ runs = 2048
 # rain-sol-codegen, which writes that file.
 [dependencies]
 forge-std = "1.17.0"
+# Frozen: bumping OZ changes the generated BeaconProxy creation code and so the
+# ICloneableFactoryV5 address derivation, which needs a new interface version.
 "@openzeppelin-contracts" = "5.6.1"
 rain-sol-codegen = "0.1.39"
 

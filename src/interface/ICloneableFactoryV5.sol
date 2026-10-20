@@ -10,6 +10,8 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN = keccak256
 
 /// @dev `keccak256` of the OpenZeppelin `BeaconProxy` creation code, without
 /// constructor arguments, that `ICloneableFactoryV5` deploys.
+/// Part of the V5 spec: a different hash is a different derivation and needs a
+/// new interface version, never an edit here.
 bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
     0xe1ae7c0d01fd026af8df65ef9ca88d99cef57ff3b31eaa283d3101ccb42a02a2;
 
