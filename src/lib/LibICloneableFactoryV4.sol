@@ -35,7 +35,23 @@ library LibICloneableFactoryV4 {
     }
 
     function effectiveOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
-        return keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        return hashDomainSaltData(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, data);
+    }
+
+    /// `keccak256(abi.encode(domain, salt, keccak256(data)))`, the open-salt
+    /// preimage shape every domain tag shares.
+    function hashDomainSaltData(bytes32 domain, bytes32 salt, bytes memory data) internal pure returns (bytes32) {
+        bytes32 dataHash = keccak256(data);
+        bytes32 hashed;
+        // The three-word preimage, in unallocated memory past the free pointer.
+        assembly ("memory-safe") {
+            let preimage := mload(0x40)
+            mstore(preimage, domain)
+            mstore(add(preimage, 0x20), salt)
+            mstore(add(preimage, 0x40), dataHash)
+            hashed := keccak256(preimage, 0x60)
+        }
+        return hashed;
     }
 
     function cloneCreationCode(address implementation) internal pure returns (bytes memory) {
@@ -83,7 +99,8 @@ library LibICloneableFactoryV4 {
         return deployAndInitialize(cloneCreationCode(implementation), implementation, derivedSalt, data, salt);
     }
 
-    /// Emits `NewClone` with the raw caller `salt`, not `derivedSalt`.
+    /// Emits `NewClone` with the raw caller `salt`, not `derivedSalt`, and the
+    /// unchecked `implementation` (the beacon, for V5): callers check it first.
     /// `creationCode` MUST NOT call its delegation target while constructing.
     function deployAndInitialize(
         bytes memory creationCode,

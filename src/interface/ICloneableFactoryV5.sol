@@ -19,7 +19,8 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
 /// @notice Adds a deterministic open-salt OpenZeppelin `BeaconProxy` derivation
 /// to the `ICloneableFactoryV4` clone derivations. Effective `CREATE2` salt:
 /// `keccak256(abi.encode(BEACON_PROXY_OPEN_SALT_DOMAIN, salt, keccak256(data)))`;
-/// creation code: `BEACON_PROXY_CREATION_CODE ++ abi.encode(beacon, bytes(""))`.
+/// creation code: the `BeaconProxy` creation code hashing to
+/// `ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH`, `++ abi.encode(beacon, bytes(""))`.
 /// The address commits to `(factory, beacon, salt, data)`, not the caller, and
 /// not the implementation the beacon serves: the beacon owner is trusted for
 /// the proxy's behaviour and, since `initialize` runs on what the beacon serves
