@@ -16,6 +16,9 @@ error ZeroBeaconCodeSize();
 /// library logic, on `LibICloneableFactoryV4`'s deploy-and-initialize tail.
 library LibICloneableFactoryV5 {
     /// The `CREATE2` salt of the open-salt beacon proxy for `(salt, data)`.
+    /// @param salt The raw caller salt.
+    /// @param data The `initialize` data.
+    /// @return The derived `CREATE2` salt.
     function effectiveBeaconProxyOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
         return
             LibICloneableFactoryV4.hashDomainSaltData(ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN, salt, data);
@@ -23,12 +26,18 @@ library LibICloneableFactoryV5 {
 
     /// `BEACON_PROXY_CREATION_CODE` with `(beacon, "")` constructor arguments:
     /// empty data, so the constructor calls nothing on the implementation.
+    /// @param beacon The proxy's beacon.
+    /// @return The creation code.
     function beaconProxyCreationCode(address beacon) internal pure returns (bytes memory) {
         return bytes.concat(BEACON_PROXY_CREATION_CODE, abi.encode(beacon, bytes("")));
     }
 
     /// `CREATE2` address of the beacon proxy from `factory`, for an already
     /// derived salt.
+    /// @param factory The deploying factory.
+    /// @param beacon The proxy's beacon.
+    /// @param derivedSalt The domain-tagged `CREATE2` salt, not the caller salt.
+    /// @return The predicted proxy address.
     function predictBeaconProxyAddress(address factory, address beacon, bytes32 derivedSalt)
         internal
         pure
@@ -42,6 +51,7 @@ library LibICloneableFactoryV5 {
     /// Rejects a codeless beacon, then `checkImplementationCode` on its
     /// `implementation()`. Bubbles a reverting `implementation()`; a short or
     /// non-address answer reverts with no data.
+    /// @param beacon The beacon to check.
     function checkBeacon(address beacon) internal view {
         if (beacon.code.length == 0) {
             revert ZeroBeaconCodeSize();
@@ -58,6 +68,10 @@ library LibICloneableFactoryV5 {
     }
 
     /// `ICloneableFactoryV5.beaconProxyDeterministicOpenSalt`, from `address(this)`.
+    /// @param beacon The proxy's beacon.
+    /// @param data The `initialize` data.
+    /// @param salt The raw caller salt.
+    /// @return The deployed proxy address.
     function beaconProxyDeterministicOpenSalt(address beacon, bytes memory data, bytes32 salt)
         internal
         returns (address)
@@ -69,6 +83,10 @@ library LibICloneableFactoryV5 {
     }
 
     /// `predictBeaconProxyAddress` from `address(this)`, for `(salt, data)`.
+    /// @param beacon The proxy's beacon.
+    /// @param data The `initialize` data.
+    /// @param salt The raw caller salt.
+    /// @return The predicted proxy address.
     function predictBeaconProxyAddressOpenSalt(address beacon, bytes memory data, bytes32 salt)
         internal
         view

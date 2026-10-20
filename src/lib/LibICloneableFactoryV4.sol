@@ -40,6 +40,10 @@ library LibICloneableFactoryV4 {
 
     /// `keccak256(abi.encode(domain, salt, keccak256(data)))`, the open-salt
     /// preimage shape every domain tag shares.
+    /// @param domain The domain tag.
+    /// @param salt The raw caller salt.
+    /// @param data The `initialize` data.
+    /// @return The derived `CREATE2` salt.
     function hashDomainSaltData(bytes32 domain, bytes32 salt, bytes memory data) internal pure returns (bytes32) {
         bytes32 dataHash = keccak256(data);
         bytes32 hashed;
@@ -67,6 +71,10 @@ library LibICloneableFactoryV4 {
     }
 
     /// EIP-1014 address for `factory`, `derivedSalt` and `initCodeHash`.
+    /// @param factory The deploying factory.
+    /// @param derivedSalt The `CREATE2` salt.
+    /// @param initCodeHash `keccak256` of the creation code.
+    /// @return The predicted address.
     function predictCreate2Address(address factory, bytes32 derivedSalt, bytes32 initCodeHash)
         internal
         pure
@@ -102,6 +110,12 @@ library LibICloneableFactoryV4 {
     /// Emits `NewClone` with the raw caller `salt`, not `derivedSalt`, and the
     /// unchecked `implementation` (the beacon, for V5): callers check it first.
     /// `creationCode` MUST NOT call its delegation target while constructing.
+    /// @param creationCode The child's creation code.
+    /// @param implementation The address emitted in `NewClone`.
+    /// @param derivedSalt The `CREATE2` salt.
+    /// @param data The `initialize` data.
+    /// @param salt The raw caller salt emitted in `NewClone`.
+    /// @return The deployed child address.
     function deployAndInitialize(
         bytes memory creationCode,
         address implementation,
