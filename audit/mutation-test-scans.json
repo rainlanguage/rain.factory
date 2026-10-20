@@ -51,5 +51,31 @@
       "testsAfter": 114,
       "filed": ["#270"]
     }
+  },
+  {
+    "timestamp": "2026-10-20T20:30:00Z",
+    "commit": "df32720fa15a2e1a71db1326ed596cd1dd785313",
+    "testsAfterCommit": "ab0fdca7305e1bef384c885eabe1a531ca4631ec",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 8,
+    "scope": "PR #271 after OpenZeppelin BeaconProxy replaced the hand-written proxy bytecode (df32720): LibICloneableFactoryV5.sol (26 mutants), the V4 shared tail in LibICloneableFactoryV4.sol (20), the pinned src/generated/BeaconProxy.sol constant (1) and the domain tag in ICloneableFactoryV5.sol (1). The pre-existing suite is the branch suite at the scanned commit.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 48,
+      "killedByPreexistingSuite": 46,
+      "killedAfter": 46,
+      "survivedAfter": 0,
+      "equivalent": 2,
+      "equivalents": [
+        "V05: abi.encodePacked vs abi.encode over three bytes32 words",
+        "T20: returning predicted instead of child, which are equal after the deploy"
+      ],
+      "testsBefore": 107,
+      "testsAfter": 108,
+      "filed": []
+    }
   }
 ]
