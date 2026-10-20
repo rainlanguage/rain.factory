@@ -25,8 +25,11 @@ SPDX headers.
 
 ## Testing
 
-Nix + Foundry (`nix develop`; run `rainix-sol-prelude` first). Tests exercise
-the libraries through `TestCloneFactory`, a pure-delegation concrete, with OZ
+Nix + Foundry (`nix develop`; run `rainix-sol-prelude` first). Checks:
+`rainix-sol-test`, `rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE).
+Regenerate `src/generated/` with `forge script script/Build.sol && forge fmt`;
+CI's `Git is clean` job does the same and fails on any diff. Tests exercise the
+libraries through `TestCloneFactory`, a pure-delegation concrete, with OZ
 `Clones` as foreign EIP1167 oracle.
 
 ## Architecture

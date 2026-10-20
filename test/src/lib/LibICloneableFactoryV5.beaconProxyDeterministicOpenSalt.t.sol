@@ -24,6 +24,7 @@ import {
 } from "../../../src/lib/LibICloneableFactoryV4.sol";
 import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";
+import {TestBeaconStrictCalldata} from "../../concrete/TestBeaconStrictCalldata.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
@@ -423,5 +424,14 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), "", salt);
         assertEq(proxy, expectedAddress(address(beacon), "", salt));
         assertEq(TestCloneable(proxy).sData(), "");
+    }
+
+    /// The factory's check and the proxy both call the beacon with exactly
+    /// the 4-byte `implementation()` calldata.
+    function testBeaconProxyStrictBeaconCalldata(bytes memory data, bytes32 salt) external {
+        TestBeaconStrictCalldata beacon = new TestBeaconStrictCalldata(address(new TestCloneable()));
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        assertEq(proxy, expectedAddress(address(beacon), data, salt));
+        assertEq(TestCloneable(proxy).sData(), data);
     }
 }

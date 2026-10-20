@@ -26,13 +26,23 @@ interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// constructor data, whose return `BeaconProxy` discards. MUST revert if
     /// `beacon` has no code, or `beacon.implementation()` has no code or is an
     /// EIP-7702 delegated account. MUST NOT mix any caller-derived value into
-    /// the salt.
+    /// the salt. `NewClone.implementation` holds the beacon, not cloned
+    /// bytecode: an indexer tells a beacon proxy from an EIP-1167 clone by
+    /// re-deriving `clone` from the event under each domain tag.
+    /// @param beacon The OpenZeppelin `IBeacon` the proxy reads.
+    /// @param data Passed to `initialize`; part of the address.
+    /// @param salt Part of the address; emitted raw in `NewClone`.
+    /// @return The deployed proxy.
     function beaconProxyDeterministicOpenSalt(address beacon, bytes calldata data, bytes32 salt)
         external
         returns (address);
 
     /// The address `beaconProxyDeterministicOpenSalt` deploys to, for any
     /// caller. Does not read the beacon.
+    /// @param beacon As for `beaconProxyDeterministicOpenSalt`.
+    /// @param data As for `beaconProxyDeterministicOpenSalt`.
+    /// @param salt As for `beaconProxyDeterministicOpenSalt`.
+    /// @return The proxy address.
     function predictBeaconProxyAddressOpenSalt(address beacon, bytes calldata data, bytes32 salt)
         external
         view

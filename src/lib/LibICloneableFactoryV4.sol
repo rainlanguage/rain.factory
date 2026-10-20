@@ -50,6 +50,7 @@ library LibICloneableFactoryV4 {
         return predictCreate2Address(factory, derivedSalt, keccak256(cloneCreationCode(implementation)));
     }
 
+    /// EIP-1014 address for `factory`, `derivedSalt` and `initCodeHash`.
     function predictCreate2Address(address factory, bytes32 derivedSalt, bytes32 initCodeHash)
         internal
         pure
