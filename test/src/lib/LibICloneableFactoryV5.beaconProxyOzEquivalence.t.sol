@@ -40,13 +40,14 @@ contract LibICloneableFactoryV5BeaconProxyOzEquivalenceTest is Test {
 
     /// What `TestBeaconProxyEcho` answers `data` with when run as `proxy`.
     function echoAnswer(address proxy, uint256 value, bytes memory data) internal view returns (bool, bytes memory) {
-        if (data.length > 0 && data[0] == 0x00) {
-            return (false, data);
+        bool success = data.length == 0 || data[0] != 0x00;
+        if (!success) {
+            return (success, data);
         }
         if (data.length > 32 && data[0] == 0x01) {
-            return (true, "");
+            return (success, "");
         }
-        return (true, abi.encode(proxy, address(this), value, data));
+        return (success, abi.encode(proxy, address(this), value, data));
     }
 
     /// Calls both proxies with `value` and `data` and checks each answers as
@@ -136,6 +137,8 @@ contract LibICloneableFactoryV5BeaconProxyOzEquivalenceTest is Test {
         address oz = address(new BeaconProxy(address(beacon), ""));
         if (!reverts && answer.length >= 32) {
             uint256 word = abi.decode(answer, (uint256));
+            // casting to 'uint160' is safe because the left operand short-circuits any word with high bits set
+            // forge-lint: disable-next-line(unsafe-typecast)
             vm.assume(word >> 160 != 0 || address(uint160(word)).code.length == 0);
         }
         beacon.set(reverts, answer);

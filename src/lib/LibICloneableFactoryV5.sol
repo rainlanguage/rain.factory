@@ -6,7 +6,7 @@ import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "../interface/
 import {LibICloneableFactoryV4} from "./LibICloneableFactoryV4.sol";
 
 /// Thrown when a beacon has zero code size: a beacon proxy of a codeless
-/// beacon resolves every call — `initialize` included — to nothing.
+/// beacon reverts every call — `initialize` included — with no data.
 error ZeroBeaconCodeSize();
 
 /// @dev The beacon proxy creation code up to the beacon address in the

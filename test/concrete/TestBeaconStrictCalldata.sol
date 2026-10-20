@@ -10,6 +10,8 @@ contract TestBeaconStrictCalldata {
     /// The implementation `implementation()` returns.
     address internal immutable I_IMPLEMENTATION;
 
+    // A test beacon serves whatever implementation it is given, zero included.
+    // forge-lint: disable-next-line(missing-zero-check)
     constructor(address implementation) {
         I_IMPLEMENTATION = implementation;
     }

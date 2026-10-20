@@ -16,6 +16,7 @@ import {
 import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "src/interface/ICloneableFactoryV5.sol";
 import {
     CloneAddressOccupied,
+    CloneDeploymentFailed,
     DelegatedImplementation,
     InitializationFailed,
     ZeroImplementationCodeSize
@@ -24,7 +25,7 @@ import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "src/lib/LibICloneableF
 import {LibTestBeaconProxyBytes} from "test/lib/LibTestBeaconProxyBytes.sol";
 import {TestBeaconRawAnswer} from "test/concrete/TestBeaconRawAnswer.sol";
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "test/concrete/TestCloneableCallRecorder.sol";
 import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
 import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
@@ -247,6 +248,25 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(TestCloneable(proxy).sData(), data);
     }
 
+    /// A codeless proxy address with a nonzero nonce fails the `CREATE2`
+    /// itself: `CloneDeploymentFailed`.
+    function testBeaconProxyDeterministicOpenSaltNonceOnlyCollisionReverts(bytes memory data, bytes32 salt) external {
+        UpgradeableBeacon beacon = newBeacon();
+        vm.setNonce(expectedAddress(address(beacon), data, salt), 1);
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+    }
+
+    /// Prediction never calls the beacon.
+    function testPredictBeaconProxyAddressOpenSaltNoBeaconCall(bytes memory data, bytes32 salt) external {
+        UpgradeableBeacon beacon = newBeacon();
+        vm.expectCall(address(beacon), "", 0);
+        assertEq(
+            I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt),
+            expectedAddress(address(beacon), data, salt)
+        );
+    }
+
     /// An address holding ETH but no code deploys, and the proxy keeps the
     /// ETH.
     function testBeaconProxyDeterministicOpenSaltPrefunded(uint256 balance, bytes memory data, bytes32 salt) external {
@@ -389,7 +409,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(proxy, predicted);
         assertEq(TestCloneable(proxy).sData(), data);
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(TestCloneableAlreadyInitialized.selector));
         TestCloneable(proxy).initialize(data);
         beacon.upgradeTo(address(new TestCloneableFailure()));
         assertEq(TestCloneableFailure(proxy).initialize(data), bytes32(0));

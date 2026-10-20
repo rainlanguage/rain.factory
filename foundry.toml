@@ -23,8 +23,9 @@ runs = 2048
 # implements it. The concrete CloneFactory, its deploy-pin snapshots and deploy
 # scripts live in rain.factory.deploy (rainlanguage/rain.factory#46). The
 # published src/ imports nothing external, so every dependency here is
-# test-harness only: forge-std, and OZ Clones as the independent equivalence
-# oracle for the EIP1167 construction.
+# test-harness only: forge-std, OZ Clones as the independent equivalence
+# oracle for the EIP1167 construction, and OZ BeaconProxy as the behavioural
+# oracle for the beacon proxy.
 [dependencies]
 forge-std = "1.16.1"
 "@openzeppelin-contracts" = "5.6.1"
