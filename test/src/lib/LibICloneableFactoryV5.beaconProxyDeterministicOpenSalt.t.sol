@@ -85,6 +85,33 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         );
     }
 
+    /// Fixed example: the expected value is `cast keccak` over the 96-byte
+    /// concatenation of `cast keccak "rain.factory.beaconproxy.opensalt"`,
+    /// the salt word and `cast keccak 0xabcdef`.
+    function testEffectiveBeaconProxyOpenSaltFixedExample() external pure {
+        assertEq(
+            LibICloneableFactoryV5.effectiveBeaconProxyOpenSalt(bytes32(uint256(0xff)), hex"abcdef"),
+            0xa78b62d74202c9c7a28df91ceee2d4968c81b78a3312893e9837744c4e1c6a7c
+        );
+    }
+
+    /// The preimage is built past the free pointer without claiming or
+    /// overwriting allocated memory.
+    function testEffectiveBeaconProxyOpenSaltMemory(bytes32 salt, bytes memory data) external pure {
+        bytes memory copy = bytes.concat(data);
+        uint256 freeBefore;
+        assembly ("memory-safe") {
+            freeBefore := mload(0x40)
+        }
+        LibICloneableFactoryV5.effectiveBeaconProxyOpenSalt(salt, data);
+        uint256 freeAfter;
+        assembly ("memory-safe") {
+            freeAfter := mload(0x40)
+        }
+        assertEq(freeAfter, freeBefore);
+        assertEq(data, copy);
+    }
+
     /// The prediction is the independently derived address, for any beacon,
     /// deployed or not: it reads nothing from the beacon.
     function testPredictBeaconProxyAddressOpenSalt(address beacon, bytes memory data, bytes32 salt) external view {
@@ -379,6 +406,12 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     /// verbatim, empty included.
     function testBeaconProxyBeaconRevertBubbles(bytes memory revertData, bytes32 salt) external {
         checkBeaconReverts(true, revertData, salt, revertData);
+    }
+
+    /// A beacon reverting with no data reverts the deploy with no data, rather
+    /// than reading past the revert.
+    function testBeaconProxyBeaconEmptyRevertBubbles(bytes32 salt) external {
+        checkBeaconReverts(true, "", salt, "");
     }
 
     /// A beacon answering fewer than 32 bytes, or a word that is not an

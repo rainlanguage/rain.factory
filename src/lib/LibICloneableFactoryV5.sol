@@ -10,13 +10,30 @@ import {LibICloneableFactoryV4} from "./LibICloneableFactoryV4.sol";
 /// answer fails the decode with no data, before `BeaconProxy` checks it.
 error ZeroBeaconCodeSize();
 
+/// The OpenZeppelin `IBeacon` read, declared here as `src/` imports nothing
+/// from outside this repo.
+interface IBeaconImplementation {
+    function implementation() external view returns (address);
+}
+
 /// @title LibICloneableFactoryV5
 /// @notice The `ICloneableFactoryV5` beacon-proxy derivation as internal
 /// library logic, on `LibICloneableFactoryV4`'s deploy-and-initialize tail.
 library LibICloneableFactoryV5 {
     /// The `CREATE2` salt of the open-salt beacon proxy for `(salt, data)`.
     function effectiveBeaconProxyOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
-        return keccak256(abi.encode(ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN, salt, keccak256(data)));
+        bytes32 domain = ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN;
+        bytes32 dataHash = keccak256(data);
+        bytes32 effective;
+        // The three-word preimage, in unallocated memory past the free pointer.
+        assembly ("memory-safe") {
+            let preimage := mload(0x40)
+            mstore(preimage, domain)
+            mstore(add(preimage, 0x20), salt)
+            mstore(add(preimage, 0x40), dataHash)
+            effective := keccak256(preimage, 0x60)
+        }
+        return effective;
     }
 
     /// `BEACON_PROXY_CREATION_CODE` with `(beacon, "")` constructor arguments:
@@ -43,14 +60,15 @@ library LibICloneableFactoryV5 {
         if (beacon.code.length == 0) {
             revert ZeroBeaconCodeSize();
         }
-        // slither-disable-next-line low-level-calls
-        (bool success, bytes memory returnData) = beacon.staticcall(abi.encodeWithSignature("implementation()"));
-        if (!success) {
+        // A malformed answer fails the decode outside the try, so the catch
+        // only ever holds the beacon's own revert.
+        try IBeaconImplementation(beacon).implementation() returns (address implementation) {
+            LibICloneableFactoryV4.checkImplementationCode(implementation);
+        } catch (bytes memory reason) {
             assembly ("memory-safe") {
-                revert(add(returnData, 0x20), mload(returnData))
+                revert(add(reason, 0x20), mload(reason))
             }
         }
-        LibICloneableFactoryV4.checkImplementationCode(abi.decode(returnData, (address)));
     }
 
     /// `ICloneableFactoryV5.beaconProxyDeterministicOpenSalt`, from `address(this)`.
