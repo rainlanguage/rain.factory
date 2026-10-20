@@ -6,8 +6,8 @@ import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "../interface/
 import {BEACON_PROXY_CREATION_CODE} from "../generated/BeaconProxy.sol";
 import {LibICloneableFactoryV4} from "./LibICloneableFactoryV4.sol";
 
-/// The beacon has no code. Checked here because `CREATE2` drops the revert
-/// data of `BeaconProxy`'s own check.
+/// The beacon has no code. Without this check its empty `implementation()`
+/// answer fails the decode with no data, before `BeaconProxy` checks it.
 error ZeroBeaconCodeSize();
 
 /// @title LibICloneableFactoryV5

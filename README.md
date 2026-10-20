@@ -116,10 +116,10 @@ tags and their spec are still declared in `ICloneableFactoryV4`.
 
 Deterministic-only (`cloneDeterministic` + `predictDeterministicAddress`,
 CREATE2 with the salt namespaced by `msg.sender`). Superseded by
-`ICloneableFactoryV4`, which extends it, so the namespaced pair and `NewClone`
-are still declared in `ICloneableFactoryV3` and inherited from there. Standalone
-rather than extending `ICloneableFactoryV2`, because the non-deterministic
-`clone()` was intentionally dropped.
+`ICloneableFactoryV5`, which extends it through `ICloneableFactoryV4`, so the
+namespaced pair and `NewClone` are still declared in `ICloneableFactoryV3` and
+inherited from there. Standalone rather than extending `ICloneableFactoryV2`,
+because the non-deterministic `clone()` was intentionally dropped.
 
 #### `ICloneableFactoryV2`
 

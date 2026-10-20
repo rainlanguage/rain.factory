@@ -73,6 +73,8 @@ library LibICloneableFactoryV4 {
         }
     }
 
+    /// `checkImplementationCode`, then `deployAndInitialize` with the EIP-1167
+    /// creation code.
     function cloneAndInitialize(address implementation, bytes32 derivedSalt, bytes memory data, bytes32 salt)
         internal
         returns (address)

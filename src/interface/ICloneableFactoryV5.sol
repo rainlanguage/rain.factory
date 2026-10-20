@@ -29,6 +29,7 @@ interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// the salt. `NewClone.implementation` holds the beacon, not cloned
     /// bytecode: an indexer tells a beacon proxy from an EIP-1167 clone by
     /// re-deriving `clone` from the event under each domain tag.
+    /// Needs a Cancun chain: the proxy creation code uses `MCOPY`.
     /// @param beacon The OpenZeppelin `IBeacon` the proxy reads.
     /// @param data Passed to `initialize`; part of the address.
     /// @param salt Part of the address; emitted raw in `NewClone`.
