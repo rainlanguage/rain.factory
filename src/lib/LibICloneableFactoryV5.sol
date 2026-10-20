@@ -60,12 +60,7 @@ library LibICloneableFactoryV5 {
         if (beacon.code.length == 0) {
             revert ZeroBeaconCodeSize();
         }
-        uint256 firstByte;
-        assembly ("memory-safe") {
-            extcodecopy(beacon, 0, 0, 1)
-            firstByte := byte(0, mload(0))
-        }
-        if (firstByte == 0xef) {
+        if (LibICloneableFactoryV4.isDelegated(beacon)) {
             revert DelegatedBeacon();
         }
         // A malformed answer fails the decode outside the try, so the catch

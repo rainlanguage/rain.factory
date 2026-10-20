@@ -9,17 +9,22 @@ import {Build} from "../../script/Build.sol";
 contract BuildTest is Test {
     /// `Build.run` rewrites the committed `src/generated/BeaconProxy.sol` byte
     /// for byte, with OZ `BeaconProxy`'s creation code, and writes no other
-    /// file.
+    /// file. The committed file is restored before any assertion, even if the
+    /// script reverts.
     function testBuildRewritesCommittedBeaconProxy() external {
         string memory path = "src/generated/BeaconProxy.sol";
         string memory committed = vm.readFile(path);
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.writeFile(path, "");
-        new Build().run();
+        bool ran;
+        try new Build().run() {
+            ran = true;
+        } catch {}
         string memory written = vm.readFile(path);
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.writeFile(path, committed);
 
+        assertTrue(ran);
         assertEq(written, committed);
         assertTrue(
             vm.indexOf(written, vm.replace(vm.toString(type(BeaconProxy).creationCode), "0x", "")) != type(uint256).max

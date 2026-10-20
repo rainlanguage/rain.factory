@@ -83,16 +83,24 @@ library LibICloneableFactoryV4 {
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", factory, derivedSalt, initCodeHash)))));
     }
 
+    /// Whether `account`'s code starts with `0xef`: an EIP-7702 delegation
+    /// designator, as EIP-3541 bars deployed code from that byte.
+    /// @param account The account to read.
+    /// @return True when the first code byte is `0xef`.
+    function isDelegated(address account) internal view returns (bool) {
+        uint256 firstByte;
+        assembly ("memory-safe") {
+            extcodecopy(account, 0, 0, 1)
+            firstByte := byte(0, mload(0))
+        }
+        return firstByte == 0xef;
+    }
+
     function checkImplementationCode(address implementation) internal view {
         if (implementation.code.length == 0) {
             revert ZeroImplementationCodeSize();
         }
-        uint256 firstByte;
-        assembly ("memory-safe") {
-            extcodecopy(implementation, 0, 0, 1)
-            firstByte := byte(0, mload(0))
-        }
-        if (firstByte == 0xef) {
+        if (isDelegated(implementation)) {
             revert DelegatedImplementation();
         }
     }
