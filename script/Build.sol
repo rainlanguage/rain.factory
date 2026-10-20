@@ -20,7 +20,7 @@ contract Build is Script {
                 LibCodeGen.filePrefix(),
                 LibCodeGen.bytesConstantString(
                     vm,
-                    "/// @dev OpenZeppelin v5.6.1 `BeaconProxy` creation code, without constructor arguments. Needs Cancun: it uses `MCOPY`.",
+                    "/// @dev OpenZeppelin `BeaconProxy` creation code, without constructor arguments. Needs Cancun: it uses `MCOPY`.",
                     "BEACON_PROXY_CREATION_CODE",
                     type(BeaconProxy).creationCode
                 )

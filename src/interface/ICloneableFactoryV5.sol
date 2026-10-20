@@ -8,6 +8,11 @@ import {ICloneableFactoryV4} from "./deprecated/ICloneableFactoryV4.sol";
 /// `ICloneableFactoryV4` tags.
 bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN = keccak256("rain.factory.beaconproxy.opensalt");
 
+/// @dev `keccak256` of the OpenZeppelin `BeaconProxy` creation code, without
+/// constructor arguments, that `ICloneableFactoryV5` deploys.
+bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
+    0xe1ae7c0d01fd026af8df65ef9ca88d99cef57ff3b31eaa283d3101ccb42a02a2;
+
 /// @title ICloneableFactoryV5
 /// @notice Adds a deterministic open-salt OpenZeppelin `BeaconProxy` derivation
 /// to the `ICloneableFactoryV4` clone derivations. Effective `CREATE2` salt:

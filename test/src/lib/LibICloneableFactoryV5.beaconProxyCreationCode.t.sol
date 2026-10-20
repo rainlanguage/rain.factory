@@ -9,6 +9,7 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/Upgr
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
+import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH} from "../../../src/interface/ICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
 
@@ -22,12 +23,10 @@ contract LibICloneableFactoryV5BeaconProxyCreationCodeTest is Test {
         assertEq(BEACON_PROXY_CREATION_CODE, type(BeaconProxy).creationCode);
     }
 
-    /// The pinned constant's hash, so any change to what OZ compiles to here
-    /// shows as a reviewed edit of this literal.
+    /// The pinned constant hashes to
+    /// `ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH`.
     function testBeaconProxyCreationCodeHash() external pure {
-        assertEq(
-            keccak256(BEACON_PROXY_CREATION_CODE), 0xe1ae7c0d01fd026af8df65ef9ca88d99cef57ff3b31eaa283d3101ccb42a02a2
-        );
+        assertEq(keccak256(BEACON_PROXY_CREATION_CODE), ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH);
     }
 
     /// The creation code is `BeaconProxy`'s with `(beacon, "")` as constructor
