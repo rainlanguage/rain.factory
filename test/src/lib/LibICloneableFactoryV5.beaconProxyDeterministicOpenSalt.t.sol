@@ -22,7 +22,7 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV4.sol";
-import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {DelegatedBeacon, LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestBeaconDivergent} from "../../concrete/TestBeaconDivergent.sol";
 import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";
 import {TestBeaconStrictCalldata} from "../../concrete/TestBeaconStrictCalldata.sol";
@@ -366,6 +366,38 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         vm.assume(beacon.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroBeaconCodeSize.selector));
         iCloneFactory.beaconProxyDeterministicOpenSalt(beacon, data, salt);
+    }
+
+    /// An EIP-7702 delegated beacon is `DelegatedBeacon`, even delegating to a
+    /// valid beacon, and the address stays free.
+    function testBeaconProxyDelegatedBeacon(bytes memory data, bytes32 salt) external {
+        address beacon = makeAddr("delegated-beacon");
+        vm.etch(beacon, abi.encodePacked(hex"ef0100", address(newBeacon())));
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(beacon, data, salt);
+        vm.expectRevert(abi.encodeWithSelector(DelegatedBeacon.selector));
+        iCloneFactory.beaconProxyDeterministicOpenSalt(beacon, data, salt);
+        assertEq(predicted.code.length, 0);
+    }
+
+    /// One byte of beacon code that is `0xef` is `DelegatedBeacon`.
+    function testBeaconProxySingleByteEfBeacon(bytes32 salt) external {
+        address beacon = makeAddr("single-byte-ef-beacon");
+        vm.etch(beacon, hex"ef");
+        vm.expectRevert(abi.encodeWithSelector(DelegatedBeacon.selector));
+        iCloneFactory.beaconProxyDeterministicOpenSalt(beacon, "", salt);
+    }
+
+    /// One byte of beacon code that is not `0xef`, including the bytes either
+    /// side of it, passes the delegation check and fails only at
+    /// `implementation()`, which answers nothing decodable: no data.
+    function testBeaconProxySingleByteBeacon(bytes32 salt) external {
+        bytes1[4] memory codes = [bytes1(0x00), 0xee, 0xf0, 0xff];
+        for (uint256 i = 0; i < codes.length; i++) {
+            address beacon = makeAddr(string.concat("single-byte-beacon-", vm.toString(i)));
+            vm.etch(beacon, abi.encodePacked(codes[i]));
+            vm.expectRevert(bytes(""));
+            iCloneFactory.beaconProxyDeterministicOpenSalt(beacon, "", salt);
+        }
     }
 
     /// Deploys through a `TestBeaconRawAnswer` answering `(reverts, answer)`,

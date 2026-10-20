@@ -24,16 +24,19 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
 /// The address commits to `(factory, beacon, salt, data)`, not the caller, and
 /// not the implementation the beacon serves: the beacon owner is trusted for
 /// the proxy's behaviour and, since `initialize` runs on what the beacon serves
-/// at deploy time, its initial state. Every implementation the beacon serves
-/// MUST otherwise meet the `cloneDeterministicOpenSalt` rules.
+/// at deploy time, its initial state. Anyone picks the deploy time, and so
+/// which implementation initializes a pinned address: every implementation the
+/// beacon serves while it is undeployed MUST give the same `initialize(data)`
+/// result, or revert, and MUST otherwise meet the `cloneDeterministicOpenSalt`
+/// rules.
 interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// Deploys the beacon proxy at the open-salt address, then initializes it
     /// as `ICloneableFactoryV3.cloneDeterministic` does: `initialize(data)`
     /// first and only, success sentinel checked, raw-salt `NewClone` with
     /// `beacon` as `implementation`. `initialize` runs after `CREATE2`, not as
     /// constructor data, whose return `BeaconProxy` discards. MUST revert if
-    /// `beacon` has no code, or `beacon.implementation()` has no code or is an
-    /// EIP-7702 delegated account. MUST NOT mix any caller-derived value into
+    /// `beacon` or `beacon.implementation()` has no code or is an EIP-7702
+    /// delegated account. MUST NOT mix any caller-derived value into
     /// the salt. `NewClone.implementation` holds the beacon, not cloned
     /// bytecode: an indexer tells a beacon proxy from an EIP-1167 clone by
     /// re-deriving `clone` from the event under each domain tag.

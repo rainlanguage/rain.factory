@@ -11,6 +11,10 @@ import {IBeaconImplementation} from "../interface/IBeaconImplementation.sol";
 /// answer fails the decode with no data, before `BeaconProxy` checks it.
 error ZeroBeaconCodeSize();
 
+/// Beacon code starts with `0xef` (EIP-7702 delegation): the EOA key, not the
+/// beacon's code, would decide `implementation()`.
+error DelegatedBeacon();
+
 /// @title LibICloneableFactoryV5
 /// @notice The `ICloneableFactoryV5` beacon-proxy derivation as internal
 /// library logic, on `LibICloneableFactoryV4`'s deploy-and-initialize tail.
@@ -48,13 +52,21 @@ library LibICloneableFactoryV5 {
         );
     }
 
-    /// Rejects a codeless beacon, then `checkImplementationCode` on its
-    /// `implementation()`. Bubbles a reverting `implementation()`; a short or
-    /// non-address answer reverts with no data.
+    /// Rejects a codeless or EIP-7702 delegated beacon, then
+    /// `checkImplementationCode` on its `implementation()`. Bubbles a reverting
+    /// `implementation()`; a short or non-address answer reverts with no data.
     /// @param beacon The beacon to check.
     function checkBeacon(address beacon) internal view {
         if (beacon.code.length == 0) {
             revert ZeroBeaconCodeSize();
+        }
+        uint256 firstByte;
+        assembly ("memory-safe") {
+            extcodecopy(beacon, 0, 0, 1)
+            firstByte := byte(0, mload(0))
+        }
+        if (firstByte == 0xef) {
+            revert DelegatedBeacon();
         }
         // A malformed answer fails the decode outside the try, so the catch
         // only ever holds the beacon's own revert.
