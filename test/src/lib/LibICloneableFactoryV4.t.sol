@@ -7,7 +7,7 @@ import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/ICloneableFactoryV4.sol";
+} from "src/interface/deprecated/ICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV4Test
 /// Every expectation is recomputed inline from the pinned formula, never read

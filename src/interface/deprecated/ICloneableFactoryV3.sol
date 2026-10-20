@@ -3,10 +3,10 @@
 pragma solidity ^0.8.18;
 
 /// @title ICloneableFactoryV3
-/// @notice DEPRECATED: superseded by `ICloneableFactoryV4`, the current
+/// @notice DEPRECATED: superseded by `ICloneableFactoryV5`, the current
 /// factory interface. New factories and consumers MUST use
-/// `ICloneableFactoryV4`, not this interface on its own. `ICloneableFactoryV4`
-/// extends this interface and inherits `cloneDeterministic`,
+/// `ICloneableFactoryV5`, not this interface on its own. `ICloneableFactoryV5`
+/// extends this interface through `ICloneableFactoryV4` and inherits `cloneDeterministic`,
 /// `predictDeterministicAddress` and `NewClone` from it, so their spec still
 /// lives here.
 ///

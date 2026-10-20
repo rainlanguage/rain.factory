@@ -15,7 +15,7 @@ interface ICloneableV2 {
     /// Initialize is intended to work like constructors but for cloneable
     /// proxies. The `ICloneableV2` contract MUST ensure that initialize can NOT
     /// be called more than once. The `ICloneableV2` contract is designed to be
-    /// deployed by an `ICloneableFactoryV4` but MUST NOT assume that it will be.
+    /// deployed by an `ICloneableFactoryV5` but MUST NOT assume that it will be.
     /// It is possible for someone to directly deploy an `ICloneableV2` and fail
     /// to call initialize before other functions are called, and end users MAY
     /// NOT realise or know how to confirm a safe deployment state. The
@@ -38,7 +38,7 @@ interface ICloneableV2 {
     /// If initialization is successful the `ICloneableV2` MUST return the
     /// keccak256 hash of the string "ICloneableV2.initialize". This avoids false
     /// positives where a contract building a proxy, such as an
-    /// `ICloneableFactoryV4`, may incorrectly believe that the clone has been
+    /// `ICloneableFactoryV5`, may incorrectly believe that the clone has been
     /// initialized but the implementation doesn't support `ICloneableV2`.
     ///
     /// @dev The `ICloneableV2` interface differs from `ICloneableV1` in that

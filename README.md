@@ -1,8 +1,8 @@
 # rain.factory
 
 This repo is the **library** half of the library/deploy split: the `ICloneable*`
-interface surface and the `LibICloneableFactoryV4` library that implements it.
-It publishes to Soldeer as `rain-factory`.
+interface surface and the `LibICloneableFactoryV4` and `LibICloneableFactoryV5`
+libraries that implement it. It publishes to Soldeer as `rain-factory`.
 
 Soldeer `rain-factory` 0.1.5 and earlier are the pre-split package, carrying the
 concrete `CloneFactory` and its deploy pins; 0.1.6 dropped them. The `v0.1.0`,
@@ -40,6 +40,13 @@ factory is one delegation per entry point. The tests live here under
 the interface's spec byte for byte, and pin the EIP1167 construction against
 OpenZeppelin `Clones` as a foreign implementation of the same standard.
 
+`src/lib/LibICloneableFactoryV5.sol` adds the beacon-proxy derivation of
+`ICloneableFactoryV5`: its effective salt, the minimal ERC-1967 beacon proxy
+creation code, the beacon guard and the two entry points, on top of
+`LibICloneableFactoryV4`'s shared deploy-and-initialize tail. Its tests pin the
+proxy bytes written out opcode by opcode, and check the proxy behaves as
+OpenZeppelin `BeaconProxy`.
+
 ## Interfaces
 
 Contains interfaces for working with Rain factories.
@@ -66,24 +73,14 @@ https://github.com/rainprotocol/rain.extrospection
 
 The current interfaces in this repository are for
 
-- `ICloneableFactoryV4`, the current factory interface. Extends
-  `ICloneableFactoryV3` — nothing was dropped this time, so it inherits rather
-  than restates — and adds a second deterministic derivation,
-  `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, whose
-  `CREATE2` salt hashes the caller-supplied salt together with the
-  initialization data and nothing about the caller. The two derivations differ
-  in what the clone's address commits to, and neither dominates: the V3 pair
-  namespaces the salt by `msg.sender`, so the address commits to WHO deployed
-  and not to WHAT — nobody else can reach the caller's address, but the
-  deploying account is baked into it forever and the deployer alone decides the
-  initial state. The open-salt pair commits to WHAT and not to WHO — every
-  account reaches the same address, and so can anyone, but everyone who reaches
-  it deploys the same contract initialized with the same bytes, because varying
-  either input lands somewhere else. Its cost is that the address is not
-  knowable until the data is final. The residual the address cannot fix —
-  implementations MUST NOT read `tx.origin` — and the address-registry pairing
-  it is intended for are spelled out in the NatSpec on
-  `ICloneableFactoryV4.cloneDeterministicOpenSalt`
+- `ICloneableFactoryV5`, the current factory interface. Extends
+  `ICloneableFactoryV4` and adds `beaconProxyDeterministicOpenSalt` +
+  `predictBeaconProxyAddressOpenSalt`: a `CREATE2` minimal ERC-1967 beacon
+  proxy, initialized atomically, whose address commits to the beacon and the
+  initialization data and nothing about the caller, behind a third domain tag.
+  The address does not commit to the implementation the beacon serves, so the
+  beacon owner is the trust point; the NatSpec on `ICloneableFactoryV5` spells
+  out what that party controls
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
@@ -93,6 +90,27 @@ The current interfaces in this repository are for
 Every interface that is not the newest version of itself is deprecated and lives
 in `src/interface/deprecated/`. They are still published for consumers pinned to
 them. New work uses the current interfaces above.
+
+#### `ICloneableFactoryV4`
+
+Extends `ICloneableFactoryV3` — nothing was dropped this time, so it inherits
+rather than restates — and adds a second deterministic derivation,
+`cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, whose
+`CREATE2` salt hashes the caller-supplied salt together with the initialization
+data and nothing about the caller. The two derivations differ in what the
+clone's address commits to, and neither dominates: the V3 pair namespaces the
+salt by `msg.sender`, so the address commits to WHO deployed and not to WHAT —
+nobody else can reach the caller's address, but the deploying account is baked
+into it forever and the deployer alone decides the initial state. The open-salt
+pair commits to WHAT and not to WHO — every account reaches the same address,
+and so can anyone, but everyone who reaches it deploys the same contract
+initialized with the same bytes, because varying either input lands somewhere
+else. Its cost is that the address is not knowable until the data is final. The
+residual the address cannot fix — implementations MUST NOT read `tx.origin` —
+and the address-registry pairing it is intended for are spelled out in the
+NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt`. Superseded by
+`ICloneableFactoryV5`, which extends it, so both clone derivations, their domain
+tags and their spec are still declared in `ICloneableFactoryV4`.
 
 #### `ICloneableFactoryV3`
 
@@ -106,7 +124,7 @@ rather than extending `ICloneableFactoryV2`, because the non-deterministic
 #### `ICloneableFactoryV2`
 
 Clones proxies from a reference implementation with a non-deterministic
-`clone()`. Superseded by `ICloneableFactoryV4`.
+`clone()`. Superseded by `ICloneableFactoryV5`.
 
 #### `ICloneableV1`
 

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.18;
 
-import {ICloneableFactoryV3} from "./deprecated/ICloneableFactoryV3.sol";
+import {ICloneableFactoryV3} from "./ICloneableFactoryV3.sol";
 
 /// @dev Domain tag hashed as the FIRST word of the `cloneDeterministic` /
 /// `predictDeterministicAddress` effective `CREATE2` salt on a factory that
@@ -24,7 +24,13 @@ bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.facto
 bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factory.clone.opensalt");
 
 /// @title ICloneableFactoryV4
-/// @notice A factory with two deterministic-clone derivations, both pinned to
+/// @notice DEPRECATED: superseded by `ICloneableFactoryV5`, the current
+/// factory interface. New factories and consumers MUST use
+/// `ICloneableFactoryV5`, not this interface on its own. `ICloneableFactoryV5`
+/// extends this interface and inherits both derivations and their domain tags
+/// from it, so their spec still lives here.
+///
+/// A factory with two deterministic-clone derivations, both pinned to
 /// exact bytes. The namespaced pair — `cloneDeterministic`, which namespaces its
 /// salt by `msg.sender`, and `predictDeterministicAddress`, which takes a
 /// `deployer` — is inherited from `ICloneableFactoryV3`. The open-salt pair,

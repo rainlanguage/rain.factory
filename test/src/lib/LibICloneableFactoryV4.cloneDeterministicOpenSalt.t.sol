@@ -9,7 +9,7 @@ import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/ICloneableFactoryV4.sol";
+} from "src/interface/deprecated/ICloneableFactoryV4.sol";
 import {
     LibICloneableFactoryV4,
     CloneAddressOccupied,
