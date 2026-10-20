@@ -7,7 +7,7 @@ import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
-import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
+import {LibTestBeaconProxy} from "../../lib/LibTestBeaconProxy.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH} from "../../../src/interface/ICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
@@ -56,10 +56,6 @@ contract LibICloneableFactoryV5BeaconProxyCreationCodeTest is Test {
         assertEq(proxy.code, address(new BeaconProxy(address(beacon), "")).code);
         assertEq(vm.load(proxy, ERC1967Utils.BEACON_SLOT), bytes32(uint256(uint160(address(beacon)))));
         assertEq(logs.length, 1);
-        assertEq(logs[0].emitter, proxy);
-        assertEq(logs[0].topics.length, 2);
-        assertEq(logs[0].topics[0], IERC1967.BeaconUpgraded.selector);
-        assertEq(logs[0].topics[1], bytes32(uint256(uint160(address(beacon)))));
-        assertEq(logs[0].data.length, 0);
+        LibTestBeaconProxy.checkBeaconUpgradedLog(vm, logs[0], proxy, address(beacon));
     }
 }

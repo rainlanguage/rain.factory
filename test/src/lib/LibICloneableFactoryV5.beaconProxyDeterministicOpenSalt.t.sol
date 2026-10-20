@@ -8,7 +8,7 @@ import {Create2} from "@openzeppelin-contracts-5.6.1/utils/Create2.sol";
 import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
-import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
+import {LibTestBeaconProxy} from "../../lib/LibTestBeaconProxy.sol";
 import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
@@ -237,11 +237,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         assertEq(logs.length, 2);
-        assertEq(logs[0].emitter, proxy);
-        assertEq(logs[0].topics.length, 2);
-        assertEq(logs[0].topics[0], IERC1967.BeaconUpgraded.selector);
-        assertEq(logs[0].topics[1], bytes32(uint256(uint160(address(beacon)))));
-        assertEq(logs[0].data.length, 0);
+        LibTestBeaconProxy.checkBeaconUpgradedLog(vm, logs[0], proxy, address(beacon));
         assertEq(logs[1].emitter, address(iCloneFactory));
         assertEq(logs[1].topics.length, 1);
         assertEq(logs[1].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
