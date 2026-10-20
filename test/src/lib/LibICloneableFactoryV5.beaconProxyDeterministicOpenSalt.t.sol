@@ -40,10 +40,10 @@ import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete
 /// `cloneDeterministicOpenSalt`.
 contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     /// The `TestCloneFactory` instance under test.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
+    TestCloneFactory internal immutable iCloneFactory;
 
     constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
+        iCloneFactory = new TestCloneFactory();
     }
 
     /// An OZ beacon serving a fresh `TestCloneable`, owned by this test.
@@ -64,7 +64,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function expectedAddress(address beacon, bytes memory data, bytes32 salt) internal view returns (address) {
         bytes32 effectiveSalt =
             keccak256(abi.encode(keccak256("rain.factory.beaconproxy.opensalt"), salt, keccak256(data)));
-        return Create2.computeAddress(effectiveSalt, ozCreationCodeHash(beacon), address(I_CLONE_FACTORY));
+        return Create2.computeAddress(effectiveSalt, ozCreationCodeHash(beacon), address(iCloneFactory));
     }
 
     /// The domain tag is the string it documents, and differs from both V4
@@ -87,7 +87,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     /// deployed or not: it reads nothing from the beacon.
     function testPredictBeaconProxyAddressOpenSalt(address beacon, bytes memory data, bytes32 salt) external view {
         assertEq(
-            I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(beacon, data, salt), expectedAddress(beacon, data, salt)
+            iCloneFactory.predictBeaconProxyAddressOpenSalt(beacon, data, salt), expectedAddress(beacon, data, salt)
         );
     }
 
@@ -107,7 +107,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         UpgradeableBeacon beacon = newBeacon();
         address expected = expectedAddress(address(beacon), data, salt);
 
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
 
         assertEq(proxy, expected);
         assertEq(proxy.code, address(new BeaconProxy(address(beacon), "")).code);
@@ -129,10 +129,10 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         UpgradeableBeacon beacon = newBeacon();
         uint256 snapshot = vm.snapshotState();
         vm.prank(alice);
-        address proxyAlice = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxyAlice = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         vm.revertToState(snapshot);
         vm.prank(bob);
-        address proxyBob = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxyBob = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         assertEq(proxyAlice, proxyBob);
         assertEq(proxyAlice, expectedAddress(address(beacon), data, salt));
     }
@@ -146,7 +146,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     ) external {
         address expected = expectedAddress(beacon, data, salt);
         vm.prank(alice);
-        assertEq(I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(beacon, data, salt), expected);
+        assertEq(iCloneFactory.predictBeaconProxyAddressOpenSalt(beacon, data, salt), expected);
     }
 
     /// `data`, `salt` and the beacon each move the address.
@@ -161,10 +161,10 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         UpgradeableBeacon beaconA = newBeacon();
         UpgradeableBeacon beaconB = newBeacon();
 
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beaconA), dataA, saltA);
-        address otherData = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beaconA), dataB, saltA);
-        address otherSalt = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beaconA), dataA, saltB);
-        address otherBeacon = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beaconB), dataA, saltA);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beaconA), dataA, saltA);
+        address otherData = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beaconA), dataB, saltA);
+        address otherSalt = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beaconA), dataA, saltB);
+        address otherBeacon = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beaconB), dataA, saltA);
 
         assertTrue(proxy != otherData);
         assertTrue(proxy != otherSalt);
@@ -187,15 +187,15 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
             beaconSalt != keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, attacker, keccak256(data)))
         );
 
-        address predicted = I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
-        address openClone = I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
+        address openClone = iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
         vm.prank(attacker);
-        address namespacedClone = I_CLONE_FACTORY.cloneDeterministic(implementation, data, keccak256(data));
+        address namespacedClone = iCloneFactory.cloneDeterministic(implementation, data, keccak256(data));
         assertTrue(openClone != predicted);
         assertTrue(namespacedClone != predicted);
         assertEq(predicted.code.length, 0);
 
-        assertEq(I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt), predicted);
+        assertEq(iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt), predicted);
     }
 
     /// The proxy emits `BeaconUpgraded(beacon)` while constructing, then the
@@ -204,7 +204,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconProxyDeterministicOpenSaltEvents(bytes memory data, bytes32 salt) external {
         UpgradeableBeacon beacon = newBeacon();
         vm.recordLogs();
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         assertEq(logs.length, 2);
@@ -213,7 +213,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(logs[0].topics[0], IERC1967.BeaconUpgraded.selector);
         assertEq(logs[0].topics[1], bytes32(uint256(uint160(address(beacon)))));
         assertEq(logs[0].data.length, 0);
-        assertEq(logs[1].emitter, address(I_CLONE_FACTORY));
+        assertEq(logs[1].emitter, address(iCloneFactory));
         assertEq(logs[1].topics.length, 1);
         assertEq(logs[1].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
         assertEq(logs[1].data, abi.encode(address(this), address(beacon), proxy, salt, data));
@@ -224,7 +224,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconProxyDeterministicOpenSaltInitializeOnly(bytes memory data, bytes32 salt) external {
         UpgradeableBeacon beacon = new UpgradeableBeacon(address(new TestCloneableCallRecorder()), address(this));
         vm.recordLogs();
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         bytes4[] memory selectors = TestCloneableCallRecorder(proxy).selectors();
@@ -243,10 +243,10 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         external
     {
         UpgradeableBeacon beacon = newBeacon();
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, proxy));
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         assertEq(TestCloneable(proxy).sData(), data);
     }
 
@@ -256,7 +256,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         UpgradeableBeacon beacon = newBeacon();
         vm.setNonce(expectedAddress(address(beacon), data, salt), 1);
         vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
     }
 
     /// Prediction never calls the beacon.
@@ -264,7 +264,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         UpgradeableBeacon beacon = newBeacon();
         vm.expectCall(address(beacon), "", 0);
         assertEq(
-            I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt),
+            iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt),
             expectedAddress(address(beacon), data, salt)
         );
     }
@@ -274,9 +274,9 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconProxyDeterministicOpenSaltPrefunded(uint256 balance, bytes memory data, bytes32 salt) external {
         balance = bound(balance, 1, type(uint128).max);
         UpgradeableBeacon beacon = newBeacon();
-        address predicted = I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
         vm.deal(predicted, balance);
-        assertEq(I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt), predicted);
+        assertEq(iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt), predicted);
         assertEq(predicted.balance, balance);
     }
 
@@ -284,9 +284,9 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     /// as the revert, and checks the address stays free.
     function checkReverts(address implementation, bytes memory data, bytes32 salt, bytes memory expected) internal {
         UpgradeableBeacon beacon = new UpgradeableBeacon(implementation, address(this));
-        address predicted = I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         assertEq(predicted.code.length, 0);
     }
 
@@ -329,7 +329,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconProxyZeroBeaconCodeSize(address beacon, bytes memory data, bytes32 salt) external {
         vm.assume(beacon.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroBeaconCodeSize.selector));
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(beacon, data, salt);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(beacon, data, salt);
     }
 
     /// Deploys through a `TestBeaconRawAnswer` answering `(reverts, answer)`,
@@ -337,9 +337,9 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function checkBeaconReverts(bool reverts, bytes memory answer, bytes32 salt, bytes memory expected) internal {
         TestBeaconRawAnswer beacon = new TestBeaconRawAnswer();
         beacon.set(reverts, answer);
-        address predicted = I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), "", salt);
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), "", salt);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), "", salt);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), "", salt);
         assertEq(predicted.code.length, 0);
     }
 
@@ -388,7 +388,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconProxyBeaconLongAnswer(bytes memory trailing, bytes memory data, bytes32 salt) external {
         TestBeaconRawAnswer beacon = new TestBeaconRawAnswer();
         beacon.set(false, abi.encodePacked(abi.encode(address(new TestCloneable())), trailing));
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         assertEq(TestCloneable(proxy).sData(), data);
     }
 
@@ -399,15 +399,15 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testBeaconOwnerIsTrustPoint(bytes32 salt) external {
         UpgradeableBeacon beacon = newBeacon();
         bytes memory data = abi.encode(bytes32(0));
-        address predicted = I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
+        address predicted = iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt);
 
         beacon.upgradeTo(address(new TestCloneableFailure()));
         vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
-        I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
-        assertEq(I_CLONE_FACTORY.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt), predicted);
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        assertEq(iCloneFactory.predictBeaconProxyAddressOpenSalt(address(beacon), data, salt), predicted);
 
         beacon.upgradeTo(address(new TestCloneable()));
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
         assertEq(proxy, predicted);
         assertEq(TestCloneable(proxy).sData(), data);
 
@@ -420,7 +420,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     /// Empty data deploys where predicted.
     function testBeaconProxyEmptyData(bytes32 salt) external {
         UpgradeableBeacon beacon = newBeacon();
-        address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), "", salt);
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), "", salt);
         assertEq(proxy, expectedAddress(address(beacon), "", salt));
         assertEq(TestCloneable(proxy).sData(), "");
     }
