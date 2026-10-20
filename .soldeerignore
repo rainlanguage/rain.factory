@@ -15,6 +15,7 @@ CLAUDE.md
 /flake.nix
 /foundry.toml
 /out
+/script
 /remappings.txt
 /slither.config.json
 /soldeer.lock

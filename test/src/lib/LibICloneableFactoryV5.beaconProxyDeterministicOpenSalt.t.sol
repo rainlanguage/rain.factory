@@ -2,9 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
+import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
 import {Create2} from "@openzeppelin-contracts-5.6.1/utils/Create2.sol";
+import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
@@ -22,7 +23,6 @@ import {
     ZeroImplementationCodeSize
 } from "src/lib/LibICloneableFactoryV4.sol";
 import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "src/lib/LibICloneableFactoryV5.sol";
-import {LibTestBeaconProxyBytes} from "test/lib/LibTestBeaconProxyBytes.sol";
 import {TestBeaconRawAnswer} from "test/concrete/TestBeaconRawAnswer.sol";
 import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
 import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
@@ -35,7 +35,7 @@ import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/concrete/
 /// @notice Tests `LibICloneableFactoryV5.beaconProxyDeterministicOpenSalt` /
 /// `predictBeaconProxyAddressOpenSalt` through `TestCloneFactory`. The address
 /// is pinned against OpenZeppelin `Create2` over an independently derived salt
-/// and the proxy bytes `LibTestBeaconProxyBytes` writes out; the deploy is
+/// and OpenZeppelin `BeaconProxy`'s creation code; the deploy is
 /// checked for the guards, the event and the atomic initialize it shares with
 /// `cloneDeterministicOpenSalt`.
 contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
@@ -51,16 +51,20 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         return new UpgradeableBeacon(address(new TestCloneable()), address(this));
     }
 
+    /// The hash of OZ `BeaconProxy`'s creation code with `(beacon, "")` as
+    /// constructor arguments.
+    function ozCreationCodeHash(address beacon) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, bytes(""))));
+    }
+
     /// The derivation `ICloneableFactoryV5` fixes, computed without the
     /// library: OZ `Create2` over
     /// `keccak256(abi.encode(keccak256("rain.factory.beaconproxy.opensalt"), salt, keccak256(data)))`
-    /// and the written-out proxy creation code.
+    /// and `ozCreationCodeHash`.
     function expectedAddress(address beacon, bytes memory data, bytes32 salt) internal view returns (address) {
         bytes32 effectiveSalt =
             keccak256(abi.encode(keccak256("rain.factory.beaconproxy.opensalt"), salt, keccak256(data)));
-        return Create2.computeAddress(
-            effectiveSalt, keccak256(LibTestBeaconProxyBytes.expectedCreationCode(beacon)), address(I_CLONE_FACTORY)
-        );
+        return Create2.computeAddress(effectiveSalt, ozCreationCodeHash(beacon), address(I_CLONE_FACTORY));
     }
 
     /// The domain tag is the string it documents, and differs from both V4
@@ -92,13 +96,11 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     function testPredictBeaconProxyAddress(address factory, address beacon, bytes32 derivedSalt) external pure {
         assertEq(
             LibICloneableFactoryV5.predictBeaconProxyAddress(factory, beacon, derivedSalt),
-            Create2.computeAddress(
-                derivedSalt, keccak256(LibTestBeaconProxyBytes.expectedCreationCode(beacon)), factory
-            )
+            Create2.computeAddress(derivedSalt, ozCreationCodeHash(beacon), factory)
         );
     }
 
-    /// The proxy lands at the derived address with the written-out runtime,
+    /// The proxy lands at the derived address with `BeaconProxy`'s runtime,
     /// the beacon in the ERC-1967 slot, and the data initialized into its
     /// own storage.
     function testBeaconProxyDeterministicOpenSaltDeploys(bytes memory data, bytes32 salt) external {
@@ -108,7 +110,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         address proxy = I_CLONE_FACTORY.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
 
         assertEq(proxy, expected);
-        assertEq(proxy.code, LibTestBeaconProxyBytes.expectedRuntime(address(beacon)));
+        assertEq(proxy.code, address(new BeaconProxy(address(beacon), "")).code);
         assertEq(vm.load(proxy, ERC1967Utils.BEACON_SLOT), bytes32(uint256(uint160(address(beacon)))));
         assertEq(TestCloneable(proxy).sData(), data);
         assertTrue(TestCloneable(proxy).sInitialized());

@@ -6,9 +6,9 @@ code in this repository.
 ## Project Overview
 
 rain.factory is a Solidity **library** repo for Rain's proxy factories (EIP1167
-clones and minimal ERC-1967 beacon proxies): the `ICloneable*` interface surface
-and the `LibICloneableFactoryV4` and `LibICloneableFactoryV5` libraries that
-implement it. It is the library half of the library/deploy split
+clones and OZ `BeaconProxy`s): the `ICloneable*` interface surface and the
+`LibICloneableFactoryV4` and `LibICloneableFactoryV5` libraries that implement
+it. It is the library half of the library/deploy split
 (rainlanguage/rain.factory#46) — no concrete contract, no deploy pins, no deploy
 script.
 
@@ -27,8 +27,7 @@ SPDX headers.
 
 Nix + Foundry (`nix develop`; run `rainix-sol-prelude` first). Tests exercise
 the libraries through `TestCloneFactory`, a pure-delegation concrete, with OZ
-`Clones` as foreign EIP1167 oracle and OZ `BeaconProxy` as behavioural oracle
-for the beacon proxy.
+`Clones` as foreign EIP1167 oracle.
 
 ## Architecture
 
@@ -55,8 +54,8 @@ makes this half a standalone publish.
 - No named return values.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
-- Dependencies (Soldeer, vendored under `dependencies/`) are test-harness only:
-  forge-std, plus `@openzeppelin-contracts` as the equivalence oracle for the
-  EIP1167 construction and the beacon proxy. `rain-deploy` and
-  `rain-sol-codegen` belong to the deploy half and must not be added here:
-  needing one means deploy-pin code has landed in a library repo.
+- Dependencies (Soldeer) are test/build only: forge-std, OZ (the EIP1167 oracle,
+  and the `BeaconProxy` whose creation code `script/Build.sol` writes to
+  `src/generated/` with `rain-sol-codegen`; never hand-edit it). `rain-deploy`
+  belongs to the deploy half: needing it means deploy-pin code has landed in a
+  library repo.

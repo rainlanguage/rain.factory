@@ -41,11 +41,12 @@ the interface's spec byte for byte, and pin the EIP1167 construction against
 OpenZeppelin `Clones` as a foreign implementation of the same standard.
 
 `src/lib/LibICloneableFactoryV5.sol` adds the beacon-proxy derivation of
-`ICloneableFactoryV5`: its effective salt, the minimal ERC-1967 beacon proxy
+`ICloneableFactoryV5`: its effective salt, the OpenZeppelin `BeaconProxy`
 creation code, the beacon guard and the two entry points, on top of
-`LibICloneableFactoryV4`'s shared deploy-and-initialize tail. Its tests pin the
-proxy bytes written out opcode by opcode, and check the proxy behaves as
-OpenZeppelin `BeaconProxy`.
+`LibICloneableFactoryV4`'s shared deploy-and-initialize tail. The creation code
+is the `BEACON_PROXY_CREATION_CODE` constant in `src/generated/BeaconProxy.sol`,
+which `script/Build.sol` writes and CI regenerates and diffs; a test pins it to
+`type(BeaconProxy).creationCode`.
 
 ## Interfaces
 
@@ -75,8 +76,8 @@ The current interfaces in this repository are for
 
 - `ICloneableFactoryV5`, the current factory interface. Extends
   `ICloneableFactoryV4` and adds `beaconProxyDeterministicOpenSalt` +
-  `predictBeaconProxyAddressOpenSalt`: a `CREATE2` minimal ERC-1967 beacon
-  proxy, initialized atomically, whose address commits to the beacon and the
+  `predictBeaconProxyAddressOpenSalt`: a `CREATE2` OpenZeppelin `BeaconProxy`,
+  initialized atomically, whose address commits to the beacon and the
   initialization data and nothing about the caller, behind a third domain tag.
   The address does not commit to the implementation the beacon serves, so the
   beacon owner is the trust point; the NatSpec on `ICloneableFactoryV5` spells

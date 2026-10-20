@@ -2,62 +2,57 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
+import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
-import {LibTestBeaconProxyBytes} from "test/lib/LibTestBeaconProxyBytes.sol";
+import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
+import {BEACON_PROXY_CREATION_CODE} from "src/generated/BeaconProxy.sol";
 import {LibICloneableFactoryV5} from "src/lib/LibICloneableFactoryV5.sol";
+import {TestCloneable} from "test/concrete/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV5BeaconProxyCreationCodeTest
-/// @notice Pins `LibICloneableFactoryV5.beaconProxyCreationCode` to bytes
-/// written out here opcode by opcode, with the ERC-1967 beacon slot and the
-/// `BeaconUpgraded` topic taken from OpenZeppelin, so neither the library's
-/// constants nor its arithmetic are checked against themselves. What those
-/// bytes DO is checked against OpenZeppelin `BeaconProxy` in
-/// `LibICloneableFactoryV5BeaconProxyOzEquivalenceTest`.
+/// @notice Pins `BEACON_PROXY_CREATION_CODE` and
+/// `LibICloneableFactoryV5.beaconProxyCreationCode` to OpenZeppelin
+/// `BeaconProxy` as compiled here.
 contract LibICloneableFactoryV5BeaconProxyCreationCodeTest is Test {
-    /// The OpenZeppelin constants the expected bytes are built from are the
-    /// ERC-1967 definitions.
-    function testErc1967Constants() external pure {
-        assertEq(ERC1967Utils.BEACON_SLOT, bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1));
-        assertEq(IERC1967.BeaconUpgraded.selector, keccak256("BeaconUpgraded(address)"));
+    /// The pinned constant is `BeaconProxy`'s creation code.
+    function testBeaconProxyCreationCodePin() external pure {
+        assertEq(BEACON_PROXY_CREATION_CODE, type(BeaconProxy).creationCode);
     }
 
-    /// The creation code is the 187 bytes `LibTestBeaconProxyBytes` writes out.
-    function testBeaconProxyCreationCodeBytes(address beacon) external pure {
-        bytes memory creationCode = LibICloneableFactoryV5.beaconProxyCreationCode(beacon);
-        assertEq(creationCode.length, 187);
-        assertEq(creationCode, LibTestBeaconProxyBytes.expectedCreationCode(beacon));
-        assertEq(LibTestBeaconProxyBytes.expectedRuntime(beacon).length, 0x56);
+    /// The creation code is `BeaconProxy`'s with `(beacon, "")` as constructor
+    /// arguments.
+    function testBeaconProxyCreationCode(address beacon) external pure {
+        assertEq(
+            LibICloneableFactoryV5.beaconProxyCreationCode(beacon),
+            abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, bytes("")))
+        );
     }
 
-    /// Deploying the creation code leaves exactly the runtime `LibTestBeaconProxyBytes`
-    /// writes out, writes `beacon` to the ERC-1967 beacon slot and nothing else
-    /// observable but one `BeaconUpgraded(beacon)` log, and calls nothing.
-    function testBeaconProxyCreationCodeDeploys(address beacon, bytes32 salt) external {
-        bytes memory creationCode = LibICloneableFactoryV5.beaconProxyCreationCode(beacon);
-        vm.expectCall(beacon, "", 0);
+    /// Deploying the creation code leaves `new BeaconProxy(beacon, "")`'s
+    /// runtime, writes `beacon` to the ERC-1967 beacon slot, emits one
+    /// `BeaconUpgraded(beacon)` and calls nothing on the implementation.
+    function testBeaconProxyCreationCodeDeploys(bytes32 salt) external {
+        UpgradeableBeacon beacon = new UpgradeableBeacon(address(new TestCloneable()), address(this));
+        bytes memory creationCode = LibICloneableFactoryV5.beaconProxyCreationCode(address(beacon));
+        vm.expectCall(beacon.implementation(), "", 0);
         vm.recordLogs();
-        vm.record();
         address proxy;
         assembly ("memory-safe") {
             proxy := create2(0, add(creationCode, 0x20), mload(creationCode), salt)
         }
-        (bytes32[] memory reads, bytes32[] memory writes) = vm.accesses(proxy);
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         assertTrue(proxy != address(0));
-        assertEq(proxy.code, LibTestBeaconProxyBytes.expectedRuntime(beacon));
-        assertEq(vm.load(proxy, ERC1967Utils.BEACON_SLOT), bytes32(uint256(uint160(beacon))));
-        assertEq(writes.length, 1);
-        assertEq(writes[0], ERC1967Utils.BEACON_SLOT);
-        assertEq(reads.length, 1);
+        assertEq(proxy.code, address(new BeaconProxy(address(beacon), "")).code);
+        assertEq(vm.load(proxy, ERC1967Utils.BEACON_SLOT), bytes32(uint256(uint160(address(beacon)))));
         assertEq(logs.length, 1);
         assertEq(logs[0].emitter, proxy);
         assertEq(logs[0].topics.length, 2);
         assertEq(logs[0].topics[0], IERC1967.BeaconUpgraded.selector);
-        assertEq(logs[0].topics[1], bytes32(uint256(uint160(beacon))));
+        assertEq(logs[0].topics[1], bytes32(uint256(uint160(address(beacon)))));
         assertEq(logs[0].data.length, 0);
     }
 }
