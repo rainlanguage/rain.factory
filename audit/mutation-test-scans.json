@@ -17,13 +17,38 @@
       "survivedAfter": 0,
       "equivalent": 11,
       "groups": {
-        "g1-derivations": {"mutants": 111, "killedByPreexistingSuite": 106, "killedAfter": 106, "survivedAfter": 0, "equivalent": 5, "coveragePr": null},
-        "g2-clone-tail": {"mutants": 75, "killedByPreexistingSuite": 67, "killedAfter": 72, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#98"},
-        "g3-entry-points": {"mutants": 113, "killedByPreexistingSuite": 103, "killedAfter": 110, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#99"}
+        "g1-derivations": {
+          "mutants": 111,
+          "killedByPreexistingSuite": 106,
+          "killedAfter": 106,
+          "survivedAfter": 0,
+          "equivalent": 5,
+          "coveragePr": null
+        },
+        "g2-clone-tail": {
+          "mutants": 75,
+          "killedByPreexistingSuite": 67,
+          "killedAfter": 72,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#98"
+        },
+        "g3-entry-points": {
+          "mutants": 113,
+          "killedByPreexistingSuite": 103,
+          "killedAfter": 110,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#99"
+        }
       },
       "testsBefore": 68,
       "testsAfter": 78,
-      "filed": ["#95", "#96", "#97"]
+      "filed": [
+        "#95",
+        "#96",
+        "#97"
+      ]
     }
   },
   {
@@ -44,12 +69,35 @@
       "survivedAfter": 0,
       "equivalent": 2,
       "groups": {
-        "v5-beacon": {"mutants": 86, "killedByPreexistingSuite": 85, "killedAfter": 85, "survivedAfter": 0, "equivalent": 1, "pinlessPass": {"mutants": 54, "killedByPreexistingSuite": 51, "killedAfter": 53, "survivedAfter": 0, "equivalent": 1}, "coveragePr": null},
-        "v4-tail": {"mutants": 53, "killedByPreexistingSuite": 52, "killedAfter": 52, "survivedAfter": 0, "equivalent": 1, "coveragePr": null}
+        "v5-beacon": {
+          "mutants": 86,
+          "killedByPreexistingSuite": 85,
+          "killedAfter": 85,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "pinlessPass": {
+            "mutants": 54,
+            "killedByPreexistingSuite": 51,
+            "killedAfter": 53,
+            "survivedAfter": 0,
+            "equivalent": 1
+          },
+          "coveragePr": null
+        },
+        "v4-tail": {
+          "mutants": 53,
+          "killedByPreexistingSuite": 52,
+          "killedAfter": 52,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "coveragePr": null
+        }
       },
       "testsBefore": 113,
       "testsAfter": 114,
-      "filed": ["#270"]
+      "filed": [
+        "#270"
+      ]
     }
   },
   {
@@ -127,6 +175,33 @@
       "equivalents": [],
       "testsBefore": 110,
       "testsAfter": 110,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-20T22:45:14Z",
+    "commit": "c41ee814e43431cba8b5e6f7318ed8c342226eda",
+    "testsAfterCommit": "c41ee814e43431cba8b5e6f7318ed8c342226eda",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 29,
+    "scope": "PR #271 src lines changed since aa6efa4: LibICloneableFactoryV4.hashDomainSaltData (shared open-salt preimage), the V4 and V5 domain arguments passed to it, and LibICloneableFactoryV5.checkBeacon's try/catch. Before numbers run the aa6efa4 suite on the c41ee81 src (111 tests); after numbers run the c41ee81 suite (115 tests), whose 41bf8f2 tests were written with the change.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 21,
+      "killedByPreexistingSuite": 20,
+      "killedAfter": 21,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "survivorsOfPreexistingSuite": [
+        "S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"
+      ],
+      "testsBefore": 111,
+      "testsAfter": 115,
       "filed": []
     }
   }
