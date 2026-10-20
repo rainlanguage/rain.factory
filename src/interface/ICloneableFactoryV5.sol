@@ -32,7 +32,8 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN = keccak256
 /// ))
 /// ```
 ///
-/// and the `CREATE2` creation code is the proxy's own, which embeds `beacon`.
+/// and the `CREATE2` creation code is the proxy's own, pinned byte for byte on
+/// `beaconProxyDeterministicOpenSalt`, which embeds `beacon`.
 /// So the address is a pure function of `(factory, beacon, salt, data)`, and
 /// third parties can recompute it.
 ///
@@ -85,6 +86,16 @@ interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// reverts MUST revert with the beacon's revert data, and one that returns
     /// fewer than 32 bytes or a value that is not an address MUST revert with
     /// no data. This is OpenZeppelin `BeaconProxy`'s observable behaviour.
+    ///
+    /// The `CREATE2` creation code MUST be exactly these 187 bytes, so every
+    /// conforming factory derives the same address:
+    ///
+    /// ```
+    /// 0x73 ++ beacon ++
+    /// 0x807fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50557f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f5fa260568060655f395ff3635c60da1b5f5260205f6004601c73
+    /// ++ beacon ++
+    /// 0x5afa80156043575f518060a01c60203d1017605257365f5f375f5f365f845af45b3d5f5f3e604e573d5ffd5b3d5ff35b5f5ffd
+    /// ```
     ///
     /// The factory MUST use
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN, salt, keccak256(data)))`
