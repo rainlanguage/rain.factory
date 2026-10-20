@@ -92,15 +92,16 @@ library LibICloneableFactoryV4 {
         bytes memory data,
         bytes32 salt
     ) internal returns (address) {
-        address predicted = predictCreate2Address(address(this), derivedSalt, keccak256(creationCode));
-        if (predicted.code.length != 0) {
-            revert CloneAddressOccupied(predicted);
+        address child = predictCreate2Address(address(this), derivedSalt, keccak256(creationCode));
+        if (child.code.length != 0) {
+            revert CloneAddressOccupied(child);
         }
-        address child;
+        // A successful `CREATE2` deploys at exactly `child`.
+        bool deployed;
         assembly ("memory-safe") {
-            child := create2(0, add(creationCode, 0x20), mload(creationCode), derivedSalt)
+            deployed := iszero(iszero(create2(0, add(creationCode, 0x20), mload(creationCode), derivedSalt)))
         }
-        if (child == address(0)) {
+        if (!deployed) {
             revert CloneDeploymentFailed();
         }
         emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);

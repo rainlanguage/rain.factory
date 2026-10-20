@@ -434,4 +434,19 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(proxy, expectedAddress(address(beacon), data, salt));
         assertEq(TestCloneable(proxy).sData(), data);
     }
+
+    /// The returned address is the one `CREATE2` deployed: the OZ-derived
+    /// address, the emitter of the proxy's constructor event, holding the
+    /// `BeaconProxy` runtime code.
+    function testBeaconProxyReturnsDeployedAddress(bytes memory data, bytes32 salt) external {
+        UpgradeableBeacon beacon = newBeacon();
+        address expected = expectedAddress(address(beacon), data, salt);
+        vm.recordLogs();
+        address proxy = iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        assertEq(proxy, expected);
+        assertEq(logs[0].emitter, expected);
+        assertEq(expected.code, address(new BeaconProxy(address(beacon), "")).code);
+    }
 }
