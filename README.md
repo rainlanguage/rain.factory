@@ -80,9 +80,8 @@ The current interfaces in this repository are for
   account reaches the same address, and so can anyone, but everyone who reaches
   it deploys the same contract initialized with the same bytes, because varying
   either input lands somewhere else. Its cost is that the address is not
-  knowable until the data is final. The residual the address cannot fix —
-  implementations MUST NOT read `tx.origin` — and the address-registry pairing
-  it is intended for are spelled out in the NatSpec on
+  knowable until the data is final. What the address cannot fix — an
+  `initialize` reading `tx.origin`, gas, or third-party-settable state — is on
   `ICloneableFactoryV4.cloneDeterministicOpenSalt`
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
