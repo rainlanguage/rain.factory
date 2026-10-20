@@ -65,8 +65,8 @@ makes this half a standalone publish.
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies (Soldeer) are test/build only: forge-std, OZ (the EIP1167 oracle,
   and the `BeaconProxy` whose creation code `script/Build.sol` writes to
-  `src/generated/` with `rain-sol-codegen`; never hand-edit it). The OZ pin is
-  frozen: its `BeaconProxy` creation code is part of the `ICloneableFactoryV5`
-  address derivation, so bumping OZ needs a new interface version. `rain-deploy`
-  belongs to the deploy half: needing it means deploy-pin code has landed in a
-  library repo.
+  `src/generated/` with `rain-sol-codegen`; never hand-edit it). The OZ pin and
+  the compiler settings above are frozen: they fix the `BeaconProxy` creation
+  code in the `ICloneableFactoryV5` address derivation, so changing either needs
+  a new interface version. `rain-deploy` belongs to the deploy half: needing it
+  means deploy-pin code has landed in a library repo.
