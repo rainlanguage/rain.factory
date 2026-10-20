@@ -22,7 +22,7 @@ library LibICloneableFactoryV5 {
     /// `BEACON_PROXY_CREATION_CODE` with `(beacon, "")` constructor arguments:
     /// empty data, so the constructor calls nothing on the implementation.
     function beaconProxyCreationCode(address beacon) internal pure returns (bytes memory) {
-        return abi.encodePacked(BEACON_PROXY_CREATION_CODE, abi.encode(beacon, bytes("")));
+        return bytes.concat(BEACON_PROXY_CREATION_CODE, abi.encode(beacon, bytes("")));
     }
 
     /// `CREATE2` address of the beacon proxy from `factory`, for an already
