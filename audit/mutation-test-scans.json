@@ -105,5 +105,29 @@
       "testsAfter": 109,
       "filed": []
     }
+  },
+  {
+    "timestamp": "2026-10-20T21:53:24Z",
+    "commit": "94755ae74cd8ce1f5f5f08493865293e50958eef",
+    "testsAfterCommit": "94755ae74cd8ce1f5f5f08493865293e50958eef",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 26,
+    "scope": "PR #271 src lines changed since 0477c05: LibICloneableFactoryV4.deployAndInitialize (single child address, deployed bool from create2) and LibICloneableFactoryV5.beaconProxyCreationCode (bytes.concat). The suite at the scanned commit already includes testBeaconProxyReturnsDeployedAddress, written with the change, so kills are not attributed to the pre-change suite.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 15,
+      "killedByPreexistingSuite": 15,
+      "killedAfter": 15,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "testsBefore": 110,
+      "testsAfter": 110,
+      "filed": []
+    }
   }
 ]
