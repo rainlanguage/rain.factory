@@ -37,6 +37,8 @@ libraries through `TestCloneFactory`, a pure-delegation concrete, with OZ
 - `src/interface/ICloneableFactoryV5.sol` is the current factory interface.
   Every derivation is pinned to exact bytes behind a distinct string-derived
   domain tag, so the images are disjoint by construction.
+- `src/interface/ICloneableV2.sol` is the cloneable interface:
+  `initialize(bytes)` must return `ICLONEABLE_V2_SUCCESS`.
 - `src/lib/LibICloneableFactoryV4.sol` / `LibICloneableFactoryV5.sol` are the
   whole factory as internal library logic (no external cloning dependency);
   `msg.sender` and `address(this)` are read inside the library.
