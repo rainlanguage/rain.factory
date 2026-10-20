@@ -23,6 +23,7 @@ import {
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV4.sol";
 import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {TestBeaconDivergent} from "../../concrete/TestBeaconDivergent.sol";
 import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";
 import {TestBeaconStrictCalldata} from "../../concrete/TestBeaconStrictCalldata.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
@@ -258,6 +259,17 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         vm.setNonce(expectedAddress(address(beacon), data, salt), 1);
         vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
         iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+    }
+
+    /// A beacon that passes the factory's check but fails the `BeaconProxy`
+    /// constructor's is `CloneDeploymentFailed`, the constructor's revert data
+    /// not bubbled, and nothing lands at the predicted address.
+    function testBeaconProxyConstructorRevertIsDeploymentFailed(bytes memory data, bytes32 salt) external {
+        TestBeaconDivergent beacon = new TestBeaconDivergent(address(iCloneFactory), address(new TestCloneable()));
+        address predicted = expectedAddress(address(beacon), data, salt);
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        iCloneFactory.beaconProxyDeterministicOpenSalt(address(beacon), data, salt);
+        assertEq(predicted.code.length, 0);
     }
 
     /// Prediction never calls the beacon.
