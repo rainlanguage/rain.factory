@@ -22,6 +22,14 @@ contract LibICloneableFactoryV5BeaconProxyCreationCodeTest is Test {
         assertEq(BEACON_PROXY_CREATION_CODE, type(BeaconProxy).creationCode);
     }
 
+    /// The pinned constant's hash, so any change to what OZ compiles to here
+    /// shows as a reviewed edit of this literal.
+    function testBeaconProxyCreationCodeHash() external pure {
+        assertEq(
+            keccak256(BEACON_PROXY_CREATION_CODE), 0xe1ae7c0d01fd026af8df65ef9ca88d99cef57ff3b31eaa283d3101ccb42a02a2
+        );
+    }
+
     /// The creation code is `BeaconProxy`'s with `(beacon, "")` as constructor
     /// arguments.
     function testBeaconProxyCreationCode(address beacon) external pure {
