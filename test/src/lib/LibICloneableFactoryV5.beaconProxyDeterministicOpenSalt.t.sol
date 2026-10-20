@@ -209,6 +209,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(logs[0].topics.length, 2);
         assertEq(logs[0].topics[0], IERC1967.BeaconUpgraded.selector);
         assertEq(logs[0].topics[1], bytes32(uint256(uint160(address(beacon)))));
+        assertEq(logs[0].data.length, 0);
         assertEq(logs[1].emitter, address(I_CLONE_FACTORY));
         assertEq(logs[1].topics.length, 1);
         assertEq(logs[1].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));

@@ -10,6 +10,7 @@ import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967U
 import {LibICloneableFactoryV5} from "src/lib/LibICloneableFactoryV5.sol";
 import {TestBeaconProxyEcho} from "test/concrete/TestBeaconProxyEcho.sol";
 import {TestBeaconRawAnswer} from "test/concrete/TestBeaconRawAnswer.sol";
+import {TestBeaconStrictCalldata} from "test/concrete/TestBeaconStrictCalldata.sol";
 
 /// @title LibICloneableFactoryV5BeaconProxyOzEquivalenceTest
 /// @notice The beacon proxy `LibICloneableFactoryV5.beaconProxyCreationCode`
@@ -77,6 +78,17 @@ contract LibICloneableFactoryV5BeaconProxyOzEquivalenceTest is Test {
     function testCallMatchesOz(uint256 value, bytes memory data) external {
         value = bound(value, 0, type(uint128).max);
         UpgradeableBeacon beacon = new UpgradeableBeacon(address(new TestBeaconProxyEcho()), address(this));
+        address ours = deployOurs(address(beacon));
+        address oz = address(new BeaconProxy(address(beacon), ""));
+
+        checkSameEcho(ours, oz, value, data);
+    }
+
+    /// Both proxies call the beacon with exactly the 4-byte `implementation()`
+    /// selector: a beacon that answers only that calldata serves both.
+    function testBeaconCalldataMatchesOz(uint256 value, bytes memory data) external {
+        value = bound(value, 0, type(uint128).max);
+        TestBeaconStrictCalldata beacon = new TestBeaconStrictCalldata(address(new TestBeaconProxyEcho()));
         address ours = deployOurs(address(beacon));
         address oz = address(new BeaconProxy(address(beacon), ""));
 
