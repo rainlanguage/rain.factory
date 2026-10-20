@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ICloneableV2} from "src/interface/ICloneableV2.sol";
+import {ICloneableV2} from "../../src/interface/ICloneableV2.sol";
 
 /// Thrown unconditionally by `TestCloneableRevert.initialize`, carrying the
 /// data it was called with so a test can prove both that the revert came from

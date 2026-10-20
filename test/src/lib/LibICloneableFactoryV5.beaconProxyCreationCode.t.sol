@@ -8,9 +8,9 @@ import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProx
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
-import {BEACON_PROXY_CREATION_CODE} from "src/generated/BeaconProxy.sol";
-import {LibICloneableFactoryV5} from "src/lib/LibICloneableFactoryV5.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
+import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
+import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {TestCloneable} from "../../concrete/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV5BeaconProxyCreationCodeTest
 /// @notice Pins `BEACON_PROXY_CREATION_CODE` and

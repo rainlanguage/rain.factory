@@ -8,8 +8,8 @@ import {
     LibICloneableFactoryV4,
     DelegatedImplementation,
     ZeroImplementationCodeSize
-} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
+} from "../../../src/lib/LibICloneableFactoryV4.sol";
+import {TestCloneable} from "../../concrete/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV4CheckImplementationCodeTest
 /// @notice Tests `LibICloneableFactoryV4.checkImplementationCode`.

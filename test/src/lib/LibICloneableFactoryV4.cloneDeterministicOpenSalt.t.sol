@@ -5,20 +5,20 @@ pragma solidity =0.8.25;
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
-import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
+import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/deprecated/ICloneableFactoryV4.sol";
+} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {
     LibICloneableFactoryV4,
     CloneAddressOccupied,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
-import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
+} from "../../../src/lib/LibICloneableFactoryV4.sol";
+import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
+import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 
 /// @title LibICloneableFactoryV4CloneDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV4.cloneDeterministicOpenSalt` /

@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 
-import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
+import {LibICloneableFactoryV4} from "../../../src/lib/LibICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV4CloneCreationCodeTest
 /// @notice Tests `LibICloneableFactoryV4.cloneCreationCode` against the EIP-1167

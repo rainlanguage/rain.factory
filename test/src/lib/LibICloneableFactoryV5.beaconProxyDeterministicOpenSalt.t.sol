@@ -9,27 +9,27 @@ import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProx
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
-import {ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
+import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/deprecated/ICloneableFactoryV4.sol";
-import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "src/interface/ICloneableFactoryV5.sol";
+} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
+import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "../../../src/interface/ICloneableFactoryV5.sol";
 import {
     CloneAddressOccupied,
     CloneDeploymentFailed,
     DelegatedImplementation,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "src/lib/LibICloneableFactoryV4.sol";
-import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "src/lib/LibICloneableFactoryV5.sol";
-import {TestBeaconRawAnswer} from "test/concrete/TestBeaconRawAnswer.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
-import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
-import {TestCloneableCallRecorder} from "test/concrete/TestCloneableCallRecorder.sol";
-import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
-import {TestCloneableRawAnswer} from "test/concrete/TestCloneableRawAnswer.sol";
-import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/concrete/TestCloneableRevert.sol";
+} from "../../../src/lib/LibICloneableFactoryV4.sol";
+import {LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";
+import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
+import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
+import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
+import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
+import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";
+import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete/TestCloneableRevert.sol";
 
 /// @title LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV5.beaconProxyDeterministicOpenSalt` /

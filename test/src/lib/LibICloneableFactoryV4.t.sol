@@ -3,11 +3,11 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
+import {LibICloneableFactoryV4} from "../../../src/lib/LibICloneableFactoryV4.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/deprecated/ICloneableFactoryV4.sol";
+} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV4Test
 /// Every expectation is recomputed inline from the pinned formula, never read
