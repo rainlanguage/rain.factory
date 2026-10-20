@@ -10,6 +10,11 @@ concrete `CloneFactory` and its deploy pins; 0.1.6 dropped them. The `v0.1.0`,
 pre-split releases, and the reports under `audit/protofire/` audit them, not the
 current tree.
 
+The release that adds `ICloneableFactoryV5` moves `ICloneableFactoryV4` and its
+domain-tag constants from `src/interface/ICloneableFactoryV4.sol` to
+`src/interface/deprecated/ICloneableFactoryV4.sol`. Consumers importing the old
+path, such as `rain.factory.deploy`, rewrite the import when they bump.
+
 ## Concrete implementations
 
 `CloneFactory` — the concrete that implements these interfaces — lives in
