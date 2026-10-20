@@ -31,9 +31,9 @@ the libraries through `TestCloneFactory`, a pure-delegation concrete, with OZ
 
 ## Architecture
 
-- `src/interface/ICloneableFactoryV5.sol` is the current factory interface; its
-  NatSpec is the full spec, with every derivation pinned to exact bytes behind a
-  distinct string-derived domain tag so the images are disjoint by construction.
+- `src/interface/ICloneableFactoryV5.sol` is the current factory interface.
+  Every derivation is pinned to exact bytes behind a distinct string-derived
+  domain tag, so the images are disjoint by construction.
 - `src/lib/LibICloneableFactoryV4.sol` / `LibICloneableFactoryV5.sol` are the
   whole factory as internal library logic (no external cloning dependency);
   `msg.sender` and `address(this)` are read inside the library.
@@ -52,6 +52,9 @@ makes this half a standalone publish.
   different `0.8.x` still compile them; the library floats `^0.8.25`; tests pin
   `=0.8.25`, as do the concretes and scripts in rain.factory.deploy.
 - No named return values.
+- NatSpec is terse: what an item does and non-obvious invariants only. rainix
+  `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
+  cut prose to fit, never exempt.
 - Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
   metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
 - Dependencies (Soldeer) are test/build only: forge-std, OZ (the EIP1167 oracle,

@@ -80,8 +80,7 @@ The current interfaces in this repository are for
   initialized atomically, whose address commits to the beacon and the
   initialization data and nothing about the caller, behind a third domain tag.
   The address does not commit to the implementation the beacon serves, so the
-  beacon owner is the trust point; the NatSpec on `ICloneableFactoryV5` spells
-  out what that party controls
+  beacon owner is the trust point for the proxy's behaviour and initial state
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor
@@ -107,9 +106,9 @@ pair commits to WHAT and not to WHO — every account reaches the same address,
 and so can anyone, but everyone who reaches it deploys the same contract
 initialized with the same bytes, because varying either input lands somewhere
 else. Its cost is that the address is not knowable until the data is final. The
-residual the address cannot fix — implementations MUST NOT read `tx.origin` —
-and the address-registry pairing it is intended for are spelled out in the
-NatSpec on `ICloneableFactoryV4.cloneDeterministicOpenSalt`. Superseded by
+address commits only to the implementation and the initialization bytes, so an
+`initialize` used with `cloneDeterministicOpenSalt` MUST NOT depend on
+`tx.origin`, gas, or third-party-settable state. Superseded by
 `ICloneableFactoryV5`, which extends it, so both clone derivations, their domain
 tags and their spec are still declared in `ICloneableFactoryV4`.
 

@@ -9,95 +9,39 @@ import {
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
 } from "../interface/deprecated/ICloneableFactoryV4.sol";
 
-/// Thrown when an implementation has zero code size which is always a mistake:
-/// an EIP-1167 proxy of a codeless implementation delegates every call —
-/// `initialize` included — to nothing.
 error ZeroImplementationCodeSize();
 
-/// Thrown when an implementation's code begins with `0xef`: an EIP-7702
-/// delegated account. The only mutable-code shape detectable here; an
-/// implementation that delegates onward to a mutable target is not.
+/// Implementation code starts with `0xef` (EIP-7702 delegation).
 error DelegatedImplementation();
 
-/// Thrown when the clone address already has code. On the open-salt path the
-/// occupant is the exact clone asked for; on the namespaced path it is the
-/// clone the same deployer deployed at that salt, with whatever `data` that
-/// call passed.
-/// @param clone The occupied address.
 error CloneAddressOccupied(address clone);
 
-/// Thrown when the clone `CREATE2` fails at an address with no code: out of
-/// gas, or a nonzero nonce there.
 error CloneDeploymentFailed();
 
-/// Thrown when the fresh clone's `ICloneableV2.initialize` answers anything but
-/// the 32-byte `ICLONEABLE_V2_SUCCESS`. A revert with data bubbles verbatim.
+/// `initialize` returned anything but `ICLONEABLE_V2_SUCCESS`.
 error InitializationFailed();
 
-/// @dev The EIP-1167 creation code up to the implementation address: the
-/// 10-byte deploy preamble (which returns the trailing 45 bytes as runtime
-/// code) followed by the first 10 bytes of the runtime.
+/// @dev EIP-1167 creation code before the implementation address.
 bytes constant EIP1167_CREATION_CODE_PREFIX = hex"3d602d80600a3d3981f3363d3d373d3d3d363d73";
 
-/// @dev The EIP-1167 bytes after the implementation address, shared by the
-/// creation code and the runtime code.
+/// @dev EIP-1167 creation code after the implementation address.
 bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
 
 /// @title LibICloneableFactoryV4
-/// @notice The whole of an `ICloneableFactoryV4` factory as internal library
-/// logic, so a concrete factory is nothing but one delegation per entry point.
-/// This is the library half of the library/deploy split.
-///
-/// `ICloneableFactoryV4` is the spec for everything here: what each salt
-/// commits to, the atomic clone-and-initialize, and the `NewClone` event
-/// carrying the RAW caller salt.
+/// @notice `ICloneableFactoryV4` as internal library logic.
 library LibICloneableFactoryV4 {
-    /// The effective `CREATE2` salt for the namespaced derivation
-    /// (`cloneDeterministic` / `predictDeterministicAddress`): the caller-chosen
-    /// `salt` behind the namespaced domain tag and `deployer`, so the salt — and
-    /// therefore the clone address — is namespaced to the account that deploys.
-    /// @param deployer The account whose namespace the salt belongs to (the
-    /// `msg.sender` of `cloneDeterministic`, or the `deployer` argument of
-    /// `predictDeterministicAddress`).
-    /// @param salt The caller-chosen salt, before namespacing.
-    /// @return The effective salt `CREATE2` hashes.
     function effectiveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt));
     }
 
-    /// The effective `CREATE2` salt for the open-salt derivation
-    /// (`cloneDeterministicOpenSalt` / `predictDeterministicAddressOpenSalt`):
-    /// the caller-chosen `salt` and the hash of the initialization `data` behind
-    /// the open-salt domain tag, and nothing about the caller, so the clone
-    /// address commits to `salt` and `data` and every account reaches the same
-    /// one. `data` MAY be empty.
-    /// @param salt The caller-chosen salt.
-    /// @param data The initialization data passed to `ICloneableV2.initialize`.
-    /// @return The effective salt `CREATE2` hashes.
     function effectiveOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
         return keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
     }
 
-    /// The canonical 55-byte EIP-1167 creation code for `implementation`.
-    /// Constructed from the standard's bytes directly so this library — and
-    /// with it the published factory — depends on no external cloning code;
-    /// the tests pin it byte for byte against OZ `Clones` as a foreign
-    /// implementation of the same standard.
-    /// @param implementation The contract the deployed proxy will delegate to.
-    /// @return The creation code.
     function cloneCreationCode(address implementation) internal pure returns (bytes memory) {
         return abi.encodePacked(EIP1167_CREATION_CODE_PREFIX, implementation, EIP1167_CREATION_CODE_SUFFIX);
     }
 
-    /// The address `CREATE2` gives the EIP-1167 clone of `implementation` from
-    /// `factory` at `derivedSalt`:
-    /// `address(keccak256(0xff ++ factory ++ derivedSalt ++ keccak256(creationCode)))`.
-    /// A pure function of its inputs, computable by anyone offchain.
-    /// @param factory The factory that would deploy the clone.
-    /// @param implementation The contract to clone.
-    /// @param derivedSalt The effective `CREATE2` salt, from `effectiveSalt` or
-    /// `effectiveOpenSalt`.
-    /// @return The predicted clone address.
     function predictCloneAddress(address factory, address implementation, bytes32 derivedSalt)
         internal
         pure
@@ -106,13 +50,6 @@ library LibICloneableFactoryV4 {
         return predictCreate2Address(factory, derivedSalt, keccak256(cloneCreationCode(implementation)));
     }
 
-    /// The address `CREATE2` gives creation code hashing to `initCodeHash`
-    /// from `factory` at `derivedSalt`:
-    /// `address(keccak256(0xff ++ factory ++ derivedSalt ++ initCodeHash))`.
-    /// @param factory The account that would run the `CREATE2`.
-    /// @param derivedSalt The effective `CREATE2` salt.
-    /// @param initCodeHash The `keccak256` of the creation code.
-    /// @return The predicted address.
     function predictCreate2Address(address factory, bytes32 derivedSalt, bytes32 initCodeHash)
         internal
         pure
@@ -121,9 +58,6 @@ library LibICloneableFactoryV4 {
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", factory, derivedSalt, initCodeHash)))));
     }
 
-    /// Reverts with `ZeroImplementationCodeSize` if `implementation` has no
-    /// code, or `DelegatedImplementation` if its code begins with `0xef`.
-    /// @param implementation The contract to clone.
     function checkImplementationCode(address implementation) internal view {
         if (implementation.code.length == 0) {
             revert ZeroImplementationCodeSize();
@@ -138,15 +72,6 @@ library LibICloneableFactoryV4 {
         }
     }
 
-    /// The shared tail of both clone entry points: guard the implementation,
-    /// then `deployAndInitialize` its EIP-1167 creation code.
-    /// @param implementation The contract to clone.
-    /// @param derivedSalt The effective `CREATE2` salt, from `effectiveSalt` or
-    /// `effectiveOpenSalt`.
-    /// @param data The initialization data, forwarded verbatim to
-    /// `ICloneableV2.initialize`.
-    /// @param salt The caller-chosen salt, emitted raw in `NewClone`.
-    /// @return The deployed and initialized child contract address.
     function cloneAndInitialize(address implementation, bytes32 derivedSalt, bytes memory data, bytes32 salt)
         internal
         returns (address)
@@ -155,23 +80,8 @@ library LibICloneableFactoryV4 {
         return deployAndInitialize(cloneCreationCode(implementation), implementation, derivedSalt, data, salt);
     }
 
-    /// The shared deploy tail of every entry point that deploys a proxy:
-    /// revert `CloneAddressOccupied` if the predicted address already has code,
-    /// `CREATE2` `creationCode` at `derivedSalt`, emit `NewClone` with the RAW
-    /// caller salt, then run the mandatory `ICloneableV2.initialize` check —
-    /// atomically, with nothing else called on the proxy first, and the proxy
-    /// only considered created if `initialize` returns `ICLONEABLE_V2_SUCCESS`,
-    /// per the shared spec on `ICloneableFactoryV3.cloneDeterministic`. The
-    /// caller guards whatever `creationCode` delegates to before calling this.
-    /// @param creationCode The proxy's creation code. MUST NOT call anything on
-    /// the proxy's delegation target while constructing.
-    /// @param implementation Emitted as `NewClone.implementation`: what the
-    /// proxy delegates to, or the beacon it resolves that through.
-    /// @param derivedSalt The effective `CREATE2` salt.
-    /// @param data The initialization data, forwarded verbatim to
-    /// `ICloneableV2.initialize`.
-    /// @param salt The caller-chosen salt, emitted raw in `NewClone`.
-    /// @return The deployed and initialized child contract address.
+    /// Emits `NewClone` with the raw caller `salt`, not `derivedSalt`.
+    /// `creationCode` MUST NOT call its delegation target while constructing.
     function deployAndInitialize(
         bytes memory creationCode,
         address implementation,
@@ -191,8 +101,6 @@ library LibICloneableFactoryV4 {
             revert CloneDeploymentFailed();
         }
         emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
-        // Checking the return value of initialize is mandatory as per
-        // ICloneableFactoryV3 and ICloneableFactoryV4.
         // slither-disable-next-line low-level-calls
         (bool success, bytes memory returnData) = child.call(abi.encodeCall(ICloneableV2.initialize, (data)));
         if (!success && returnData.length > 0) {
@@ -206,23 +114,10 @@ library LibICloneableFactoryV4 {
         return child;
     }
 
-    /// `ICloneableFactoryV3.cloneDeterministic`, whole: `effectiveSalt` over
-    /// `msg.sender`, then the shared clone-initialize-verify flow.
-    /// @param implementation The contract to clone.
-    /// @param data As per `ICloneableV2`.
-    /// @param salt The caller-chosen salt.
-    /// @return The deployed and initialized child contract address.
     function cloneDeterministic(address implementation, bytes memory data, bytes32 salt) internal returns (address) {
         return cloneAndInitialize(implementation, effectiveSalt(msg.sender, salt), data, salt);
     }
 
-    /// `ICloneableFactoryV3.predictDeterministicAddress`, whole: the address
-    /// `cloneDeterministic(implementation, _, salt)` deploys to when called by
-    /// `deployer` on the factory this library is inlined into.
-    /// @param implementation The contract to clone.
-    /// @param salt The caller-chosen salt.
-    /// @param deployer The account that will call `cloneDeterministic`.
-    /// @return The predicted clone address.
     function predictDeterministicAddress(address implementation, bytes32 salt, address deployer)
         internal
         view
@@ -231,14 +126,6 @@ library LibICloneableFactoryV4 {
         return predictCloneAddress(address(this), implementation, effectiveSalt(deployer, salt));
     }
 
-    /// `ICloneableFactoryV4.cloneDeterministicOpenSalt`, whole:
-    /// `effectiveOpenSalt` — no caller-derived value hashed in — then the
-    /// shared clone-initialize-verify flow.
-    /// @param implementation The contract to clone.
-    /// @param data As per `ICloneableV2`, and part of the address derivation.
-    /// MAY be empty.
-    /// @param salt The caller-chosen salt.
-    /// @return The deployed and initialized child contract address.
     function cloneDeterministicOpenSalt(address implementation, bytes memory data, bytes32 salt)
         internal
         returns (address)
@@ -246,15 +133,6 @@ library LibICloneableFactoryV4 {
         return cloneAndInitialize(implementation, effectiveOpenSalt(salt, data), data, salt);
     }
 
-    /// `ICloneableFactoryV4.predictDeterministicAddressOpenSalt`, whole: the
-    /// address `cloneDeterministicOpenSalt(implementation, data, salt)`
-    /// deploys to from the factory this library is inlined into, whoever calls
-    /// it.
-    /// @param implementation The contract to clone.
-    /// @param data The initialization data that will be passed to
-    /// `ICloneableV2.initialize`.
-    /// @param salt The caller-chosen salt.
-    /// @return The predicted clone address.
     function predictDeterministicAddressOpenSalt(address implementation, bytes memory data, bytes32 salt)
         internal
         view
