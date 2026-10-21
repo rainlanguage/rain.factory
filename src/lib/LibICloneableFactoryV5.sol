@@ -33,6 +33,10 @@ bytes constant EIP1167_CREATION_CODE_PREFIX = hex"3d602d80600a3d3981f3363d3d373d
 /// @dev EIP-1167 creation code after the implementation address.
 bytes constant EIP1167_CREATION_CODE_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
 
+/// @dev EIP-1167 runtime code before the implementation address:
+/// `EIP1167_CREATION_CODE_PREFIX` without its 10-byte deploy preamble.
+bytes constant EIP1167_RUNTIME_CODE_PREFIX = hex"363d3d373d3d3d363d73";
+
 /// The beacon has no code. Without this check its empty `implementation()`
 /// answer fails the decode with no data, before `BeaconProxy` checks it.
 error ZeroBeaconCodeSize();
@@ -54,6 +58,20 @@ library LibICloneableFactoryV5 {
 
     function cloneCreationCode(address implementation) internal pure returns (bytes memory) {
         return abi.encodePacked(EIP1167_CREATION_CODE_PREFIX, implementation, EIP1167_CREATION_CODE_SUFFIX);
+    }
+
+    /// The code `cloneCreationCode(implementation)` leaves at the clone.
+    /// @param implementation The clone's delegation target.
+    /// @return The 45-byte EIP-1167 runtime code.
+    function cloneRuntimeCode(address implementation) internal pure returns (bytes memory) {
+        return abi.encodePacked(EIP1167_RUNTIME_CODE_PREFIX, implementation, EIP1167_CREATION_CODE_SUFFIX);
+    }
+
+    /// The `codehash` of a clone of `implementation`.
+    /// @param implementation The clone's delegation target.
+    /// @return `keccak256(cloneRuntimeCode(implementation))`.
+    function cloneRuntimeCodeHash(address implementation) internal pure returns (bytes32) {
+        return keccak256(cloneRuntimeCode(implementation));
     }
 
     function predictCloneAddress(address factory, address implementation, bytes32 derivedSalt)
