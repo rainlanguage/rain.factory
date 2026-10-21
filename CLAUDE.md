@@ -25,16 +25,12 @@ plus `.soldeerignore` unless they ship in the package.
 
 ## Testing
 
-Nix + Foundry. `nix develop`, then the commands CI runs, first
-`forge soldeer install` and then `forge test -vvv`, `slither .`,
-`forge fmt --check`, `forge lint -D warnings`, `reuse lint`,
-`pre-commit run --all-files`. Further gates are in rainix's
-`rainix-sol-static.yaml`. Regenerate `src/generated/` with
-`forge script script/Build.sol && forge fmt`; CI's `Git is clean` job does the
-same and fails on any tracked diff, and `test/script/Build.t.sol` fails if the
-script stops writing exactly the committed file. Tests call the library
-directly, and through `TestCloneFactory` where `msg.sender`/`address(this)` must
-be real. OZ `Clones` is the foreign EIP1167 oracle.
+Regenerate `src/generated/` with `forge script script/Build.sol && forge fmt`;
+CI's `Git is clean` job does the same and fails on any tracked diff, and
+`test/script/Build.t.sol` fails if the script stops writing exactly the
+committed file. Tests call the library directly, and through `TestCloneFactory`
+where `msg.sender`/`address(this)` must be real. OZ `Clones` is the foreign
+EIP1167 oracle.
 
 ## Architecture
 
