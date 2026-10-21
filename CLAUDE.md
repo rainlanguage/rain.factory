@@ -53,20 +53,12 @@ makes this half a standalone publish.
 
 ## Solidity Conventions
 
-- Versions: interfaces float `^0.8.18` so downstream soldeer consumers on a
-  different `0.8.x` still compile them; the library and `src/generated/` float
-  `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the concretes and scripts
-  in rain.factory.deploy.
+- Interfaces keep a lower pragma floor than the library so downstream soldeer
+  consumers on another `0.8.x` still compile them; never raise it to match.
 - No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
   cut prose to fit, never exempt.
-- Compiler (`foundry.toml`): Cancun EVM, optimizer at 100,000 runs, no CBOR
-  metadata (`cbor_metadata = false`, `bytecode_hash = "none"`).
-- Dependencies (Soldeer) are test/build only: forge-std, OZ (the EIP1167 oracle,
-  and the `BeaconProxy` whose creation code `script/Build.sol` writes to
-  `src/generated/` with `rain-sol-codegen`; never hand-edit it). The OZ pin and
-  the compiler settings above are frozen: they fix the `BeaconProxy` creation
-  code in the `ICloneableFactoryV5` address derivation, so changing either needs
-  a new interface version. `rain-deploy` belongs to the deploy half: needing it
-  means deploy-pin code has landed in a library repo.
+- `rain-deploy` belongs to the deploy half and must not be added as a
+  dependency here: needing it means deploy-pin code has landed in a library
+  repo.
