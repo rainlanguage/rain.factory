@@ -232,7 +232,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
         // The open salt an honest party pinned, which happens to be the
         // abi-encoding of the attacker's own address. Nothing stops a salt
         // taking this value; the attacker is free to go looking for one that
-        // does, or to pick the address to suit the salt.
+        // does.
         bytes32 openSalt = bytes32(uint256(uint160(attacker)));
         address open = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, openSalt);
 
