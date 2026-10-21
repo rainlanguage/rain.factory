@@ -17,13 +17,38 @@
       "survivedAfter": 0,
       "equivalent": 11,
       "groups": {
-        "g1-derivations": {"mutants": 111, "killedByPreexistingSuite": 106, "killedAfter": 106, "survivedAfter": 0, "equivalent": 5, "coveragePr": null},
-        "g2-clone-tail": {"mutants": 75, "killedByPreexistingSuite": 67, "killedAfter": 72, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#98"},
-        "g3-entry-points": {"mutants": 113, "killedByPreexistingSuite": 103, "killedAfter": 110, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#99"}
+        "g1-derivations": {
+          "mutants": 111,
+          "killedByPreexistingSuite": 106,
+          "killedAfter": 106,
+          "survivedAfter": 0,
+          "equivalent": 5,
+          "coveragePr": null
+        },
+        "g2-clone-tail": {
+          "mutants": 75,
+          "killedByPreexistingSuite": 67,
+          "killedAfter": 72,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#98"
+        },
+        "g3-entry-points": {
+          "mutants": 113,
+          "killedByPreexistingSuite": 103,
+          "killedAfter": 110,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#99"
+        }
       },
       "testsBefore": 68,
       "testsAfter": 78,
-      "filed": ["#95", "#96", "#97"]
+      "filed": [
+        "#95",
+        "#96",
+        "#97"
+      ]
     }
   },
   {
@@ -44,12 +69,35 @@
       "survivedAfter": 0,
       "equivalent": 2,
       "groups": {
-        "v5-beacon": {"mutants": 86, "killedByPreexistingSuite": 85, "killedAfter": 85, "survivedAfter": 0, "equivalent": 1, "pinlessPass": {"mutants": 54, "killedByPreexistingSuite": 51, "killedAfter": 53, "survivedAfter": 0, "equivalent": 1}, "coveragePr": null},
-        "v4-tail": {"mutants": 53, "killedByPreexistingSuite": 52, "killedAfter": 52, "survivedAfter": 0, "equivalent": 1, "coveragePr": null}
+        "v5-beacon": {
+          "mutants": 86,
+          "killedByPreexistingSuite": 85,
+          "killedAfter": 85,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "pinlessPass": {
+            "mutants": 54,
+            "killedByPreexistingSuite": 51,
+            "killedAfter": 53,
+            "survivedAfter": 0,
+            "equivalent": 1
+          },
+          "coveragePr": null
+        },
+        "v4-tail": {
+          "mutants": 53,
+          "killedByPreexistingSuite": 52,
+          "killedAfter": 52,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "coveragePr": null
+        }
       },
       "testsBefore": 113,
       "testsAfter": 114,
-      "filed": ["#270"]
+      "filed": [
+        "#270"
+      ]
     }
   },
   {
@@ -149,9 +197,35 @@
       "equivalent": 0,
       "invalid": 0,
       "equivalents": [],
-      "survivorsOfPreexistingSuite": ["S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"],
+      "survivorsOfPreexistingSuite": [
+        "S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"
+      ],
       "testsBefore": 111,
       "testsAfter": 115,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-21T00:04:53Z",
+    "commit": "5cffb4d8804d285f421e836c757e02db59aaa7cc",
+    "testsAfterCommit": "5cffb4d8804d285f421e836c757e02db59aaa7cc",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 35,
+    "scope": "PR #271 changes since c41ee81: script/Build.sol (B01-B05), LibICloneableFactoryV5 including checkBeacon DelegatedBeacon (V5-01..33) and LibICloneableFactoryV4 (V4-01..22), probed at 408b5678c4381b96e10b01feaa76c34e75e2c30b; then the shared LibICloneableFactoryV4.isDelegated and its two call sites (D01-D10) plus B01 again, probed at this commit. The DelegatedBeacon and Build tests were written before the probe, so no kill is attributed to a pre-existing suite.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 71,
+      "killedByPreexistingSuite": null,
+      "killedAfter": 71,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "testsBefore": 119,
+      "testsAfter": 119,
       "filed": []
     }
   }
