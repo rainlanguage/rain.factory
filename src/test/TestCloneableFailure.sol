@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity =0.8.25;
+pragma solidity ^0.8.25;
 
-import {ICloneableV2} from "../../src/interface/ICloneableV2.sol";
+import {ICloneableV2} from "../interface/ICloneableV2.sol";
 
 /// @title TestCloneableFailure
 /// @notice A cloneable contract that implements `ICloneableV2` but always

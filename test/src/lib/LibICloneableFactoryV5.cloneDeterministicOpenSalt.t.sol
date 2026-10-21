@@ -18,10 +18,10 @@ import {
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
-import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
-import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
+import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
-import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
+import {TestCloneableFailure} from "../../../src/test/TestCloneableFailure.sol";
 
 /// @title LibICloneableFactoryV5CloneDeterministicOpenSaltTest
 /// @notice Tests `LibICloneableFactoryV5.cloneDeterministicOpenSalt` /

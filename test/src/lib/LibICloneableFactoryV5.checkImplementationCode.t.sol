@@ -9,7 +9,7 @@ import {
     DelegatedImplementation,
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
-import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV5CheckImplementationCodeTest
 /// @notice Tests `LibICloneableFactoryV5.checkImplementationCode`.

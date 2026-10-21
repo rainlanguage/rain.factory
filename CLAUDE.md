@@ -8,7 +8,7 @@ code in this repository.
 rain.factory is a Solidity **library** repo for Rain's proxy factories (EIP1167
 clones and OZ `BeaconProxy`s): the `ICloneable*` interface surface and the
 `LibICloneableFactoryV5` library that implements it. It is the library half of
-the library/deploy split (rainlanguage/rain.factory#46) — no concrete contract,
+the library/deploy split (rainlanguage/rain.factory#46) — no deployed concrete,
 deploy pin or deploy script in `src/`.
 
 The concrete `CloneFactory`, its deployed address + codehash pins
@@ -46,6 +46,10 @@ EIP1167 oracle.
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V4`). Still
   published for consumers pinned to them, so FROZEN: never edit one. Do not use
   for new work. When a new version lands, the one it supersedes moves here.
+- `src/test/` — the fixtures rain.factory.deploy's suite imports
+  (`TestCloneable`, `TestCloneableFailure`, `TestCloneFactory`), published so
+  that suite runs against these rather than a copy (#169). Fixtures nothing
+  downstream imports stay in the unpublished `test/`.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV5` extends `ICloneableFactoryV4`), which is what
@@ -54,9 +58,9 @@ makes this half a standalone publish.
 ## Solidity Conventions
 
 - Versions: interfaces float `^0.8.18` so downstream soldeer consumers on a
-  different `0.8.x` still compile them; the library and `src/generated/` float
-  `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the concretes and scripts
-  in rain.factory.deploy.
+  different `0.8.x` still compile them; the library, `src/generated/` and
+  `src/test/` float `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the
+  concretes and scripts in rain.factory.deploy.
 - No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;

@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
-import {TestCloneFactory} from "../concrete/TestCloneFactory.sol";
+import {TestCloneFactory} from "../../src/test/TestCloneFactory.sol";
 
 /// @title CloneFactoryTest
 /// @notice Base for the tests that drive the library through
