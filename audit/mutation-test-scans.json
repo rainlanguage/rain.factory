@@ -246,5 +246,29 @@
       "testsAfter": 119,
       "filed": []
     }
+  },
+  {
+    "timestamp": "2026-10-21T15:25:54Z",
+    "commit": "40a403369a849237ff36d8009da74bda757972b5",
+    "testsAfterCommit": "40a403369a849237ff36d8009da74bda757972b5",
+    "publishedTag": "sol-v0.2.1",
+    "commitsAheadOfTag": 1,
+    "scope": "Issue #268 PR: EIP1167_RUNTIME_CODE_PREFIX, cloneRuntimeCode and cloneRuntimeCodeHash in LibICloneableFactoryV5, new in the scanned commit together with their tests. The functions had no callers before it, so the pre-existing suite could kill none of them by construction.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 14,
+      "killedByPreexistingSuite": 0,
+      "killedAfter": 14,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "testsBefore": 128,
+      "testsAfter": 132,
+      "filed": []
+    }
   }
 ]
