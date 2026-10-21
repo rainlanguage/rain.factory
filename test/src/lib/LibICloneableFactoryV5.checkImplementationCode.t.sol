@@ -2,22 +2,22 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {
-    LibICloneableFactoryV4,
+    LibICloneableFactoryV5,
     DelegatedImplementation,
     ZeroImplementationCodeSize
-} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {TestCloneable} from "../../concrete/TestCloneable.sol";
 
-/// @title LibICloneableFactoryV4CheckImplementationCodeTest
-/// @notice Tests `LibICloneableFactoryV4.checkImplementationCode`.
-contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
+/// @title LibICloneableFactoryV5CheckImplementationCodeTest
+/// @notice Tests `LibICloneableFactoryV5.checkImplementationCode`.
+contract LibICloneableFactoryV5CheckImplementationCodeTest is Test {
     /// External wrapper so `vm.expectRevert` sees the internal library call at
     /// its own call depth.
     function checkImplementationCodeExternal(address implementation) external view {
-        LibICloneableFactoryV4.checkImplementationCode(implementation);
+        LibICloneableFactoryV5.checkImplementationCode(implementation);
     }
 
     /// Any address without code reverts `ZeroImplementationCodeSize`.
@@ -30,7 +30,7 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
     /// A deployed contract passes.
     function testCheckImplementationCodeContract() external {
         TestCloneable implementation = new TestCloneable();
-        LibICloneableFactoryV4.checkImplementationCode(address(implementation));
+        LibICloneableFactoryV5.checkImplementationCode(address(implementation));
     }
 
     /// Any nonempty code not beginning with `0xef` passes.
@@ -40,7 +40,7 @@ contract LibICloneableFactoryV4CheckImplementationCodeTest is Test {
         vm.assume(code.length > 0);
         vm.assume(code[0] != 0xef);
         vm.etch(implementation, code);
-        LibICloneableFactoryV4.checkImplementationCode(implementation);
+        LibICloneableFactoryV5.checkImplementationCode(implementation);
     }
 
     /// One byte of code passes when that byte is not `0xef`, including the

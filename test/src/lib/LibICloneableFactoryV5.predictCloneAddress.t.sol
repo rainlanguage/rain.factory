@@ -2,18 +2,18 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
-import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
+import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 
-/// @title LibICloneableFactoryV4PredictCloneAddressTest
-/// @notice Tests `LibICloneableFactoryV4.predictCloneAddress` against two independent
+/// @title LibICloneableFactoryV5PredictCloneAddressTest
+/// @notice Tests `LibICloneableFactoryV5.predictCloneAddress` against two independent
 /// oracles: OpenZeppelin's `Clones.predictDeterministicAddress` — a foreign
 /// implementation of the same EIP-1167 CREATE2 prediction, so any divergence
 /// in our creation-code bytes or hashing shows up as a different address —
 /// and the raw CREATE2 formula computed longhand here.
-contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
+contract LibICloneableFactoryV5PredictCloneAddressTest is Test {
     /// Byte-for-byte equivalence with OZ Clones for every (factory,
     /// implementation, effectiveSalt): same creation code, same formula, same
     /// address. This is the equivalence oracle that lets the deploy half swap
@@ -23,7 +23,7 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         pure
     {
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, effectiveSalt),
+            LibICloneableFactoryV5.predictCloneAddress(factory, implementation, effectiveSalt),
             Clones.predictDeterministicAddress(implementation, effectiveSalt, factory)
         );
     }
@@ -41,14 +41,14 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
         address expected = address(
             uint160(uint256(keccak256(abi.encodePacked(hex"ff", factory, effectiveSalt, keccak256(creationCode)))))
         );
-        assertEq(LibICloneableFactoryV4.predictCloneAddress(factory, implementation, effectiveSalt), expected);
+        assertEq(LibICloneableFactoryV5.predictCloneAddress(factory, implementation, effectiveSalt), expected);
     }
 
     /// A real CREATE2 deploy of the creation code lands exactly where the
     /// prediction says, from a live factory address (this test contract).
     function testPredictCloneAddressMatchesRealDeploy(address implementation, bytes32 effectiveSalt) external {
-        address predicted = LibICloneableFactoryV4.predictCloneAddress(address(this), implementation, effectiveSalt);
-        bytes memory creationCode = LibICloneableFactoryV4.cloneCreationCode(implementation);
+        address predicted = LibICloneableFactoryV5.predictCloneAddress(address(this), implementation, effectiveSalt);
+        bytes memory creationCode = LibICloneableFactoryV5.cloneCreationCode(implementation);
         address child;
         assembly ("memory-safe") {
             child := create2(0, add(creationCode, 0x20), mload(creationCode), effectiveSalt)
@@ -59,11 +59,11 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
     /// Factory `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundaryFactories(address implementation, bytes32 derivedSalt) external pure {
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(address(0), implementation, derivedSalt),
+            LibICloneableFactoryV5.predictCloneAddress(address(0), implementation, derivedSalt),
             Clones.predictDeterministicAddress(implementation, derivedSalt, address(0))
         );
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(address(type(uint160).max), implementation, derivedSalt),
+            LibICloneableFactoryV5.predictCloneAddress(address(type(uint160).max), implementation, derivedSalt),
             Clones.predictDeterministicAddress(implementation, derivedSalt, address(type(uint160).max))
         );
     }
@@ -71,11 +71,11 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
     /// Implementation `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundaryImplementations(address factory, bytes32 derivedSalt) external pure {
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(factory, address(0), derivedSalt),
+            LibICloneableFactoryV5.predictCloneAddress(factory, address(0), derivedSalt),
             Clones.predictDeterministicAddress(address(0), derivedSalt, factory)
         );
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(factory, address(type(uint160).max), derivedSalt),
+            LibICloneableFactoryV5.predictCloneAddress(factory, address(type(uint160).max), derivedSalt),
             Clones.predictDeterministicAddress(address(type(uint160).max), derivedSalt, factory)
         );
     }
@@ -83,11 +83,11 @@ contract LibICloneableFactoryV4PredictCloneAddressTest is Test {
     /// Derived salt `0` and `max` predict as OZ `Clones` does.
     function testPredictCloneAddressBoundarySalts(address factory, address implementation) external pure {
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(0)),
+            LibICloneableFactoryV5.predictCloneAddress(factory, implementation, bytes32(0)),
             Clones.predictDeterministicAddress(implementation, bytes32(0), factory)
         );
         assertEq(
-            LibICloneableFactoryV4.predictCloneAddress(factory, implementation, bytes32(type(uint256).max)),
+            LibICloneableFactoryV5.predictCloneAddress(factory, implementation, bytes32(type(uint256).max)),
             Clones.predictDeterministicAddress(implementation, bytes32(type(uint256).max), factory)
         );
     }

@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 
-import {ICloneableV2} from "src/interface/ICloneableV2.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
-import {TestCloneable, TestCloneableAlreadyInitialized} from "test/concrete/TestCloneable.sol";
+import {ICloneableV2} from "../../../src/interface/ICloneableV2.sol";
+import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
+import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
 
 /// @title ICloneableV2InitializeTest
 /// @notice `ICloneableV2`'s two MUSTs on `initialize`, exercised on

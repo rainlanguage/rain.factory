@@ -2,18 +2,18 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
-import {LibICloneableFactoryV4} from "src/lib/LibICloneableFactoryV4.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
+import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
-} from "src/interface/ICloneableFactoryV4.sol";
+} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 
-/// @title LibICloneableFactoryV4Test
+/// @title LibICloneableFactoryV5Test
 /// Every expectation is recomputed inline from the pinned formula, never read
 /// back from the library, so a change to the library's derivation diverges from
 /// the oracle here and the test fails.
-contract LibICloneableFactoryV4Test is Test {
+contract LibICloneableFactoryV5Test is Test {
     /// The domain tags the library derives against are exactly the two pinned
     /// string hashes. Recomputed from the literal strings so this is independent
     /// of the imported constants.
@@ -25,7 +25,7 @@ contract LibICloneableFactoryV4Test is Test {
     /// `effectiveSalt` is the namespaced formula byte for byte.
     function testEffectiveSaltMatchesFormula(address deployer, bytes32 salt) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveSalt(deployer, salt),
+            LibICloneableFactoryV5.effectiveSalt(deployer, salt),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt))
         );
     }
@@ -34,7 +34,7 @@ contract LibICloneableFactoryV4Test is Test {
     /// lengths.
     function testEffectiveOpenSaltMatchesFormula(bytes32 salt, bytes memory data) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, data),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, data),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))
         );
     }
@@ -43,7 +43,7 @@ contract LibICloneableFactoryV4Test is Test {
     /// `keccak256("")`, not the empty bytes inline.
     function testEffectiveOpenSaltEmptyData(bytes32 salt) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, ""),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, ""),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256("")))
         );
     }
@@ -63,8 +63,8 @@ contract LibICloneableFactoryV4Test is Test {
         pure
     {
         assertTrue(
-            LibICloneableFactoryV4.effectiveSalt(deployer, namespacedSalt)
-                != LibICloneableFactoryV4.effectiveOpenSalt(openSalt, data)
+            LibICloneableFactoryV5.effectiveSalt(deployer, namespacedSalt)
+                != LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data)
         );
     }
 
@@ -76,14 +76,14 @@ contract LibICloneableFactoryV4Test is Test {
         bytes memory preimage =
             abi.encodePacked(keccak256("rain.factory.clone.namespaced"), bytes32(uint256(uint160(deployer))), salt);
         assertEq(preimage.length, 96);
-        assertEq(LibICloneableFactoryV4.effectiveSalt(deployer, salt), keccak256(preimage));
+        assertEq(LibICloneableFactoryV5.effectiveSalt(deployer, salt), keccak256(preimage));
     }
 
     /// The deployer is in the namespaced derivation: two deployers, two
     /// effective salts.
     function testEffectiveSaltDeployerSensitive(address alice, address bob, bytes32 salt) external pure {
         vm.assume(alice != bob);
-        assertTrue(LibICloneableFactoryV4.effectiveSalt(alice, salt) != LibICloneableFactoryV4.effectiveSalt(bob, salt));
+        assertTrue(LibICloneableFactoryV5.effectiveSalt(alice, salt) != LibICloneableFactoryV5.effectiveSalt(bob, salt));
     }
 
     /// The caller salt is in the namespaced derivation: two salts, two
@@ -91,8 +91,8 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveSaltSaltSensitive(address deployer, bytes32 saltA, bytes32 saltB) external pure {
         vm.assume(saltA != saltB);
         assertTrue(
-            LibICloneableFactoryV4.effectiveSalt(deployer, saltA)
-                != LibICloneableFactoryV4.effectiveSalt(deployer, saltB)
+            LibICloneableFactoryV5.effectiveSalt(deployer, saltA)
+                != LibICloneableFactoryV5.effectiveSalt(deployer, saltB)
         );
     }
 
@@ -104,15 +104,15 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveOpenSaltPreimageShape(bytes32 salt, bytes memory data) external pure {
         bytes memory preimage = abi.encodePacked(keccak256("rain.factory.clone.opensalt"), salt, keccak256(data));
         assertEq(preimage.length, 96);
-        assertEq(LibICloneableFactoryV4.effectiveOpenSalt(salt, data), keccak256(preimage));
+        assertEq(LibICloneableFactoryV5.effectiveOpenSalt(salt, data), keccak256(preimage));
     }
 
     /// `data` is in the open-salt derivation: two data, two effective salts.
     function testEffectiveOpenSaltDataSensitive(bytes32 salt, bytes memory dataA, bytes memory dataB) external pure {
         vm.assume(keccak256(dataA) != keccak256(dataB));
         assertTrue(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, dataA)
-                != LibICloneableFactoryV4.effectiveOpenSalt(salt, dataB)
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, dataA)
+                != LibICloneableFactoryV5.effectiveOpenSalt(salt, dataB)
         );
     }
 
@@ -121,19 +121,19 @@ contract LibICloneableFactoryV4Test is Test {
     function testEffectiveOpenSaltSaltSensitive(bytes32 saltA, bytes32 saltB, bytes memory data) external pure {
         vm.assume(saltA != saltB);
         assertTrue(
-            LibICloneableFactoryV4.effectiveOpenSalt(saltA, data)
-                != LibICloneableFactoryV4.effectiveOpenSalt(saltB, data)
+            LibICloneableFactoryV5.effectiveOpenSalt(saltA, data)
+                != LibICloneableFactoryV5.effectiveOpenSalt(saltB, data)
         );
     }
 
     /// `effectiveSalt` at salt `0` and `max` is the formula.
     function testEffectiveSaltBoundarySalts(address deployer) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(0)),
+            LibICloneableFactoryV5.effectiveSalt(deployer, bytes32(0)),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(0)))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveSalt(deployer, bytes32(type(uint256).max)),
+            LibICloneableFactoryV5.effectiveSalt(deployer, bytes32(type(uint256).max)),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, bytes32(type(uint256).max)))
         );
     }
@@ -141,11 +141,11 @@ contract LibICloneableFactoryV4Test is Test {
     /// `effectiveSalt` at deployer `0` and `max` is the formula.
     function testEffectiveSaltBoundaryDeployers(bytes32 salt) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveSalt(address(0), salt),
+            LibICloneableFactoryV5.effectiveSalt(address(0), salt),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveSalt(address(type(uint160).max), salt),
+            LibICloneableFactoryV5.effectiveSalt(address(type(uint160).max), salt),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(type(uint160).max), salt))
         );
     }
@@ -161,19 +161,19 @@ contract LibICloneableFactoryV4Test is Test {
         }
 
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneByte),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, oneByte),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneByte)))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWord),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, oneWord),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWord)))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, oneWordPlusOne),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, oneWordPlusOne),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(oneWordPlusOne)))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(salt, manyWords),
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, manyWords),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(manyWords)))
         );
     }
@@ -181,11 +181,11 @@ contract LibICloneableFactoryV4Test is Test {
     /// `effectiveOpenSalt` at salt `0` and `max` is the formula.
     function testEffectiveOpenSaltBoundarySalts(bytes memory data) external pure {
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(0), data),
+            LibICloneableFactoryV5.effectiveOpenSalt(bytes32(0), data),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(0), keccak256(data)))
         );
         assertEq(
-            LibICloneableFactoryV4.effectiveOpenSalt(bytes32(type(uint256).max), data),
+            LibICloneableFactoryV5.effectiveOpenSalt(bytes32(type(uint256).max), data),
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, bytes32(type(uint256).max), keccak256(data)))
         );
     }

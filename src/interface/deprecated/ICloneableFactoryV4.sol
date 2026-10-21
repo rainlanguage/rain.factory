@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.18;
 
-import {ICloneableFactoryV3} from "./deprecated/ICloneableFactoryV3.sol";
+import {ICloneableFactoryV3} from "./ICloneableFactoryV3.sol";
 
 /// @dev Word 0 of the namespaced effective-salt preimage.
 bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.factory.clone.namespaced");
@@ -11,7 +11,8 @@ bytes32 constant ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN = keccak256("rain.facto
 bytes32 constant ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN = keccak256("rain.factory.clone.opensalt");
 
 /// @title ICloneableFactoryV4
-/// @notice Adds an open-salt derivation to the namespaced one inherited from
+/// @notice DEPRECATED: superseded by `ICloneableFactoryV5`, which extends it.
+/// Adds an open-salt derivation to the namespaced one inherited from
 /// `ICloneableFactoryV3`. Effective `CREATE2` salts:
 /// - namespaced: `keccak256(abi.encode(NAMESPACED_DOMAIN, msg.sender, salt))`
 /// - open-salt: `keccak256(abi.encode(OPEN_SALT_DOMAIN, salt, keccak256(data)))`

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ICloneableV2} from "src/interface/ICloneableV2.sol";
+import {ICloneableV2} from "../../src/interface/ICloneableV2.sol";
 
 /// @title TestCloneableCallRecorder
 /// @notice An `ICloneableV2` that records the selector of every call the proxy

@@ -2,31 +2,31 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std-1.16.1/src/Test.sol";
+import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "src/interface/ICloneableV2.sol";
-import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "src/interface/ICloneableFactoryV4.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
+import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {
     CloneAddressOccupied,
     CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "src/lib/LibICloneableFactoryV4.sol";
-import {TestCloneFactory} from "test/concrete/TestCloneFactory.sol";
-import {TestCloneable} from "test/concrete/TestCloneable.sol";
-import {TestCloneableCallRecorder} from "test/concrete/TestCloneableCallRecorder.sol";
-import {TestCloneableFailure} from "test/concrete/TestCloneableFailure.sol";
-import {TestCloneableRevert, TestCloneableRevertInitialize} from "test/concrete/TestCloneableRevert.sol";
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
+import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
+import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
+import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete/TestCloneableRevert.sol";
 
-/// @title LibICloneableFactoryV4CloneDeterministicTest
-/// @notice Tests `LibICloneableFactoryV4.cloneDeterministic` /
+/// @title LibICloneableFactoryV5CloneDeterministicTest
+/// @notice Tests `LibICloneableFactoryV5.cloneDeterministic` /
 /// `predictDeterministicAddress` — the namespaced pair — through
 /// `TestCloneFactory`, a pure-delegation concrete, because `msg.sender`
 /// namespacing and the `NewClone` event only exist across an external call.
 /// The defining property is that the address commits to WHO deployed —
 /// `(deployer, salt)` — and not to WHAT was initialized.
-contract LibICloneableFactoryV4CloneDeterministicTest is Test {
+contract LibICloneableFactoryV5CloneDeterministicTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
     TestCloneFactory internal immutable I_CLONE_FACTORY;

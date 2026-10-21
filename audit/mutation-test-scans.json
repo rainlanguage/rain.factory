@@ -17,13 +17,234 @@
       "survivedAfter": 0,
       "equivalent": 11,
       "groups": {
-        "g1-derivations": {"mutants": 111, "killedByPreexistingSuite": 106, "killedAfter": 106, "survivedAfter": 0, "equivalent": 5, "coveragePr": null},
-        "g2-clone-tail": {"mutants": 75, "killedByPreexistingSuite": 67, "killedAfter": 72, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#98"},
-        "g3-entry-points": {"mutants": 113, "killedByPreexistingSuite": 103, "killedAfter": 110, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#99"}
+        "g1-derivations": {
+          "mutants": 111,
+          "killedByPreexistingSuite": 106,
+          "killedAfter": 106,
+          "survivedAfter": 0,
+          "equivalent": 5,
+          "coveragePr": null
+        },
+        "g2-clone-tail": {
+          "mutants": 75,
+          "killedByPreexistingSuite": 67,
+          "killedAfter": 72,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#98"
+        },
+        "g3-entry-points": {
+          "mutants": 113,
+          "killedByPreexistingSuite": 103,
+          "killedAfter": 110,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#99"
+        }
       },
       "testsBefore": 68,
       "testsAfter": 78,
       "filed": ["#95", "#96", "#97"]
+    }
+  },
+  {
+    "timestamp": "2026-10-20T19:00:00Z",
+    "commit": "22471de45993904595d723da92c7943445b230e7",
+    "testsAfterCommit": "baec2956d47db20cb21f798e8542bcc30c661caa",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 1,
+    "scope": "PR branch 2026-10-20-beacon-proxy-open-salt (ICloneableFactoryV5 beacon proxies), in two groups: v5-beacon (LibICloneableFactoryV5.sol with its three proxy bytecode constants, opcode by opcode, and ICloneableFactoryV5.sol) and v4-tail (LibICloneableFactoryV4.sol functions the branch refactored: predictCreate2Address, predictCloneAddress, cloneAndInitialize, deployAndInitialize). The pre-existing suite is the branch's own suite at the scanned commit, written alongside the code. v5-beacon also ran a second pass of its 54 bytecode mutants with the exact-bytecode and expected-address tests excluded, to find behaviour only the byte pins caught.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 139,
+      "killedByPreexistingSuite": 137,
+      "killedAfter": 137,
+      "survivedAfter": 0,
+      "equivalent": 2,
+      "groups": {
+        "v5-beacon": {
+          "mutants": 86,
+          "killedByPreexistingSuite": 85,
+          "killedAfter": 85,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "pinlessPass": {
+            "mutants": 54,
+            "killedByPreexistingSuite": 51,
+            "killedAfter": 53,
+            "survivedAfter": 0,
+            "equivalent": 1
+          },
+          "coveragePr": null
+        },
+        "v4-tail": {
+          "mutants": 53,
+          "killedByPreexistingSuite": 52,
+          "killedAfter": 52,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "coveragePr": null
+        }
+      },
+      "testsBefore": 113,
+      "testsAfter": 114,
+      "filed": ["#270"]
+    }
+  },
+  {
+    "timestamp": "2026-10-20T20:30:00Z",
+    "commit": "df32720fa15a2e1a71db1326ed596cd1dd785313",
+    "testsAfterCommit": "ab0fdca7305e1bef384c885eabe1a531ca4631ec",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 8,
+    "scope": "PR #271 after OpenZeppelin BeaconProxy replaced the hand-written proxy bytecode (df32720): LibICloneableFactoryV5.sol (26 mutants), the V4 shared tail in LibICloneableFactoryV4.sol (20), the pinned src/generated/BeaconProxy.sol constant (1) and the domain tag in ICloneableFactoryV5.sol (1). The pre-existing suite is the branch suite at the scanned commit.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 48,
+      "killedByPreexistingSuite": 46,
+      "killedAfter": 46,
+      "survivedAfter": 0,
+      "equivalent": 2,
+      "equivalents": [
+        "V05: abi.encodePacked vs abi.encode over three bytes32 words",
+        "T20: returning predicted instead of child, which are equal after the deploy"
+      ],
+      "testsBefore": 107,
+      "testsAfter": 108,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-20T21:15:00Z",
+    "commit": "fc229cba0fcf62c97c90364fcb4e87d05326abcb",
+    "testsAfterCommit": "fc229cba0fcf62c97c90364fcb4e87d05326abcb",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 17,
+    "scope": "PR #271 whole diff at fc229cb, after the strict beacon calldata test: src (58 mutants) and script/Build.sol (4). B04 in Build.sol is an invalid mutant (compile failure). The pre-existing suite is the branch suite at the scanned commit.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 62,
+      "killedByPreexistingSuite": 58,
+      "killedAfter": 58,
+      "survivedAfter": 0,
+      "equivalent": 3,
+      "invalid": 1,
+      "equivalents": [
+        "V05: abi.encodePacked vs abi.encode over three bytes32 words",
+        "T20: returning predicted instead of child, which are equal after the deploy",
+        "V28 (V5-25): checkBeacon's if (!success) guarded on non-empty revert data, see audit/known-false-positives.md"
+      ],
+      "testsBefore": 108,
+      "testsAfter": 109,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-20T21:53:24Z",
+    "commit": "94755ae74cd8ce1f5f5f08493865293e50958eef",
+    "testsAfterCommit": "94755ae74cd8ce1f5f5f08493865293e50958eef",
+    "publishedTag": "sol-v0.1.30",
+    "commitsAheadOfTag": 26,
+    "scope": "PR #271 src lines changed since 0477c05: LibICloneableFactoryV4.deployAndInitialize (single child address, deployed bool from create2) and LibICloneableFactoryV5.beaconProxyCreationCode (bytes.concat). The suite at the scanned commit already includes testBeaconProxyReturnsDeployedAddress, written with the change, so kills are not attributed to the pre-change suite.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 15,
+      "killedByPreexistingSuite": 15,
+      "killedAfter": 15,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "testsBefore": 110,
+      "testsAfter": 110,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-20T22:45:14Z",
+    "commit": "c41ee814e43431cba8b5e6f7318ed8c342226eda",
+    "testsAfterCommit": "c41ee814e43431cba8b5e6f7318ed8c342226eda",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 29,
+    "scope": "PR #271 src lines changed since aa6efa4: LibICloneableFactoryV4.hashDomainSaltData (shared open-salt preimage), the V4 and V5 domain arguments passed to it, and LibICloneableFactoryV5.checkBeacon's try/catch. Before numbers run the aa6efa4 suite on the c41ee81 src (111 tests); after numbers run the c41ee81 suite (115 tests), whose 41bf8f2 tests were written with the change.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 21,
+      "killedByPreexistingSuite": 20,
+      "killedAfter": 21,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "survivorsOfPreexistingSuite": [
+        "S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"
+      ],
+      "testsBefore": 111,
+      "testsAfter": 115,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-21T00:04:53Z",
+    "commit": "5cffb4d8804d285f421e836c757e02db59aaa7cc",
+    "testsAfterCommit": "5cffb4d8804d285f421e836c757e02db59aaa7cc",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 35,
+    "scope": "PR #271 changes since c41ee81: script/Build.sol (B01-B05), LibICloneableFactoryV5 including checkBeacon DelegatedBeacon (V5-01..33) and LibICloneableFactoryV4 (V4-01..22), probed at 408b5678c4381b96e10b01feaa76c34e75e2c30b; then the shared LibICloneableFactoryV4.isDelegated and its two call sites (D01-D10) plus B01 again, probed at this commit. The DelegatedBeacon and Build tests were written before the probe, so no kill is attributed to a pre-existing suite.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 71,
+      "killedByPreexistingSuite": null,
+      "killedAfter": 71,
+      "survivedAfter": 0,
+      "equivalent": 0,
+      "invalid": 0,
+      "equivalents": [],
+      "testsBefore": 119,
+      "testsAfter": 119,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-21T07:59:51Z",
+    "commit": "14479a1ab20d6d06eb59ea3f881326e332692108",
+    "testsAfterCommit": "14479a1ab20d6d06eb59ea3f881326e332692108",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 42,
+    "scope": "PR #271 after the NewBeaconProxy event, the revert of the Marvin-only restructures and the merge of LibICloneableFactoryV4 into LibICloneableFactoryV5: the merged library, the V5 interface constants, src/generated/BeaconProxy.sol and script/Build.sol. Run offline. D01 was re-probed against plain forge test because the regeneration harness overwrites a mutated generated file; B26 was split into one mutant per copy of the bubble line.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 66,
+      "killedByPreexistingSuite": 62,
+      "killedAfter": 62,
+      "survivedAfter": 4,
+      "equivalent": 4,
+      "invalid": 0,
+      "equivalents": ["T20", "V05a", "V05b", "V28"],
+      "testsBefore": 119,
+      "testsAfter": 119,
+      "filed": []
     }
   }
 ]
