@@ -17,9 +17,30 @@
       "survivedAfter": 0,
       "equivalent": 11,
       "groups": {
-        "g1-derivations": {"mutants": 111, "killedByPreexistingSuite": 106, "killedAfter": 106, "survivedAfter": 0, "equivalent": 5, "coveragePr": null},
-        "g2-clone-tail": {"mutants": 75, "killedByPreexistingSuite": 67, "killedAfter": 72, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#98"},
-        "g3-entry-points": {"mutants": 113, "killedByPreexistingSuite": 103, "killedAfter": 110, "survivedAfter": 0, "equivalent": 3, "coveragePr": "#99"}
+        "g1-derivations": {
+          "mutants": 111,
+          "killedByPreexistingSuite": 106,
+          "killedAfter": 106,
+          "survivedAfter": 0,
+          "equivalent": 5,
+          "coveragePr": null
+        },
+        "g2-clone-tail": {
+          "mutants": 75,
+          "killedByPreexistingSuite": 67,
+          "killedAfter": 72,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#98"
+        },
+        "g3-entry-points": {
+          "mutants": 113,
+          "killedByPreexistingSuite": 103,
+          "killedAfter": 110,
+          "survivedAfter": 0,
+          "equivalent": 3,
+          "coveragePr": "#99"
+        }
       },
       "testsBefore": 68,
       "testsAfter": 78,
@@ -44,8 +65,29 @@
       "survivedAfter": 0,
       "equivalent": 2,
       "groups": {
-        "v5-beacon": {"mutants": 86, "killedByPreexistingSuite": 85, "killedAfter": 85, "survivedAfter": 0, "equivalent": 1, "pinlessPass": {"mutants": 54, "killedByPreexistingSuite": 51, "killedAfter": 53, "survivedAfter": 0, "equivalent": 1}, "coveragePr": null},
-        "v4-tail": {"mutants": 53, "killedByPreexistingSuite": 52, "killedAfter": 52, "survivedAfter": 0, "equivalent": 1, "coveragePr": null}
+        "v5-beacon": {
+          "mutants": 86,
+          "killedByPreexistingSuite": 85,
+          "killedAfter": 85,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "pinlessPass": {
+            "mutants": 54,
+            "killedByPreexistingSuite": 51,
+            "killedAfter": 53,
+            "survivedAfter": 0,
+            "equivalent": 1
+          },
+          "coveragePr": null
+        },
+        "v4-tail": {
+          "mutants": 53,
+          "killedByPreexistingSuite": 52,
+          "killedAfter": 52,
+          "survivedAfter": 0,
+          "equivalent": 1,
+          "coveragePr": null
+        }
       },
       "testsBefore": 113,
       "testsAfter": 114,
@@ -149,7 +191,9 @@
       "equivalent": 0,
       "invalid": 0,
       "equivalents": [],
-      "survivorsOfPreexistingSuite": ["S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"],
+      "survivorsOfPreexistingSuite": [
+        "S08: hashDomainSaltData advancing the free pointer past the preimage, killed at c41ee81 by testEffectiveBeaconProxyOpenSaltMemory"
+      ],
       "testsBefore": 111,
       "testsAfter": 115,
       "filed": []
@@ -174,6 +218,30 @@
       "equivalent": 0,
       "invalid": 0,
       "equivalents": [],
+      "testsBefore": 119,
+      "testsAfter": 119,
+      "filed": []
+    }
+  },
+  {
+    "timestamp": "2026-10-21T07:59:51Z",
+    "commit": "14479a1ab20d6d06eb59ea3f881326e332692108",
+    "testsAfterCommit": "14479a1ab20d6d06eb59ea3f881326e332692108",
+    "publishedTag": "sol-v0.1.31",
+    "commitsAheadOfTag": 42,
+    "scope": "PR #271 after the NewBeaconProxy event, the revert of the Marvin-only restructures and the merge of LibICloneableFactoryV4 into LibICloneableFactoryV5: the merged library, the V5 interface constants, src/generated/BeaconProxy.sol and script/Build.sol. Run offline. D01 was re-probed against plain forge test because the regeneration harness overwrites a mutated generated file; B26 was split into one mutant per copy of the bubble line.",
+    "tool": "adversarial-mutation-test",
+    "skillVersion": "0.34.0",
+    "skillPluginVersion": "0.35.0",
+    "skillCommit": "4e59ec0cc05248c14bcb1f27bc5c11b4d1e5589c",
+    "summary": {
+      "mutants": 66,
+      "killedByPreexistingSuite": 62,
+      "killedAfter": 62,
+      "survivedAfter": 4,
+      "equivalent": 4,
+      "invalid": 0,
+      "equivalents": ["T20", "V05a", "V05b", "V28"],
       "testsBefore": 119,
       "testsAfter": 119,
       "filed": []
