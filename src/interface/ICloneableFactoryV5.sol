@@ -28,7 +28,8 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
 /// which implementation initializes a pinned address: every implementation the
 /// beacon serves while it is undeployed MUST give the same `initialize(data)`
 /// result, or revert, and MUST otherwise meet the `cloneDeterministicOpenSalt`
-/// rules.
+/// rules. A version tag leading `data`, which an implementation that does not
+/// know it rejects, meets the first rule.
 interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// Emitted by `beaconProxyDeterministicOpenSalt` after `CREATE2`, before
     /// `initialize`, in place of `NewClone`.
