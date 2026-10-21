@@ -20,8 +20,7 @@ and library; on `rain-factory-deploy` for the deployed pins, which embed the
 `rain-factory` revision that repo pins.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). Every `.sol` copies the two SPDX
-header lines its siblings carry. Other files need a `REUSE.toml` path entry,
-plus `.soldeerignore` unless they ship in the package.
+header lines its siblings carry.
 
 ## Testing
 
