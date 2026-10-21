@@ -50,7 +50,7 @@ contract LibICloneableFactoryV5CheckImplementationCodeTest is Test {
         for (uint256 i = 0; i < codes.length; i++) {
             address implementation = makeAddr(string.concat("single-byte-", vm.toString(i)));
             vm.etch(implementation, abi.encodePacked(codes[i]));
-            this.checkImplementationCodeExternal(implementation);
+            LibICloneableFactoryV5.checkImplementationCode(implementation);
         }
     }
 
