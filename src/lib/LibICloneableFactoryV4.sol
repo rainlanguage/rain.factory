@@ -105,32 +105,26 @@ library LibICloneableFactoryV4 {
         }
     }
 
-    /// `checkImplementationCode`, then `deployAndInitialize` with the EIP-1167
-    /// creation code.
+    /// `checkImplementationCode`, `deployChild` of the EIP-1167 creation code,
+    /// `NewClone` with the raw caller `salt`, then `initializeChild`.
     function cloneAndInitialize(address implementation, bytes32 derivedSalt, bytes memory data, bytes32 salt)
         internal
         returns (address)
     {
         checkImplementationCode(implementation);
-        return deployAndInitialize(cloneCreationCode(implementation), implementation, derivedSalt, data, salt);
+        address child = deployChild(cloneCreationCode(implementation), derivedSalt);
+        emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
+        initializeChild(child, data);
+        return child;
     }
 
-    /// Emits `NewClone` with the raw caller `salt`, not `derivedSalt`, and the
-    /// unchecked `implementation` (the beacon, for V5): callers check it first.
-    /// `creationCode` MUST NOT call its delegation target while constructing.
+    /// `CREATE2` of `creationCode` from `address(this)`, reverting if the
+    /// address already has code. `creationCode` MUST NOT call its delegation
+    /// target while constructing.
     /// @param creationCode The child's creation code.
-    /// @param implementation The address emitted in `NewClone`.
     /// @param derivedSalt The `CREATE2` salt.
-    /// @param data The `initialize` data.
-    /// @param salt The raw caller salt emitted in `NewClone`.
     /// @return The deployed child address.
-    function deployAndInitialize(
-        bytes memory creationCode,
-        address implementation,
-        bytes32 derivedSalt,
-        bytes memory data,
-        bytes32 salt
-    ) internal returns (address) {
+    function deployChild(bytes memory creationCode, bytes32 derivedSalt) internal returns (address) {
         address child = predictCreate2Address(address(this), derivedSalt, keccak256(creationCode));
         if (child.code.length != 0) {
             revert CloneAddressOccupied(child);
@@ -143,7 +137,14 @@ library LibICloneableFactoryV4 {
         if (!deployed) {
             revert CloneDeploymentFailed();
         }
-        emit ICloneableFactoryV3.NewClone(msg.sender, implementation, child, salt, data);
+        return child;
+    }
+
+    /// Calls `initialize(data)` on `child`, bubbling a revert that has data;
+    /// anything but `ICLONEABLE_V2_SUCCESS` is `InitializationFailed`.
+    /// @param child The deployed child.
+    /// @param data The `initialize` data.
+    function initializeChild(address child, bytes memory data) internal {
         // slither-disable-next-line low-level-calls
         (bool success, bytes memory returnData) = child.call(abi.encodeCall(ICloneableV2.initialize, (data)));
         if (!success && returnData.length > 0) {
@@ -154,7 +155,6 @@ library LibICloneableFactoryV4 {
         if (returnData.length != 32 || abi.decode(returnData, (bytes32)) != ICLONEABLE_V2_SUCCESS) {
             revert InitializationFailed();
         }
-        return child;
     }
 
     function cloneDeterministic(address implementation, bytes memory data, bytes32 salt) internal returns (address) {

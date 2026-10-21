@@ -14,7 +14,10 @@ import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
 } from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
-import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "../../../src/interface/ICloneableFactoryV5.sol";
+import {
+    ICloneableFactoryV5,
+    ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN
+} from "../../../src/interface/ICloneableFactoryV5.sol";
 import {
     CloneAddressOccupied,
     CloneDeploymentFailed,
@@ -228,8 +231,8 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
     }
 
     /// The proxy emits `BeaconUpgraded(beacon)` while constructing, then the
-    /// factory emits `NewClone` with the caller, the beacon as
-    /// `implementation`, the proxy, the raw salt and the data.
+    /// factory emits `NewBeaconProxy` with the caller, the beacon, the proxy,
+    /// the raw salt and the data, and no `NewClone`.
     function testBeaconProxyDeterministicOpenSaltEvents(bytes memory data, bytes32 salt) external {
         UpgradeableBeacon beacon = newBeacon();
         vm.recordLogs();
@@ -240,12 +243,16 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         LibTestBeaconProxy.checkBeaconUpgradedLog(vm, logs[0], proxy, address(beacon));
         assertEq(logs[1].emitter, address(iCloneFactory));
         assertEq(logs[1].topics.length, 1);
-        assertEq(logs[1].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
+        assertEq(logs[1].topics[0], keccak256("NewBeaconProxy(address,address,address,bytes32,bytes)"));
+        assertEq(logs[1].topics[0], ICloneableFactoryV5.NewBeaconProxy.selector);
+        for (uint256 i = 0; i < logs.length; ++i) {
+            assertTrue(logs[i].topics[0] != keccak256("NewClone(address,address,address,bytes32,bytes)"));
+        }
         assertEq(logs[1].data, abi.encode(address(this), address(beacon), proxy, salt, data));
     }
 
     /// `initialize` is the only call the proxy receives, with `data`
-    /// verbatim, after `NewClone`.
+    /// verbatim, after `NewBeaconProxy`.
     function testBeaconProxyDeterministicOpenSaltInitializeOnly(bytes memory data, bytes32 salt) external {
         UpgradeableBeacon beacon = new UpgradeableBeacon(address(new TestCloneableCallRecorder()), address(this));
         vm.recordLogs();
@@ -257,7 +264,7 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         assertEq(selectors[0], TestCloneableCallRecorder.initialize.selector);
         assertEq(TestCloneableCallRecorder(proxy).sData(), data);
         assertEq(logs.length, 3);
-        assertEq(logs[1].topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
+        assertEq(logs[1].topics[0], keccak256("NewBeaconProxy(address,address,address,bytes32,bytes)"));
         assertEq(logs[2].emitter, proxy);
         assertEq(logs[2].topics[0], TestCloneableCallRecorder.Initializing.selector);
     }

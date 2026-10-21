@@ -48,9 +48,10 @@ OpenZeppelin `Clones` as a foreign implementation of the same standard.
 `src/lib/LibICloneableFactoryV5.sol` adds the beacon-proxy derivation of
 `ICloneableFactoryV5`: its effective salt, the OpenZeppelin `BeaconProxy`
 creation code, the beacon guard and the two entry points, on top of
-`LibICloneableFactoryV4`'s shared deploy-and-initialize tail. The creation code
-is the `BEACON_PROXY_CREATION_CODE` constant in `src/generated/BeaconProxy.sol`,
-which `script/Build.sol` writes and CI regenerates and diffs; a test pins it to
+`LibICloneableFactoryV4`'s shared `deployChild` and `initializeChild`, emitting
+`NewBeaconProxy` in place of `NewClone`. The creation code is the
+`BEACON_PROXY_CREATION_CODE` constant in `src/generated/BeaconProxy.sol`, which
+`script/Build.sol` writes and CI regenerates and diffs; a test pins it to
 `type(BeaconProxy).creationCode`.
 
 ## Interfaces
@@ -85,7 +86,8 @@ The current interfaces in this repository are for
   initialized atomically, whose address commits to the beacon and the
   initialization data and nothing about the caller, behind a third domain tag.
   The address does not commit to the implementation the beacon serves, so the
-  beacon owner is the trust point for the proxy's behaviour and initial state
+  beacon owner is the trust point for the proxy's behaviour and initial state.
+  Each deploy emits `NewBeaconProxy`, not `NewClone`.
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
   constructor

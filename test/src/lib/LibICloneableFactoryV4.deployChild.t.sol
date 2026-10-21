@@ -8,8 +8,8 @@ import {LibICloneableFactoryV4} from "../../../src/lib/LibICloneableFactoryV4.so
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
 
-contract LibICloneableFactoryV4DeployAndInitializeTest is Test {
-    /// Every creation code this repo passes to `deployAndInitialize`, each
+contract LibICloneableFactoryV4DeployChildTest is Test {
+    /// Every creation code this repo passes to `deployChild`, each
     /// delegating to `target`. A new derivation adds its code here.
     function shippedCreationCodes(address target) internal returns (bytes[] memory) {
         bytes[] memory codes = new bytes[](2);
@@ -18,7 +18,7 @@ contract LibICloneableFactoryV4DeployAndInitializeTest is Test {
         return codes;
     }
 
-    /// `deployAndInitialize`'s precondition: no shipped creation code calls
+    /// `deployChild`'s precondition: no shipped creation code calls
     /// its delegation target while constructing.
     function testShippedCreationCodesDoNotCallTarget(bytes32 salt) external {
         address target = address(new TestCloneableCallRecorder());

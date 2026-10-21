@@ -2,7 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN} from "../interface/ICloneableFactoryV5.sol";
+import {
+    ICloneableFactoryV5,
+    ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN
+} from "../interface/ICloneableFactoryV5.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../generated/BeaconProxy.sol";
 import {LibICloneableFactoryV4} from "./LibICloneableFactoryV4.sol";
 import {IBeaconImplementation} from "../interface/IBeaconImplementation.sol";
@@ -17,7 +20,8 @@ error DelegatedBeacon();
 
 /// @title LibICloneableFactoryV5
 /// @notice The `ICloneableFactoryV5` beacon-proxy derivation as internal
-/// library logic, on `LibICloneableFactoryV4`'s deploy-and-initialize tail.
+/// library logic, on `LibICloneableFactoryV4`'s `deployChild` and
+/// `initializeChild`.
 library LibICloneableFactoryV5 {
     /// The `CREATE2` salt of the open-salt beacon proxy for `(salt, data)`.
     /// @param salt The raw caller salt.
@@ -84,9 +88,12 @@ library LibICloneableFactoryV5 {
         returns (address)
     {
         checkBeacon(beacon);
-        return LibICloneableFactoryV4.deployAndInitialize(
-            beaconProxyCreationCode(beacon), beacon, effectiveBeaconProxyOpenSalt(salt, data), data, salt
+        address proxy = LibICloneableFactoryV4.deployChild(
+            beaconProxyCreationCode(beacon), effectiveBeaconProxyOpenSalt(salt, data)
         );
+        emit ICloneableFactoryV5.NewBeaconProxy(msg.sender, beacon, proxy, salt, data);
+        LibICloneableFactoryV4.initializeChild(proxy, data);
+        return proxy;
     }
 
     /// `predictBeaconProxyAddress` from `address(this)`, for `(salt, data)`.

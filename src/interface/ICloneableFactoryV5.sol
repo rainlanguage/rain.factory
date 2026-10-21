@@ -30,20 +30,27 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
 /// result, or revert, and MUST otherwise meet the `cloneDeterministicOpenSalt`
 /// rules.
 interface ICloneableFactoryV5 is ICloneableFactoryV4 {
-    /// Deploys the beacon proxy at the open-salt address, then initializes it
-    /// as `ICloneableFactoryV3.cloneDeterministic` does: `initialize(data)`
-    /// first and only, success sentinel checked, raw-salt `NewClone` with
-    /// `beacon` as `implementation`. `initialize` runs after `CREATE2`, not as
-    /// constructor data, whose return `BeaconProxy` discards. MUST revert if
-    /// `beacon` or `beacon.implementation()` has no code or is an EIP-7702
-    /// delegated account. MUST NOT mix any caller-derived value into
-    /// the salt. `NewClone.implementation` holds the beacon, not cloned
-    /// bytecode: an indexer tells a beacon proxy from an EIP-1167 clone by
-    /// re-deriving `clone` from the event under each domain tag.
-    /// Needs a Cancun chain: the proxy creation code uses `MCOPY`.
+    /// Emitted by `beaconProxyDeterministicOpenSalt` after `CREATE2`, before
+    /// `initialize`, in place of `NewClone`.
+    /// @param sender The `msg.sender` that called it.
+    /// @param beacon The proxy's beacon.
+    /// @param proxy The deployed proxy.
+    /// @param salt The raw caller salt.
+    /// @param data The `initialize` data.
+    event NewBeaconProxy(address sender, address beacon, address proxy, bytes32 salt, bytes data);
+
+    /// Deploys the beacon proxy at the open-salt address, emits
+    /// `NewBeaconProxy` and no `NewClone`, then initializes it as
+    /// `ICloneableFactoryV3.cloneDeterministic` does: `initialize(data)` first
+    /// and only, success sentinel checked. `initialize` runs after `CREATE2`,
+    /// not as constructor data, whose return `BeaconProxy` discards. MUST
+    /// revert if `beacon` or `beacon.implementation()` has no code or is an
+    /// EIP-7702 delegated account. MUST NOT mix any caller-derived value into
+    /// the salt, nor expose another entry point whose salt image overlaps
+    /// this one. Needs a Cancun chain: the proxy creation code uses `MCOPY`.
     /// @param beacon The OpenZeppelin `IBeacon` the proxy reads.
     /// @param data Passed to `initialize`; part of the address.
-    /// @param salt Part of the address; emitted raw in `NewClone`.
+    /// @param salt Part of the address; emitted raw in `NewBeaconProxy`.
     /// @return The deployed proxy.
     function beaconProxyDeterministicOpenSalt(address beacon, bytes calldata data, bytes32 salt)
         external
