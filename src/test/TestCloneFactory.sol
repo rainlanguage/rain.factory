@@ -6,10 +6,10 @@ pragma solidity =0.8.25;
 // `@inheritdoc` references on the functions they declare; each newer interface
 // inherits rather than redeclares them, so the tag must name the declaring
 // interface and it must be in scope here.
-import {ICloneableFactoryV3} from "../../src/interface/deprecated/ICloneableFactoryV3.sol";
-import {ICloneableFactoryV4} from "../../src/interface/deprecated/ICloneableFactoryV4.sol";
-import {ICloneableFactoryV5} from "../../src/interface/ICloneableFactoryV5.sol";
-import {LibICloneableFactoryV5} from "../../src/lib/LibICloneableFactoryV5.sol";
+import {ICloneableFactoryV3} from "../interface/deprecated/ICloneableFactoryV3.sol";
+import {ICloneableFactoryV4} from "../interface/deprecated/ICloneableFactoryV4.sol";
+import {ICloneableFactoryV5} from "../interface/ICloneableFactoryV5.sol";
+import {LibICloneableFactoryV5} from "../lib/LibICloneableFactoryV5.sol";
 
 /// @title TestCloneFactory
 /// @notice A concrete `ICloneableFactoryV5` written the way the deploy half is

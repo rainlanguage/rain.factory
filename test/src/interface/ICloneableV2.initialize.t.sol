@@ -6,8 +6,8 @@ import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {ICloneableV2} from "../../../src/interface/ICloneableV2.sol";
 import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
-import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
-import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
+import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
+import {TestCloneable, TestCloneableAlreadyInitialized} from "../../../src/test/TestCloneable.sol";
 
 /// @title ICloneableV2InitializeTest
 /// @notice `ICloneableV2`'s once-only and typed-overload MUSTs on

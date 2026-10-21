@@ -11,8 +11,8 @@ import {
     InitializationFailed
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
-import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
-import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
+import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 import {TestCloneableNestedClone} from "../../concrete/TestCloneableNestedClone.sol";
 import {TestCloneableGasRecorder} from "../../concrete/TestCloneableGasRecorder.sol";
 import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";

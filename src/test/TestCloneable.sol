@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ICloneableV2} from "../../src/interface/ICloneableV2.sol";
+import {ICloneableV2} from "../interface/ICloneableV2.sol";
 
 /// Thrown by a second call to `TestCloneable.initialize`. `ICloneableV2` says
 /// the implementation MUST ensure `initialize` can NOT be called more than

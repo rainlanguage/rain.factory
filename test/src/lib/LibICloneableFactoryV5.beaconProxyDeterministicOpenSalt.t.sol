@@ -29,10 +29,10 @@ import {DelegatedBeacon, LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../..
 import {TestBeaconDivergent} from "../../concrete/TestBeaconDivergent.sol";
 import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";
 import {TestBeaconStrictCalldata} from "../../concrete/TestBeaconStrictCalldata.sol";
-import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
-import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
+import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
+import {TestCloneable, TestCloneableAlreadyInitialized} from "../../../src/test/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
-import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
+import {TestCloneableFailure} from "../../../src/test/TestCloneableFailure.sol";
 import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";
 import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete/TestCloneableRevert.sol";
 

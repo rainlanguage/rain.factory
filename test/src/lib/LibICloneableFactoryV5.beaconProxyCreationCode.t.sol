@@ -11,7 +11,7 @@ import {LibTestBeaconProxy} from "../../lib/LibTestBeaconProxy.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH} from "../../../src/interface/ICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
-import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 
 /// @title LibICloneableFactoryV5BeaconProxyCreationCodeTest
 /// @notice Pins `BEACON_PROXY_CREATION_CODE` and
