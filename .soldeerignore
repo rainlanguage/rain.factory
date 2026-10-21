@@ -19,5 +19,6 @@ CLAUDE.md
 /script
 /remappings.txt
 /slither.config.json
+/slither.db.json
 /soldeer.lock
 /test
