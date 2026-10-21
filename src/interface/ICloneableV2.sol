@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 /// @dev Returned by a successful `ICloneableV2.initialize`.
 bytes32 constant ICLONEABLE_V2_SUCCESS = keccak256("ICloneableV2.initialize");

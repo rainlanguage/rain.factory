@@ -53,10 +53,9 @@ makes this half a standalone publish.
 
 ## Solidity Conventions
 
-- Versions: interfaces float `^0.8.18` so downstream soldeer consumers on a
-  different `0.8.x` still compile them; the library and `src/generated/` float
-  `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the concretes and scripts
-  in rain.factory.deploy.
+- Versions: interfaces, the library and `src/generated/` float `^0.8.25` (the
+  deprecated interfaces keep `^0.8.18`); tests and `script/` pin `=0.8.25`, as
+  do the concretes and scripts in rain.factory.deploy.
 - No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
