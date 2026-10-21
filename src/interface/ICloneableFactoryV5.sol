@@ -30,6 +30,9 @@ bytes32 constant ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH =
 /// result, or revert, and MUST otherwise meet the `cloneDeterministicOpenSalt`
 /// rules. A version tag leading `data`, which an implementation that does not
 /// know it rejects, meets the first rule.
+/// Every deploy bubbles a reverting `initialize` verbatim, so a revert's
+/// selector and arguments, the factory's own errors included, may be the
+/// deployed contract's: re-derive an address with a predict function.
 interface ICloneableFactoryV5 is ICloneableFactoryV4 {
     /// Emitted by `beaconProxyDeterministicOpenSalt` after `CREATE2`, before
     /// `initialize`, in place of `NewClone`.
