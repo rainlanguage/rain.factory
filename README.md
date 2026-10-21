@@ -4,10 +4,8 @@ This repo is the **library** half of the library/deploy split: the `ICloneable*`
 interface surface and the `LibICloneableFactoryV5` library that implements it.
 It publishes to Soldeer as `rain-factory`.
 
-Soldeer `rain-factory` 0.1.5 and earlier are the pre-split package, carrying the
-concrete `CloneFactory` and its deploy pins; 0.1.6 dropped them. The `v0.1.0`,
-`v0.1.1`, `sol-v0.1.2`, `sol-v0.1.3` and `sol-v0.1.5` tags here are those
-pre-split releases, and the reports under `audit/protofire/` audit them, not the
+Releases from before the split carried the concrete `CloneFactory` and its
+deploy pins, and the reports under `audit/protofire/` audit those, not the
 current tree.
 
 The release that adds `ICloneableFactoryV5` moves `ICloneableFactoryV4` and its
@@ -57,26 +55,6 @@ points, on the shared `deployChild` and `initializeChild`, emitting
 
 Contains interfaces for working with Rain factories.
 
-Rain tooling/ecosystem generally tries to be as agnostic and low friction as
-possible on the implementation side.
-
-The ideal would be that "any" contract can call an interpreter and magically be
-supported but there's a lot that can go wrong, for example:
-
-- Contracts can self-destruct or even be
-  [redeployed with new bytecode](https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e)
-- Proxies can point to new implementations and "upgrade"
-- Discoverability of ABIs and other metadata subject to indexer limitations
-
-Falling short of the ideal, we want to support:
-
-- Ability to (dis)trust contracts at the bytecode level NOT the human/key level
-- Support existing patterns such as EIP1167 for clones, etc.
-- Avoid introducing Rain-isms as much as possible
-
-The onchain tooling for analysis is found at
-https://github.com/rainprotocol/rain.extrospection
-
 The current interfaces in this repository are for
 
 - `ICloneableFactoryV5`, the current factory interface. Extends
@@ -103,18 +81,10 @@ Extends `ICloneableFactoryV3` — nothing was dropped this time, so it inherits
 rather than restates — and adds a second deterministic derivation,
 `cloneDeterministicOpenSalt` + `predictDeterministicAddressOpenSalt`, whose
 `CREATE2` salt hashes the caller-supplied salt together with the initialization
-data and nothing about the caller. The two derivations differ in what the
-clone's address commits to, and neither dominates: the V3 pair namespaces the
-salt by `msg.sender`, so the address commits to WHO deployed and not to WHAT —
-nobody else can reach the caller's address, but the deploying account is baked
-into it forever and the deployer alone decides the initial state. The open-salt
-pair commits to WHAT and not to WHO — every account reaches the same address,
-and so can anyone, but everyone who reaches it deploys the same contract
-initialized with the same bytes, because varying either input lands somewhere
-else. Its cost is that the address is not knowable until the data is final. The
-address commits only to the implementation and the initialization bytes, so an
-`initialize` used with `cloneDeterministicOpenSalt` MUST NOT depend on
-`tx.origin`, gas, or third-party-settable state. Superseded by
+data and nothing about the caller. What each derivation's address commits to,
+what the open-salt address does not fix, and the MUSTs that places on
+implementations are the NatSpec on `ICloneableFactoryV4` and
+`cloneDeterministicOpenSalt`. Superseded by
 `ICloneableFactoryV5`, which extends it, so both clone derivations, their domain
 tags and their spec are still declared in `ICloneableFactoryV4`.
 
