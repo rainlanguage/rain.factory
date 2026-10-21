@@ -125,16 +125,15 @@ library LibICloneableFactoryV4 {
     /// @param derivedSalt The `CREATE2` salt.
     /// @return The deployed child address.
     function deployChild(bytes memory creationCode, bytes32 derivedSalt) internal returns (address) {
-        address child = predictCreate2Address(address(this), derivedSalt, keccak256(creationCode));
-        if (child.code.length != 0) {
-            revert CloneAddressOccupied(child);
+        address predicted = predictCreate2Address(address(this), derivedSalt, keccak256(creationCode));
+        if (predicted.code.length != 0) {
+            revert CloneAddressOccupied(predicted);
         }
-        // A successful `CREATE2` deploys at exactly `child`.
-        bool deployed;
+        address child;
         assembly ("memory-safe") {
-            deployed := iszero(iszero(create2(0, add(creationCode, 0x20), mload(creationCode), derivedSalt)))
+            child := create2(0, add(creationCode, 0x20), mload(creationCode), derivedSalt)
         }
-        if (!deployed) {
+        if (child == address(0)) {
             revert CloneDeploymentFailed();
         }
         return child;
