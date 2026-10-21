@@ -47,8 +47,8 @@ EIP1167 oracle.
   for new work. When a new version lands, the one it supersedes moves here.
 - `src/test/` — the fixtures rain.factory.deploy's suite imports
   (`TestCloneable`, `TestCloneableFailure`, `TestCloneFactory`), published so
-  that suite runs against these rather than a copy (#169). Fixtures nothing
-  downstream imports stay in the unpublished `test/`.
+  that suite runs against these rather than a copy (#169). Fixtures that no
+  downstream consumer imports stay in the unpublished `test/`.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV5` extends `ICloneableFactoryV4`), which is what
