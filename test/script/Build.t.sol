@@ -15,7 +15,7 @@ contract BuildTest is Test {
         string memory path = "src/generated/BeaconProxy.sol";
         string memory committed = vm.readFile(path);
         //forge-lint: disable-next-line(unsafe-cheatcode)
-        vm.writeFile(path, "");
+        vm.writeFile(path, "// Build.t.sol was interrupted: run forge script script/Build.sol\n");
         bool ran;
         try new Build().run() {
             ran = true;
