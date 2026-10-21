@@ -28,8 +28,7 @@ library LibICloneableFactoryV5 {
     /// @param data The `initialize` data.
     /// @return The derived `CREATE2` salt.
     function effectiveBeaconProxyOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
-        return
-            LibICloneableFactoryV4.hashDomainSaltData(ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN, salt, data);
+        return keccak256(abi.encode(ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN, salt, keccak256(data)));
     }
 
     /// `BEACON_PROXY_CREATION_CODE` with `(beacon, "")` constructor arguments:
@@ -67,15 +66,15 @@ library LibICloneableFactoryV5 {
         if (LibICloneableFactoryV4.isDelegated(beacon)) {
             revert DelegatedBeacon();
         }
-        // A malformed answer fails the decode outside the try, so the catch
-        // only ever holds the beacon's own revert.
-        try IBeaconImplementation(beacon).implementation() returns (address implementation) {
-            LibICloneableFactoryV4.checkImplementationCode(implementation);
-        } catch (bytes memory reason) {
+        // slither-disable-next-line low-level-calls
+        (bool success, bytes memory returnData) =
+            beacon.staticcall(abi.encodeCall(IBeaconImplementation.implementation, ()));
+        if (!success) {
             assembly ("memory-safe") {
-                revert(add(reason, 0x20), mload(reason))
+                revert(add(returnData, 0x20), mload(returnData))
             }
         }
+        LibICloneableFactoryV4.checkImplementationCode(abi.decode(returnData, (address)));
     }
 
     /// `ICloneableFactoryV5.beaconProxyDeterministicOpenSalt`, from `address(this)`.

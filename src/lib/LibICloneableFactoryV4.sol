@@ -35,27 +35,7 @@ library LibICloneableFactoryV4 {
     }
 
     function effectiveOpenSalt(bytes32 salt, bytes memory data) internal pure returns (bytes32) {
-        return hashDomainSaltData(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, data);
-    }
-
-    /// `keccak256(abi.encode(domain, salt, keccak256(data)))`, the open-salt
-    /// preimage shape every domain tag shares.
-    /// @param domain The domain tag.
-    /// @param salt The raw caller salt.
-    /// @param data The `initialize` data.
-    /// @return The derived `CREATE2` salt.
-    function hashDomainSaltData(bytes32 domain, bytes32 salt, bytes memory data) internal pure returns (bytes32) {
-        bytes32 dataHash = keccak256(data);
-        bytes32 hashed;
-        // The three-word preimage, in unallocated memory past the free pointer.
-        assembly ("memory-safe") {
-            let preimage := mload(0x40)
-            mstore(preimage, domain)
-            mstore(add(preimage, 0x20), salt)
-            mstore(add(preimage, 0x40), dataHash)
-            hashed := keccak256(preimage, 0x60)
-        }
-        return hashed;
+        return keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)));
     }
 
     function cloneCreationCode(address implementation) internal pure returns (bytes memory) {

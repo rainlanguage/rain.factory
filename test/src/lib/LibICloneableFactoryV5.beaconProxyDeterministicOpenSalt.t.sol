@@ -98,20 +98,10 @@ contract LibICloneableFactoryV5BeaconProxyDeterministicOpenSaltTest is Test {
         );
     }
 
-    /// The preimage is built past the free pointer without claiming or
-    /// overwriting allocated memory.
+    /// Hashing leaves `data` unchanged.
     function testEffectiveBeaconProxyOpenSaltMemory(bytes32 salt, bytes memory data) external pure {
         bytes memory copy = bytes.concat(data);
-        uint256 freeBefore;
-        assembly ("memory-safe") {
-            freeBefore := mload(0x40)
-        }
         LibICloneableFactoryV5.effectiveBeaconProxyOpenSalt(salt, data);
-        uint256 freeAfter;
-        assembly ("memory-safe") {
-            freeAfter := mload(0x40)
-        }
-        assertEq(freeAfter, freeBefore);
         assertEq(data, copy);
     }
 
