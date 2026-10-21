@@ -72,9 +72,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
     /// two different callers lands on the SAME address. State is snapshotted
     /// and rolled back between the two deploys so both callers genuinely
     /// deploy from the same starting state — the addresses are compared, not
-    /// merely predicted. This is exactly what `cloneDeterministic` forbids, so
-    /// an address deployed here survives its original deployer being retired:
-    /// any other account can re-establish it on another chain.
+    /// merely predicted. This is exactly what `cloneDeterministic` forbids.
     function testCloneDeterministicOpenSaltCallerIndependent(
         bytes32 salt,
         bytes memory data,
