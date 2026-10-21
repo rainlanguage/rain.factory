@@ -84,9 +84,9 @@ rather than restates — and adds a second deterministic derivation,
 data and nothing about the caller. What each derivation's address commits to,
 what the open-salt address does not fix, and the MUSTs that places on
 implementations are the NatSpec on `ICloneableFactoryV4` and
-`cloneDeterministicOpenSalt`. Superseded by
-`ICloneableFactoryV5`, which extends it, so both clone derivations, their domain
-tags and their spec are still declared in `ICloneableFactoryV4`.
+`cloneDeterministicOpenSalt`. Superseded by `ICloneableFactoryV5`, which extends
+it, so both clone derivations, their domain tags and their spec are still
+declared in `ICloneableFactoryV4`.
 
 #### `ICloneableFactoryV3`
 
