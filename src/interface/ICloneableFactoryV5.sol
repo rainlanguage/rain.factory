@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 import {ICloneableFactoryV4} from "./deprecated/ICloneableFactoryV4.sol";
 
