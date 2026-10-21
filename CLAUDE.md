@@ -20,8 +20,7 @@ and library; on `rain-factory-deploy` for the deployed pins, which embed the
 `rain-factory` revision that repo pins.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense). Every `.sol` copies the two SPDX
-header lines its siblings carry. Other files need a `REUSE.toml` path entry,
-plus `.soldeerignore` unless they ship in the package.
+header lines its siblings carry.
 
 ## Testing
 
@@ -57,10 +56,9 @@ makes this half a standalone publish.
 
 ## Solidity Conventions
 
-- Versions: interfaces float `^0.8.18` so downstream soldeer consumers on a
-  different `0.8.x` still compile them; the library, `src/generated/` and
-  `src/test/` float `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the
-  concretes and scripts in rain.factory.deploy.
+- Versions: interfaces, the library, `src/generated/` and `src/test/` float
+  `^0.8.25` (the deprecated interfaces keep `^0.8.18`); tests and `script/` pin
+  `=0.8.25`, as do the concretes and scripts in rain.factory.deploy.
 - No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
