@@ -51,7 +51,7 @@ contract LibICloneableFactoryV5Test is Test {
     /// The two derivations use distinct fixed tags in word 0 — the whole of the
     /// disjointness-by-construction guarantee.
     function testDomainTagsDistinct() external pure {
-        assertTrue(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN != ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN);
+        assertNotEq(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN);
     }
 
     /// No namespaced `(deployer, salt)` input collides with any open-salt
@@ -61,9 +61,9 @@ contract LibICloneableFactoryV5Test is Test {
         external
         pure
     {
-        assertTrue(
-            LibICloneableFactoryV5.effectiveSalt(deployer, namespacedSalt)
-                != LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveSalt(deployer, namespacedSalt),
+            LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data)
         );
     }
 
@@ -82,16 +82,15 @@ contract LibICloneableFactoryV5Test is Test {
     /// effective salts.
     function testEffectiveSaltDeployerSensitive(address alice, address bob, bytes32 salt) external pure {
         vm.assume(alice != bob);
-        assertTrue(LibICloneableFactoryV5.effectiveSalt(alice, salt) != LibICloneableFactoryV5.effectiveSalt(bob, salt));
+        assertNotEq(LibICloneableFactoryV5.effectiveSalt(alice, salt), LibICloneableFactoryV5.effectiveSalt(bob, salt));
     }
 
     /// The caller salt is in the namespaced derivation: two salts, two
     /// effective salts.
     function testEffectiveSaltSaltSensitive(address deployer, bytes32 saltA, bytes32 saltB) external pure {
         vm.assume(saltA != saltB);
-        assertTrue(
-            LibICloneableFactoryV5.effectiveSalt(deployer, saltA)
-                != LibICloneableFactoryV5.effectiveSalt(deployer, saltB)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveSalt(deployer, saltA), LibICloneableFactoryV5.effectiveSalt(deployer, saltB)
         );
     }
 
@@ -109,9 +108,8 @@ contract LibICloneableFactoryV5Test is Test {
     /// `data` is in the open-salt derivation: two data, two effective salts.
     function testEffectiveOpenSaltDataSensitive(bytes32 salt, bytes memory dataA, bytes memory dataB) external pure {
         vm.assume(keccak256(dataA) != keccak256(dataB));
-        assertTrue(
-            LibICloneableFactoryV5.effectiveOpenSalt(salt, dataA)
-                != LibICloneableFactoryV5.effectiveOpenSalt(salt, dataB)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, dataA), LibICloneableFactoryV5.effectiveOpenSalt(salt, dataB)
         );
     }
 
@@ -119,9 +117,8 @@ contract LibICloneableFactoryV5Test is Test {
     /// effective salts.
     function testEffectiveOpenSaltSaltSensitive(bytes32 saltA, bytes32 saltB, bytes memory data) external pure {
         vm.assume(saltA != saltB);
-        assertTrue(
-            LibICloneableFactoryV5.effectiveOpenSalt(saltA, data)
-                != LibICloneableFactoryV5.effectiveOpenSalt(saltB, data)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveOpenSalt(saltA, data), LibICloneableFactoryV5.effectiveOpenSalt(saltB, data)
         );
     }
 

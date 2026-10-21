@@ -163,7 +163,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
 
         address predictedA = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), dataA, salt);
         address predictedB = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), dataB, salt);
-        assertTrue(predictedA != predictedB);
+        assertNotEq(predictedA, predictedB);
 
         address childA = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), dataA, salt);
         address childB = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), dataB, salt);
@@ -194,7 +194,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
     ) external view {
         address open = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, openSalt);
         address namespaced = I_CLONE_FACTORY.predictDeterministicAddress(implementation, namespacedSalt, deployer);
-        assertTrue(open != namespaced);
+        assertNotEq(open, namespaced);
     }
 
     /// THE SQUAT THE DISTINCT DOMAIN TAGS CLOSE, stated as an attack rather
@@ -270,7 +270,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
 
         // THE GUARANTEE. The two distinct tags move the real open-salt address
         // off the one `cloneDeterministic` can reach.
-        assertTrue(open != namespaced);
+        assertNotEq(open, namespaced);
 
         // End to end, not just in prediction: the attacker really deploys, at
         // their own address, with their own data, and the honest open-salt
@@ -302,9 +302,9 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
         address childNamespaced = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
 
         assertEq(childNamespaced, predictedNamespaced);
-        assertTrue(childOpen != childNamespaced);
-        assertTrue(childOpen.code.length > 0);
-        assertTrue(childNamespaced.code.length > 0);
+        assertNotEq(childOpen, childNamespaced);
+        assertGt(childOpen.code.length, 0);
+        assertGt(childNamespaced.code.length, 0);
     }
 
     /// Distinct salts yield distinct clones of the same implementation and the
@@ -317,7 +317,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
 
         address child1 = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt1);
         address child2 = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt2);
-        assertTrue(child1 != child2);
+        assertNotEq(child1, child2);
     }
 
     /// A second deploy of the same `(implementation, data, salt)`, from any
@@ -424,9 +424,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
         assertEq(TestCloneable(child).sData(), data);
 
         data[9_999] = ~fill;
-        assertTrue(
-            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt) != predicted
-        );
+        assertNotEq(I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt), predicted);
     }
 
     /// Salts `0` and `max` deploy where predicted.
