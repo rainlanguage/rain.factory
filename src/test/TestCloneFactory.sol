@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.25;
+pragma solidity =0.8.25;
 
 // `ICloneableFactoryV3` and `ICloneableFactoryV4` are imported for the
 // `@inheritdoc` references on the functions they declare; each newer interface
