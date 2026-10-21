@@ -10,9 +10,9 @@ import {
 } from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV5Test
-/// Every expectation is recomputed inline from the pinned formula, never read
-/// back from the library, so a change to the library's derivation diverges from
-/// the oracle here and the test fails.
+/// @notice Tests `LibICloneableFactoryV5`'s two clone effective-salt
+/// derivations against expected values computed here, never read back from the
+/// library.
 contract LibICloneableFactoryV5Test is Test {
     /// The domain tags the library derives against are exactly the two pinned
     /// string hashes. Recomputed from the literal strings so this is independent
@@ -51,20 +51,19 @@ contract LibICloneableFactoryV5Test is Test {
     /// The two derivations use distinct fixed tags in word 0 — the whole of the
     /// disjointness-by-construction guarantee.
     function testDomainTagsDistinct() external pure {
-        assertTrue(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN != ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN);
+        assertNotEq(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN);
     }
 
     /// No namespaced `(deployer, salt)` input collides with any open-salt
-    /// `(salt, data)` input: the distinct word-0 tags make the preimages
-    /// disjoint, so the images are too. Fuzzed over both input spaces at once,
-    /// including empty and non-empty data.
+    /// `(salt, data)` input. Fuzzed over both input spaces at once, including
+    /// empty and non-empty data.
     function testDerivationsDisjoint(address deployer, bytes32 namespacedSalt, bytes32 openSalt, bytes memory data)
         external
         pure
     {
-        assertTrue(
-            LibICloneableFactoryV5.effectiveSalt(deployer, namespacedSalt)
-                != LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveSalt(deployer, namespacedSalt),
+            LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data)
         );
     }
 
@@ -75,7 +74,6 @@ contract LibICloneableFactoryV5Test is Test {
     function testEffectiveSaltPreimageShape(address deployer, bytes32 salt) external pure {
         bytes memory preimage =
             abi.encodePacked(keccak256("rain.factory.clone.namespaced"), bytes32(uint256(uint160(deployer))), salt);
-        assertEq(preimage.length, 96);
         assertEq(LibICloneableFactoryV5.effectiveSalt(deployer, salt), keccak256(preimage));
     }
 
@@ -83,16 +81,15 @@ contract LibICloneableFactoryV5Test is Test {
     /// effective salts.
     function testEffectiveSaltDeployerSensitive(address alice, address bob, bytes32 salt) external pure {
         vm.assume(alice != bob);
-        assertTrue(LibICloneableFactoryV5.effectiveSalt(alice, salt) != LibICloneableFactoryV5.effectiveSalt(bob, salt));
+        assertNotEq(LibICloneableFactoryV5.effectiveSalt(alice, salt), LibICloneableFactoryV5.effectiveSalt(bob, salt));
     }
 
     /// The caller salt is in the namespaced derivation: two salts, two
     /// effective salts.
     function testEffectiveSaltSaltSensitive(address deployer, bytes32 saltA, bytes32 saltB) external pure {
         vm.assume(saltA != saltB);
-        assertTrue(
-            LibICloneableFactoryV5.effectiveSalt(deployer, saltA)
-                != LibICloneableFactoryV5.effectiveSalt(deployer, saltB)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveSalt(deployer, saltA), LibICloneableFactoryV5.effectiveSalt(deployer, saltB)
         );
     }
 
@@ -103,16 +100,14 @@ contract LibICloneableFactoryV5Test is Test {
     /// library and the interface constant.
     function testEffectiveOpenSaltPreimageShape(bytes32 salt, bytes memory data) external pure {
         bytes memory preimage = abi.encodePacked(keccak256("rain.factory.clone.opensalt"), salt, keccak256(data));
-        assertEq(preimage.length, 96);
         assertEq(LibICloneableFactoryV5.effectiveOpenSalt(salt, data), keccak256(preimage));
     }
 
     /// `data` is in the open-salt derivation: two data, two effective salts.
     function testEffectiveOpenSaltDataSensitive(bytes32 salt, bytes memory dataA, bytes memory dataB) external pure {
         vm.assume(keccak256(dataA) != keccak256(dataB));
-        assertTrue(
-            LibICloneableFactoryV5.effectiveOpenSalt(salt, dataA)
-                != LibICloneableFactoryV5.effectiveOpenSalt(salt, dataB)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveOpenSalt(salt, dataA), LibICloneableFactoryV5.effectiveOpenSalt(salt, dataB)
         );
     }
 
@@ -120,9 +115,8 @@ contract LibICloneableFactoryV5Test is Test {
     /// effective salts.
     function testEffectiveOpenSaltSaltSensitive(bytes32 saltA, bytes32 saltB, bytes memory data) external pure {
         vm.assume(saltA != saltB);
-        assertTrue(
-            LibICloneableFactoryV5.effectiveOpenSalt(saltA, data)
-                != LibICloneableFactoryV5.effectiveOpenSalt(saltB, data)
+        assertNotEq(
+            LibICloneableFactoryV5.effectiveOpenSalt(saltA, data), LibICloneableFactoryV5.effectiveOpenSalt(saltB, data)
         );
     }
 
@@ -151,10 +145,10 @@ contract LibICloneableFactoryV5Test is Test {
     }
 
     /// `effectiveOpenSalt` over 1, 32, 33 and 2048 bytes of `data` is the formula.
-    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 b) external pure {
-        bytes memory oneByte = abi.encodePacked(b);
+    function testEffectiveOpenSaltBoundaryDataLengths(bytes32 salt, bytes32 word, bytes1 tailByte) external pure {
+        bytes memory oneByte = abi.encodePacked(tailByte);
         bytes memory oneWord = abi.encodePacked(word);
-        bytes memory oneWordPlusOne = abi.encodePacked(word, b);
+        bytes memory oneWordPlusOne = abi.encodePacked(word, tailByte);
         bytes memory manyWords = new bytes(0);
         for (uint256 i = 0; i < 64; i++) {
             manyWords = abi.encodePacked(manyWords, word);

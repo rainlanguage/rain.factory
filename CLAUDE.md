@@ -9,7 +9,7 @@ rain.factory is a Solidity **library** repo for Rain's proxy factories (EIP1167
 clones and OZ `BeaconProxy`s): the `ICloneable*` interface surface and the
 `LibICloneableFactoryV5` library that implements it. It is the library half of
 the library/deploy split (rainlanguage/rain.factory#46) — no concrete contract,
-no deploy pins, no deploy script.
+deploy pin or deploy script in `src/`.
 
 The concrete `CloneFactory`, its deployed address + codehash pins
 (`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
@@ -19,18 +19,18 @@ publishing as `rain-factory-deploy`. Depend on `rain-factory` for the interfaces
 and library; on `rain-factory-deploy` for the deployed pins, which embed the
 `rain-factory` revision that repo pins.
 
-License: LicenseRef-DCL-1.0 (DecentraLicense). All source files must include
-SPDX headers.
+License: LicenseRef-DCL-1.0 (DecentraLicense). Every `.sol` copies the two SPDX
+header lines its siblings carry. Other files need a `REUSE.toml` path entry,
+plus `.soldeerignore` unless they ship in the package.
 
 ## Testing
 
-Nix + Foundry (`nix develop`; run `rainix-sol-prelude` first). Checks:
-`rainix-sol-test`, `rainix-sol-static` (Slither), `rainix-sol-legal` (REUSE).
 Regenerate `src/generated/` with `forge script script/Build.sol && forge fmt`;
 CI's `Git is clean` job does the same and fails on any tracked diff, and
 `test/script/Build.t.sol` fails if the script stops writing exactly the
-committed file. Tests exercise the libraries through `TestCloneFactory`, a
-pure-delegation concrete, with OZ `Clones` as foreign EIP1167 oracle.
+committed file. Tests call the library directly, and through `TestCloneFactory`
+where `msg.sender`/`address(this)` must be real. OZ `Clones` is the foreign
+EIP1167 oracle.
 
 ## Architecture
 
@@ -44,8 +44,8 @@ pure-delegation concrete, with OZ `Clones` as foreign EIP1167 oracle.
   read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V4`). Still
-  published for consumers pinned to them; do not use for new work. When a new
-  version lands, the one it supersedes moves here.
+  published for consumers pinned to them, so FROZEN: never edit one. Do not use
+  for new work. When a new version lands, the one it supersedes moves here.
 
 No `src/` file imports from outside this repo — intra-repo inheritance is
 allowed (`ICloneableFactoryV5` extends `ICloneableFactoryV4`), which is what
@@ -57,7 +57,7 @@ makes this half a standalone publish.
   different `0.8.x` still compile them; the library and `src/generated/` float
   `^0.8.25`; tests and `script/` pin `=0.8.25`, as do the concretes and scripts
   in rain.factory.deploy.
-- No named return values.
+- No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
   cut prose to fit, never exempt.

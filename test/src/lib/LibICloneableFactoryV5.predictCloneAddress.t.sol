@@ -8,30 +8,27 @@ import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 
 /// @title LibICloneableFactoryV5PredictCloneAddressTest
-/// @notice Tests `LibICloneableFactoryV5.predictCloneAddress` against two independent
-/// oracles: OpenZeppelin's `Clones.predictDeterministicAddress` — a foreign
-/// implementation of the same EIP-1167 CREATE2 prediction, so any divergence
-/// in our creation-code bytes or hashing shows up as a different address —
-/// and the raw CREATE2 formula computed longhand here.
+/// @notice Tests `LibICloneableFactoryV5.predictCloneAddress` against oracles
+/// independent of the library.
 contract LibICloneableFactoryV5PredictCloneAddressTest is Test {
     /// Byte-for-byte equivalence with OZ Clones for every (factory,
-    /// implementation, effectiveSalt): same creation code, same formula, same
+    /// implementation, derivedSalt): same creation code, same formula, same
     /// address. This is the equivalence oracle that lets the deploy half swap
     /// its OZ-backed concrete for a delegation into this library.
-    function testPredictCloneAddressMatchesOZ(address factory, address implementation, bytes32 effectiveSalt)
+    function testPredictCloneAddressMatchesOZ(address factory, address implementation, bytes32 derivedSalt)
         external
         pure
     {
         assertEq(
-            LibICloneableFactoryV5.predictCloneAddress(factory, implementation, effectiveSalt),
-            Clones.predictDeterministicAddress(implementation, effectiveSalt, factory)
+            LibICloneableFactoryV5.predictCloneAddress(factory, implementation, derivedSalt),
+            Clones.predictDeterministicAddress(implementation, derivedSalt, factory)
         );
     }
 
     /// The raw CREATE2 formula, written out longhand:
     /// `address(keccak256(0xff ++ factory ++ salt ++ keccak256(creationCode)))`
     /// over the EIP-1167 creation bytes written out literally.
-    function testPredictCloneAddressIsCreate2Formula(address factory, address implementation, bytes32 effectiveSalt)
+    function testPredictCloneAddressIsCreate2Formula(address factory, address implementation, bytes32 derivedSalt)
         external
         pure
     {
@@ -39,19 +36,19 @@ contract LibICloneableFactoryV5PredictCloneAddressTest is Test {
             hex"3d602d80600a3d3981f3363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3"
         );
         address expected = address(
-            uint160(uint256(keccak256(abi.encodePacked(hex"ff", factory, effectiveSalt, keccak256(creationCode)))))
+            uint160(uint256(keccak256(abi.encodePacked(hex"ff", factory, derivedSalt, keccak256(creationCode)))))
         );
-        assertEq(LibICloneableFactoryV5.predictCloneAddress(factory, implementation, effectiveSalt), expected);
+        assertEq(LibICloneableFactoryV5.predictCloneAddress(factory, implementation, derivedSalt), expected);
     }
 
     /// A real CREATE2 deploy of the creation code lands exactly where the
     /// prediction says, from a live factory address (this test contract).
-    function testPredictCloneAddressMatchesRealDeploy(address implementation, bytes32 effectiveSalt) external {
-        address predicted = LibICloneableFactoryV5.predictCloneAddress(address(this), implementation, effectiveSalt);
+    function testPredictCloneAddressMatchesRealDeploy(address implementation, bytes32 derivedSalt) external {
+        address predicted = LibICloneableFactoryV5.predictCloneAddress(address(this), implementation, derivedSalt);
         bytes memory creationCode = LibICloneableFactoryV5.cloneCreationCode(implementation);
         address child;
         assembly ("memory-safe") {
-            child := create2(0, add(creationCode, 0x20), mload(creationCode), effectiveSalt)
+            child := create2(0, add(creationCode, 0x20), mload(creationCode), derivedSalt)
         }
         assertEq(child, predicted);
     }

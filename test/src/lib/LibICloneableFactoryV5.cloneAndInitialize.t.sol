@@ -2,24 +2,24 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.17.0/src/Test.sol";
+import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
 import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
-import {DelegatedImplementation, InitializationFailed} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {
+    CloneAddressOccupied,
+    DelegatedImplementation,
+    InitializationFailed
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneableNestedClone} from "../../concrete/TestCloneableNestedClone.sol";
+import {TestCloneableGasRecorder} from "../../concrete/TestCloneableGasRecorder.sol";
 import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";
 
 /// @title LibICloneableFactoryV5CloneAndInitializeTest
-/// @notice How `cloneAndInitialize` guards the implementation and treats each
-/// `initialize` answer, through both clone entry points.
-contract LibICloneableFactoryV5CloneAndInitializeTest is Test {
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+/// @notice How `cloneAndInitialize` behaves through both clone entry points.
+contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
     /// Both entry points revert with exactly `expected` when `initialize`
     /// reverts with (`reverts`) or returns `answer`.
     function checkBothEntryPointsRevert(bool reverts, bytes memory answer, bytes32 salt, bytes memory expected)
@@ -28,9 +28,9 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is Test {
         address implementation = address(new TestCloneableRawAnswer());
         bytes memory data = abi.encode(reverts, answer);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// An empty return, as from an `ICloneableV1`, is `InitializationFailed`.
@@ -102,9 +102,9 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is Test {
         address implementation = makeAddr("delegated-implementation");
         vm.etch(implementation, abi.encodePacked(hex"ef0100", delegate));
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// A clone address that holds ETH but no code deploys through both entry
@@ -113,14 +113,123 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is Test {
         balance = bound(balance, 1, type(uint128).max);
         address implementation = address(new TestCloneable());
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(implementation, salt, address(this));
         vm.deal(predicted, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt), predicted);
+        assertEq(iCloneFactory.cloneDeterministic(implementation, data, salt), predicted);
         assertEq(predicted.balance, balance);
 
-        address predictedOpenSalt = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
+        address predictedOpenSalt = iCloneFactory.predictDeterministicAddressOpenSalt(implementation, data, salt);
         vm.deal(predictedOpenSalt, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
+        assertEq(iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
         assertEq(predictedOpenSalt.balance, balance);
+    }
+
+    /// Deploys a `TestCloneableGasRecorder` clone with exactly `gas` forwarded
+    /// to the entry point — the open-salt one when `openSalt`, the namespaced
+    /// one otherwise — and answers the gas the clone saw inside `initialize`.
+    function observeInitializeGas(bool openSalt, uint256 gas, address implementation, bytes memory data, bytes32 salt)
+        internal
+        returns (uint256)
+    {
+        address child = openSalt
+            ? iCloneFactory.cloneDeterministicOpenSalt{gas: gas}(implementation, data, salt)
+            : iCloneFactory.cloneDeterministic{gas: gas}(implementation, data, salt);
+        return TestCloneableGasRecorder(child).sInitializeGas();
+    }
+
+    /// The factory caps nothing: the gas `initialize` observes rises with the
+    /// budget the caller hands the entry point, on both paths. A `{gas: K}` on
+    /// the call to the clone would hold the two observations equal at every
+    /// budget above `K`. The budgets are an eighth and a half of what the test
+    /// itself has left — so they are derived at runtime rather than pinned, and
+    /// both are far above any `K` a chain's own gas limit would let a caller
+    /// supply, which is what makes an escaping cap implausible rather than
+    /// merely untested.
+    function testInitializeGasRisesWithCallerBudget(bytes32 salt, bytes memory data) external {
+        address implementation = address(new TestCloneableGasRecorder());
+
+        uint256 snapshot = vm.snapshotState();
+        uint256 low = observeInitializeGas(true, gasleft() / 8, implementation, data, salt);
+        vm.revertToState(snapshot);
+
+        snapshot = vm.snapshotState();
+        assertTrue(observeInitializeGas(true, gasleft() / 2, implementation, data, salt) > low, "open salt");
+        vm.revertToState(snapshot);
+
+        snapshot = vm.snapshotState();
+        low = observeInitializeGas(false, gasleft() / 8, implementation, data, salt);
+        vm.revertToState(snapshot);
+
+        assertTrue(observeInitializeGas(false, gasleft() / 2, implementation, data, salt) > low, "namespaced");
+    }
+
+    /// The library holds no state, so a clone may clone through the same
+    /// factory during its own `initialize` — an orchestrator deploying its own
+    /// parts is the shape. Both clones land at their own derivation's address
+    /// and are initialized with their own bytes, and the outer `NewClone` —
+    /// emitted before `initialize` runs — precedes the nested one, whose sender
+    /// is the outer clone.
+    function testNestedCloneDuringInitialize(bytes32 outerSalt, bytes32 innerSalt, bytes memory innerData) external {
+        TestCloneable innerImplementation = new TestCloneable();
+        TestCloneableNestedClone outerImplementation = new TestCloneableNestedClone();
+
+        bytes memory outerData = abi.encode(address(iCloneFactory), address(innerImplementation), innerSalt, innerData);
+
+        address predictedOuter =
+            iCloneFactory.predictDeterministicAddressOpenSalt(address(outerImplementation), outerData, outerSalt);
+        address predictedInner =
+            iCloneFactory.predictDeterministicAddressOpenSalt(address(innerImplementation), innerData, innerSalt);
+
+        vm.recordLogs();
+        address outer = iCloneFactory.cloneDeterministicOpenSalt(address(outerImplementation), outerData, outerSalt);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertEq(outer, predictedOuter);
+        assertEq(TestCloneableNestedClone(outer).sInner(), predictedInner);
+        assertEq(TestCloneable(predictedInner).sData(), innerData);
+
+        assertEq(entries.length, 2);
+        assertNewClone(entries[0], address(this), address(outerImplementation), outer, outerSalt, outerData);
+        assertNewClone(entries[1], outer, address(innerImplementation), predictedInner, innerSalt, innerData);
+    }
+
+    /// A nested clone that reverts takes the whole outer deploy with it.
+    /// Re-entering at a salt the factory already occupies reverts
+    /// `CloneAddressOccupied` with that address, and the outer clone is not
+    /// left half-built: its `(deployer, salt)` is still free afterwards, so the
+    /// same deploy at a free inner salt still lands at the address it always
+    /// predicted. `data` is outside the namespaced derivation, which is what
+    /// lets the retry change the inner salt and keep the outer address.
+    function testNestedCloneAtOccupiedAddressUnwindsOuterDeploy(
+        bytes32 outerSalt,
+        bytes32 takenInnerSalt,
+        bytes32 freeInnerSalt,
+        bytes memory innerData
+    ) external {
+        vm.assume(takenInnerSalt != freeInnerSalt);
+        TestCloneable innerImplementation = new TestCloneable();
+        TestCloneableNestedClone outerImplementation = new TestCloneableNestedClone();
+
+        address inner =
+            iCloneFactory.cloneDeterministicOpenSalt(address(innerImplementation), innerData, takenInnerSalt);
+        address predictedOuter =
+            iCloneFactory.predictDeterministicAddress(address(outerImplementation), outerSalt, address(this));
+
+        vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, inner));
+        iCloneFactory.cloneDeterministic(
+            address(outerImplementation),
+            abi.encode(address(iCloneFactory), address(innerImplementation), takenInnerSalt, innerData),
+            outerSalt
+        );
+
+        address outer = iCloneFactory.cloneDeterministic(
+            address(outerImplementation),
+            abi.encode(address(iCloneFactory), address(innerImplementation), freeInnerSalt, innerData),
+            outerSalt
+        );
+
+        assertEq(outer, predictedOuter);
+        assertEq(TestCloneable(TestCloneableNestedClone(outer).sInner()).sData(), innerData);
+        assertEq(TestCloneable(inner).sData(), innerData);
     }
 }

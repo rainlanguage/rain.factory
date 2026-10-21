@@ -1,5 +1,5 @@
 .DS_Store
-.coderabbitai.yaml
+.coderabbit.yaml
 .gas-snapshot
 .git
 .github
@@ -8,6 +8,7 @@
 .soldeerignore
 .vscode
 CLAUDE.md
+/.audit
 /audit
 /cache
 /dependencies
@@ -19,4 +20,4 @@ CLAUDE.md
 /remappings.txt
 /slither.config.json
 /soldeer.lock
-/REUSE.toml
+/test

@@ -5,22 +5,15 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {ICloneableV2} from "../../../src/interface/ICloneableV2.sol";
+import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable, TestCloneableAlreadyInitialized} from "../../concrete/TestCloneable.sol";
 
 /// @title ICloneableV2InitializeTest
-/// @notice `ICloneableV2`'s two MUSTs on `initialize`, exercised on
-/// `TestCloneable` and on clones of it that `TestCloneFactory` deployed and
-/// initialized.
-contract ICloneableV2InitializeTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+/// @notice `ICloneableV2`'s once-only and typed-overload MUSTs on
+/// `initialize`, exercised on `TestCloneable` and on clones of it that
+/// `TestCloneFactory` deployed and initialized.
+contract ICloneableV2InitializeTest is CloneFactoryTest {
     /// `initialize` can NOT be called more than once: the factory's call is
     /// the one that succeeds, a second call on the clone reverts
     /// `TestCloneableAlreadyInitialized`, and the clone keeps the data the
@@ -28,7 +21,7 @@ contract ICloneableV2InitializeTest is Test {
     function testInitializeOnlyOnce(bytes32 salt, bytes memory data, bytes memory otherData) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertEq(TestCloneable(child).sData(), data);
 
         vm.expectRevert(abi.encodeWithSelector(TestCloneableAlreadyInitialized.selector));
@@ -42,7 +35,7 @@ contract ICloneableV2InitializeTest is Test {
     /// factory has initialized, for `value`, `0` and `type(uint256).max`.
     function testTypedOverloadRevertsInitializeSignatureFn(bytes32 salt, bytes memory data, uint256 value) external {
         TestCloneable implementation = new TestCloneable();
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         uint256[3] memory values = [value, 0, type(uint256).max];
         for (uint256 i = 0; i < values.length; i++) {

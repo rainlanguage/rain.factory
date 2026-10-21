@@ -35,8 +35,7 @@ contract LibICloneableFactoryV5CheckImplementationCodeTest is Test {
 
     /// Any nonempty code not beginning with `0xef` passes.
     function testCheckImplementationCodeEtched(address implementation, bytes memory code) external {
-        vm.assume(implementation.code.length == 0);
-        vm.assume(uint160(implementation) > 0x0a);
+        assumeUnusedAddress(implementation);
         vm.assume(code.length > 0);
         vm.assume(code[0] != 0xef);
         vm.etch(implementation, code);
@@ -50,7 +49,7 @@ contract LibICloneableFactoryV5CheckImplementationCodeTest is Test {
         for (uint256 i = 0; i < codes.length; i++) {
             address implementation = makeAddr(string.concat("single-byte-", vm.toString(i)));
             vm.etch(implementation, abi.encodePacked(codes[i]));
-            this.checkImplementationCodeExternal(implementation);
+            LibICloneableFactoryV5.checkImplementationCode(implementation);
         }
     }
 
@@ -64,8 +63,7 @@ contract LibICloneableFactoryV5CheckImplementationCodeTest is Test {
 
     /// An EIP-7702 delegation designator reverts `DelegatedImplementation`.
     function testCheckImplementationCodeEip7702Designator(address delegated, address delegate) external {
-        vm.assume(delegated.code.length == 0);
-        vm.assume(uint160(delegated) > 0x0a);
+        assumeUnusedAddress(delegated);
         vm.etch(delegated, abi.encodePacked(hex"ef0100", delegate));
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
         this.checkImplementationCodeExternal(delegated);
