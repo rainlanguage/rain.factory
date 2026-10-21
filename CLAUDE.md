@@ -53,12 +53,12 @@ makes this half a standalone publish.
 
 ## Solidity Conventions
 
-- Interfaces keep a lower pragma floor than the library so downstream soldeer
-  consumers on another `0.8.x` still compile them; never raise it to match.
 - No named return values in implementations.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
   cut prose to fit, never exempt.
-- `rain-deploy` belongs to the deploy half and must not be added as a
-  dependency here: needing it means deploy-pin code has landed in a library
-  repo.
+- The OZ pin and the `foundry.toml` compiler settings are frozen: they fix the
+  `BeaconProxy` creation code in the `ICloneableFactoryV5` address derivation,
+  so changing either needs a new interface version.
+- `rain-deploy` belongs to the deploy half and must not be added as a dependency
+  here: needing it means deploy-pin code has landed in a library repo.
