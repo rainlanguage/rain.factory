@@ -40,8 +40,8 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         view
     {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt));
-        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
-        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer), expected);
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(iCloneFactory));
+        assertEq(iCloneFactory.predictDeterministicAddress(implementation, salt, deployer), expected);
     }
 
     /// The deployed clone lands at the predicted address, is an EIP-1167 proxy
@@ -51,8 +51,8 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicMatchesPredict(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address predicted = iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this));
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         assertEq(child, predicted);
         assertEq(
@@ -69,8 +69,8 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         vm.assume(salt1 != salt2);
         TestCloneable implementation = new TestCloneable();
 
-        address child1 = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt1);
-        address child2 = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt2);
+        address child1 = iCloneFactory.cloneDeterministic(address(implementation), data, salt1);
+        address child2 = iCloneFactory.cloneDeterministic(address(implementation), data, salt2);
         assertNotEq(child1, child2);
     }
 
@@ -82,16 +82,16 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         vm.assume(alice != bob);
         TestCloneable implementation = new TestCloneable();
 
-        address predictedAlice = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, alice);
-        address predictedBob = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, bob);
+        address predictedAlice = iCloneFactory.predictDeterministicAddress(address(implementation), salt, alice);
+        address predictedBob = iCloneFactory.predictDeterministicAddress(address(implementation), salt, bob);
         assertNotEq(predictedAlice, predictedBob);
 
         vm.prank(alice);
-        address childAlice = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address childAlice = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertEq(childAlice, predictedAlice);
 
         vm.prank(bob);
-        address childBob = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address childBob = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertEq(childBob, predictedBob);
 
         assertNotEq(childAlice, childBob);
@@ -110,12 +110,12 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
 
         uint256 snapshot = vm.snapshotState();
 
-        address childA = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataA, salt);
+        address childA = iCloneFactory.cloneDeterministic(address(implementation), dataA, salt);
         bytes memory sDataA = TestCloneable(childA).sData();
 
         vm.revertToState(snapshot);
 
-        address childB = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataB, salt);
+        address childB = iCloneFactory.cloneDeterministic(address(implementation), dataB, salt);
 
         assertEq(childA, childB);
         assertEq(sDataA, dataA);
@@ -127,11 +127,11 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicSecondDeployReverts(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
-        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
+        assertEq(child, iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this)));
 
         vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         // The first deploy's state is untouched by the failed second one.
         assertEq(TestCloneable(child).sData(), data);
@@ -147,11 +147,11 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         vm.assume(keccak256(dataA) != keccak256(dataB));
         TestCloneable implementation = new TestCloneable();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataA, salt);
-        assertEq(child, I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)));
+        address child = iCloneFactory.cloneDeterministic(address(implementation), dataA, salt);
+        assertEq(child, iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this)));
 
         vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, child));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), dataB, salt);
+        iCloneFactory.cloneDeterministic(address(implementation), dataB, salt);
 
         assertEq(TestCloneable(child).sData(), dataA);
     }
@@ -161,11 +161,11 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicNonceOnlyCollisionReverts(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this));
         vm.setNonce(predicted, 1);
 
         vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        iCloneFactory.cloneDeterministic(address(implementation), data, salt);
     }
 
     /// `NewClone` is emitted with the caller, implementation, child, salt and
@@ -175,7 +175,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         TestCloneable implementation = new TestCloneable();
 
         vm.recordLogs();
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
@@ -194,13 +194,13 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         vm.assume(notSuccess != ICLONEABLE_V2_SUCCESS);
         TestCloneableFailure implementation = new TestCloneableFailure();
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this));
 
         vm.expectRevert(abi.encodeWithSelector(InitializationFailed.selector));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), abi.encode(notSuccess), salt);
+        iCloneFactory.cloneDeterministic(address(implementation), abi.encode(notSuccess), salt);
 
         assertEq(
-            I_CLONE_FACTORY.cloneDeterministic(address(implementation), abi.encode(ICLONEABLE_V2_SUCCESS), salt),
+            iCloneFactory.cloneDeterministic(address(implementation), abi.encode(ICLONEABLE_V2_SUCCESS), salt),
             predicted
         );
     }
@@ -211,7 +211,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     {
         vm.assume(implementation.code.length == 0);
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
     }
 
     /// The implementation-code guard runs before the occupancy check: with the
@@ -220,14 +220,14 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicCodeGuardRunsBeforeCreate2(bytes32 salt, bytes memory data) external {
         TestCloneable implementation = new TestCloneable();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertGt(child.code.length, 0);
 
         vm.etch(address(implementation), "");
         assertEq(address(implementation).code.length, 0);
 
         vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        iCloneFactory.cloneDeterministic(address(implementation), data, salt);
     }
 
     /// `CREATE2` is given a literal `0` value, so a factory that is holding ETH
@@ -240,12 +240,12 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicNoEthForwarded(bytes32 salt, bytes memory data, uint256 balance) external {
         balance = bound(balance, 1, type(uint128).max);
         TestCloneable implementation = new TestCloneable();
-        vm.deal(address(I_CLONE_FACTORY), balance);
+        vm.deal(address(iCloneFactory), balance);
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         assertEq(child.balance, 0);
-        assertEq(address(I_CLONE_FACTORY).balance, balance);
+        assertEq(address(iCloneFactory).balance, balance);
     }
 
     /// `initialize` is the FIRST thing called on the fresh proxy, and the only
@@ -258,7 +258,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicInitializeIsTheOnlyCall(bytes32 salt, bytes memory data) external {
         TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         bytes4[] memory selectors = TestCloneableCallRecorder(child).selectors();
         assertEq(selectors.length, 1);
@@ -286,7 +286,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         vm.assume(selector != bytes4(keccak256("sData()")));
         TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
 
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         assertEq(TestCloneableCallRecorder(child).selectors().length, 1);
 
         (bool success,) = child.call(abi.encodePacked(selector, tail));
@@ -308,7 +308,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
 
         vm.recordLogs();
-        address child = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        address child = iCloneFactory.cloneDeterministic(address(implementation), data, salt);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 2);
@@ -316,7 +316,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
 
         assertEq(entries[1].emitter, child);
-        assertEq(entries[1].topics[0], bytes32(uint256(keccak256("Initializing(bytes)"))));
+        assertEq(entries[1].topics[0], keccak256("Initializing(bytes)"));
         assertEq(entries[1].data, abi.encode(data));
     }
 
@@ -333,13 +333,13 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     function testCloneDeterministicInitializeRevertBubbles(bytes32 salt, bytes memory data) external {
         TestCloneableRevert implementation = new TestCloneableRevert();
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this));
 
         vm.expectRevert(abi.encodeWithSelector(TestCloneableRevertInitialize.selector, data));
-        I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt);
+        iCloneFactory.cloneDeterministic(address(implementation), data, salt);
 
         vm.etch(address(implementation), address(new TestCloneable()).code);
-        assertEq(I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt), predicted);
+        assertEq(iCloneFactory.cloneDeterministic(address(implementation), data, salt), predicted);
         assertEq(TestCloneable(predicted).sData(), data);
     }
 
@@ -352,10 +352,10 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         address caller
     ) external {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, deployer, salt));
-        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(iCloneFactory));
 
         vm.prank(caller);
-        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, deployer), expected);
+        assertEq(iCloneFactory.predictDeterministicAddress(implementation, salt, deployer), expected);
     }
 
     /// The address depends on no chain state: a funded factory at an arbitrary
@@ -371,23 +371,23 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         timestamp = bound(timestamp, 2, type(uint64).max);
         blockNumber = bound(blockNumber, 2, type(uint64).max);
         TestCloneable implementation = new TestCloneable();
-        vm.deal(address(I_CLONE_FACTORY), balance);
+        vm.deal(address(iCloneFactory), balance);
         vm.warp(timestamp);
         vm.roll(blockNumber);
 
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(this), salt));
         address expected =
-            Clones.predictDeterministicAddress(address(implementation), effectiveSalt, address(I_CLONE_FACTORY));
+            Clones.predictDeterministicAddress(address(implementation), effectiveSalt, address(iCloneFactory));
 
-        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), salt, address(this)), expected);
-        assertEq(I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, salt), expected);
+        assertEq(iCloneFactory.predictDeterministicAddress(address(implementation), salt, address(this)), expected);
+        assertEq(iCloneFactory.cloneDeterministic(address(implementation), data, salt), expected);
     }
 
     /// Deployer `address(0)` predicts over `address(0)`, not the caller.
     function testCloneDeterministicPredictZeroDeployer(address implementation, bytes32 salt) external view {
         bytes32 effectiveSalt = keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, address(0), salt));
-        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(I_CLONE_FACTORY));
-        assertEq(I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(0)), expected);
+        address expected = Clones.predictDeterministicAddress(implementation, effectiveSalt, address(iCloneFactory));
+        assertEq(iCloneFactory.predictDeterministicAddress(implementation, salt, address(0)), expected);
     }
 
     /// Salts `0` and `max` deploy where predicted and initialize with `data`.
@@ -395,13 +395,13 @@ contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
         TestCloneable implementation = new TestCloneable();
 
         address predictedZero =
-            I_CLONE_FACTORY.predictDeterministicAddress(address(implementation), bytes32(0), address(this));
-        address predictedMax = I_CLONE_FACTORY.predictDeterministicAddress(
+            iCloneFactory.predictDeterministicAddress(address(implementation), bytes32(0), address(this));
+        address predictedMax = iCloneFactory.predictDeterministicAddress(
             address(implementation), bytes32(type(uint256).max), address(this)
         );
 
-        address childZero = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(0));
-        address childMax = I_CLONE_FACTORY.cloneDeterministic(address(implementation), data, bytes32(type(uint256).max));
+        address childZero = iCloneFactory.cloneDeterministic(address(implementation), data, bytes32(0));
+        address childMax = iCloneFactory.cloneDeterministic(address(implementation), data, bytes32(type(uint256).max));
 
         assertEq(childZero, predictedZero);
         assertEq(childMax, predictedMax);

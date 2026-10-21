@@ -1,5 +1,6 @@
+.claude
 .DS_Store
-.coderabbitai.yaml
+.coderabbit.yaml
 .gas-snapshot
 .git
 .github

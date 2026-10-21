@@ -18,8 +18,7 @@ import {TestCloneableGasRecorder} from "../../concrete/TestCloneableGasRecorder.
 import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";
 
 /// @title LibICloneableFactoryV5CloneAndInitializeTest
-/// @notice How `cloneAndInitialize` guards the implementation and treats each
-/// `initialize` answer, through both clone entry points.
+/// @notice How `cloneAndInitialize` behaves through both clone entry points.
 contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
     /// Both entry points revert with exactly `expected` when `initialize`
     /// reverts with (`reverts`) or returns `answer`.
@@ -29,9 +28,9 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         address implementation = address(new TestCloneableRawAnswer());
         bytes memory data = abi.encode(reverts, answer);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(expected);
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// An empty return, as from an `ICloneableV1`, is `InitializationFailed`.
@@ -103,9 +102,9 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         address implementation = makeAddr("delegated-implementation");
         vm.etch(implementation, abi.encodePacked(hex"ef0100", delegate));
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt);
+        iCloneFactory.cloneDeterministic(implementation, data, salt);
         vm.expectRevert(abi.encodeWithSelector(DelegatedImplementation.selector));
-        I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt);
+        iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt);
     }
 
     /// A clone address that holds ETH but no code deploys through both entry
@@ -114,14 +113,14 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         balance = bound(balance, 1, type(uint128).max);
         address implementation = address(new TestCloneable());
 
-        address predicted = I_CLONE_FACTORY.predictDeterministicAddress(implementation, salt, address(this));
+        address predicted = iCloneFactory.predictDeterministicAddress(implementation, salt, address(this));
         vm.deal(predicted, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministic(implementation, data, salt), predicted);
+        assertEq(iCloneFactory.cloneDeterministic(implementation, data, salt), predicted);
         assertEq(predicted.balance, balance);
 
-        address predictedOpenSalt = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(implementation, data, salt);
+        address predictedOpenSalt = iCloneFactory.predictDeterministicAddressOpenSalt(implementation, data, salt);
         vm.deal(predictedOpenSalt, balance);
-        assertEq(I_CLONE_FACTORY.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
+        assertEq(iCloneFactory.cloneDeterministicOpenSalt(implementation, data, salt), predictedOpenSalt);
         assertEq(predictedOpenSalt.balance, balance);
     }
 
@@ -133,8 +132,8 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         returns (uint256)
     {
         address child = openSalt
-            ? I_CLONE_FACTORY.cloneDeterministicOpenSalt{gas: gas}(implementation, data, salt)
-            : I_CLONE_FACTORY.cloneDeterministic{gas: gas}(implementation, data, salt);
+            ? iCloneFactory.cloneDeterministicOpenSalt{gas: gas}(implementation, data, salt)
+            : iCloneFactory.cloneDeterministic{gas: gas}(implementation, data, salt);
         return TestCloneableGasRecorder(child).sInitializeGas();
     }
 
@@ -174,16 +173,15 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         TestCloneable innerImplementation = new TestCloneable();
         TestCloneableNestedClone outerImplementation = new TestCloneableNestedClone();
 
-        bytes memory outerData =
-            abi.encode(address(I_CLONE_FACTORY), address(innerImplementation), innerSalt, innerData);
+        bytes memory outerData = abi.encode(address(iCloneFactory), address(innerImplementation), innerSalt, innerData);
 
         address predictedOuter =
-            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(outerImplementation), outerData, outerSalt);
+            iCloneFactory.predictDeterministicAddressOpenSalt(address(outerImplementation), outerData, outerSalt);
         address predictedInner =
-            I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(innerImplementation), innerData, innerSalt);
+            iCloneFactory.predictDeterministicAddressOpenSalt(address(innerImplementation), innerData, innerSalt);
 
         vm.recordLogs();
-        address outer = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(outerImplementation), outerData, outerSalt);
+        address outer = iCloneFactory.cloneDeterministicOpenSalt(address(outerImplementation), outerData, outerSalt);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(outer, predictedOuter);
@@ -213,20 +211,20 @@ contract LibICloneableFactoryV5CloneAndInitializeTest is CloneFactoryTest {
         TestCloneableNestedClone outerImplementation = new TestCloneableNestedClone();
 
         address inner =
-            I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(innerImplementation), innerData, takenInnerSalt);
+            iCloneFactory.cloneDeterministicOpenSalt(address(innerImplementation), innerData, takenInnerSalt);
         address predictedOuter =
-            I_CLONE_FACTORY.predictDeterministicAddress(address(outerImplementation), outerSalt, address(this));
+            iCloneFactory.predictDeterministicAddress(address(outerImplementation), outerSalt, address(this));
 
         vm.expectRevert(abi.encodeWithSelector(CloneAddressOccupied.selector, inner));
-        I_CLONE_FACTORY.cloneDeterministic(
+        iCloneFactory.cloneDeterministic(
             address(outerImplementation),
-            abi.encode(address(I_CLONE_FACTORY), address(innerImplementation), takenInnerSalt, innerData),
+            abi.encode(address(iCloneFactory), address(innerImplementation), takenInnerSalt, innerData),
             outerSalt
         );
 
-        address outer = I_CLONE_FACTORY.cloneDeterministic(
+        address outer = iCloneFactory.cloneDeterministic(
             address(outerImplementation),
-            abi.encode(address(I_CLONE_FACTORY), address(innerImplementation), freeInnerSalt, innerData),
+            abi.encode(address(iCloneFactory), address(innerImplementation), freeInnerSalt, innerData),
             outerSalt
         );
 

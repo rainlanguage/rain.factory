@@ -3,8 +3,9 @@ version = 1
 [[annotations]]
 path = [
   ".github/workflows/**/",
+  ".claude/**/",
   ".vscode/**/",
-  ".coderabbitai.yaml",
+  ".coderabbit.yaml",
   ".gitignore",
   ".audit/**/",
   "audit/**/",

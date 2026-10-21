@@ -13,10 +13,10 @@ import {TestCloneFactory} from "../concrete/TestCloneFactory.sol";
 abstract contract CloneFactoryTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
+    TestCloneFactory internal immutable iCloneFactory;
 
     constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
+        iCloneFactory = new TestCloneFactory();
     }
 
     /// Asserts `entry` is the factory's `NewClone` for this deploy: the
@@ -36,7 +36,7 @@ abstract contract CloneFactoryTest is Test {
         bytes32 salt,
         bytes memory data
     ) internal view {
-        assertEq(entry.emitter, address(I_CLONE_FACTORY));
+        assertEq(entry.emitter, address(iCloneFactory));
         assertEq(entry.topics[0], keccak256("NewClone(address,address,address,bytes32,bytes)"));
         assertEq(entry.data, abi.encode(sender, implementation, clone, salt, data));
     }

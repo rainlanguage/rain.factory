@@ -10,9 +10,9 @@ import {
 } from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 
 /// @title LibICloneableFactoryV5Test
-/// Every expectation is recomputed inline from the pinned formula, never read
-/// back from the library, so a change to the library's derivation diverges from
-/// the oracle here and the test fails.
+/// @notice Tests `LibICloneableFactoryV5`'s two clone effective-salt
+/// derivations against expected values computed here, never read back from the
+/// library.
 contract LibICloneableFactoryV5Test is Test {
     /// The domain tags the library derives against are exactly the two pinned
     /// string hashes. Recomputed from the literal strings so this is independent

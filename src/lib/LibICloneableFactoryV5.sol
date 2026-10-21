@@ -17,7 +17,7 @@ import {IBeaconImplementation} from "../interface/IBeaconImplementation.sol";
 
 error ZeroImplementationCodeSize();
 
-/// Implementation code starts with `0xef` (EIP-7702 delegation).
+/// Implementation code starts with `0xef`.
 error DelegatedImplementation();
 
 error CloneAddressOccupied(address clone);

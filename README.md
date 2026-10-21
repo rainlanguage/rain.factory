@@ -13,6 +13,23 @@ domain-tag constants from `src/interface/ICloneableFactoryV4.sol` to
 `src/interface/deprecated/ICloneableFactoryV4.sol`. Consumers importing the old
 path, such as `rain.factory.deploy`, rewrite the import when they bump.
 
+## Install
+
+```sh
+forge soldeer install rain-factory~<version>
+```
+
+## Development
+
+`dependencies/` and `remappings.txt` are gitignored, so fetch them after cloning
+or when `soldeer.lock` changes:
+
+```sh
+nix develop -c forge soldeer install
+nix develop -c forge build
+nix develop -c forge test
+```
+
 ## Concrete implementations
 
 `CloneFactory` — the concrete that implements these interfaces — lives in
@@ -67,7 +84,8 @@ The current interfaces in this repository are for
   Each deploy emits `NewBeaconProxy`, not `NewClone`.
 - A small interface `ICloneableV2` designed for cloneable proxy contracts to
   expose an `initialize` function that the factory can call to act like a
-  constructor
+  constructor. `initialize` MUST return `ICLONEABLE_V2_SUCCESS`; an
+  `ICloneableFactoryV5` reverts the deploy if it does not
 
 ### Legacy
 
@@ -101,6 +119,11 @@ because the non-deterministic `clone()` was intentionally dropped.
 
 Clones proxies from a reference implementation with a non-deterministic
 `clone()`. Superseded by `ICloneableFactoryV5`.
+
+#### `ICloneableFactoryV1`
+
+The same non-deterministic `clone()` against `ICloneableV1` rather than
+`ICloneableV2`. Superseded by `ICloneableFactoryV5`.
 
 #### `ICloneableV1`
 
