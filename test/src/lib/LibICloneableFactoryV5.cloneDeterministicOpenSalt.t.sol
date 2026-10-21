@@ -11,17 +11,17 @@ import {
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
 } from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {
-    LibICloneableFactoryV4,
+    LibICloneableFactoryV5,
     CloneAddressOccupied,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "../../../src/lib/LibICloneableFactoryV4.sol";
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
 import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 
-/// @title LibICloneableFactoryV4CloneDeterministicOpenSaltTest
-/// @notice Tests `LibICloneableFactoryV4.cloneDeterministicOpenSalt` /
+/// @title LibICloneableFactoryV5CloneDeterministicOpenSaltTest
+/// @notice Tests `LibICloneableFactoryV5.cloneDeterministicOpenSalt` /
 /// `predictDeterministicAddressOpenSalt` through `TestCloneFactory`, a
 /// pure-delegation concrete. The defining property is that the address commits
 /// to WHAT is deployed — `(implementation, data, salt)` — and to nothing about
@@ -29,7 +29,7 @@ import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 /// guarantees. So the two derivations are also tested against each other here,
 /// including the one squat that the pair of distinct domain tags exists to
 /// close.
-contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
+contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
     TestCloneFactory internal immutable I_CLONE_FACTORY;
@@ -258,7 +258,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, attacker, attackerSalt));
         assertEq(
             sharedTagCounterfactual,
-            LibICloneableFactoryV4.effectiveOpenSalt(openSalt, data),
+            LibICloneableFactoryV5.effectiveOpenSalt(openSalt, data),
             "the attacker's words re-tagged ARE the open effective salt"
         );
 
@@ -270,7 +270,7 @@ contract LibICloneableFactoryV4CloneDeterministicOpenSaltTest is Test {
             keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, openSalt, keccak256(data)));
         assertEq(
             sharedTagCounterfactualNamespaced,
-            LibICloneableFactoryV4.effectiveSalt(attacker, attackerSalt),
+            LibICloneableFactoryV5.effectiveSalt(attacker, attackerSalt),
             "the open words re-tagged ARE the namespaced effective salt"
         );
 

@@ -24,7 +24,7 @@ import {
     DelegatedImplementation,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "../../../src/lib/LibICloneableFactoryV4.sol";
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {DelegatedBeacon, LibICloneableFactoryV5, ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestBeaconDivergent} from "../../concrete/TestBeaconDivergent.sol";
 import {TestBeaconRawAnswer} from "../../concrete/TestBeaconRawAnswer.sol";

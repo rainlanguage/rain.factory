@@ -7,10 +7,9 @@ code in this repository.
 
 rain.factory is a Solidity **library** repo for Rain's proxy factories (EIP1167
 clones and OZ `BeaconProxy`s): the `ICloneable*` interface surface and the
-`LibICloneableFactoryV4` and `LibICloneableFactoryV5` libraries that implement
-it. It is the library half of the library/deploy split
-(rainlanguage/rain.factory#46) — no concrete contract, no deploy pins, no deploy
-script.
+`LibICloneableFactoryV5` library that implements it. It is the library half of
+the library/deploy split (rainlanguage/rain.factory#46) — no concrete contract,
+no deploy pins, no deploy script.
 
 The concrete `CloneFactory`, its deployed address + codehash pins
 (`LibCloneFactoryDeploy`), the frozen deploy-pin snapshots and
@@ -40,9 +39,9 @@ pure-delegation concrete, with OZ `Clones` as foreign EIP1167 oracle.
   domain tag, so the images are disjoint by construction.
 - `src/interface/ICloneableV2.sol` is the cloneable interface:
   `initialize(bytes)` must return `ICLONEABLE_V2_SUCCESS`.
-- `src/lib/LibICloneableFactoryV4.sol` / `LibICloneableFactoryV5.sol` are the
-  whole factory as internal library logic (no external cloning dependency);
-  `msg.sender` and `address(this)` are read inside the library.
+- `src/lib/LibICloneableFactoryV5.sol` is the whole factory as internal library
+  logic (no external cloning dependency); `msg.sender` and `address(this)` are
+  read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
   of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V4`). Still
   published for consumers pinned to them; do not use for new work. When a new

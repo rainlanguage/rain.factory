@@ -1,8 +1,8 @@
 # rain.factory
 
 This repo is the **library** half of the library/deploy split: the `ICloneable*`
-interface surface and the `LibICloneableFactoryV4` and `LibICloneableFactoryV5`
-libraries that implement it. It publishes to Soldeer as `rain-factory`.
+interface surface and the `LibICloneableFactoryV5` library that implements it.
+It publishes to Soldeer as `rain-factory`.
 
 Soldeer `rain-factory` 0.1.5 and earlier are the pre-split package, carrying the
 concrete `CloneFactory` and its deploy pins; 0.1.6 dropped them. The `v0.1.0`,
@@ -29,9 +29,9 @@ Depend on `rain-factory` for the interfaces and the library; on
 
 ## Library
 
-`src/lib/LibICloneableFactoryV4.sol` is the executable form of
-`ICloneableFactoryV4` as internal library logic. The two `CREATE2` salt
-derivations the interface pins to exact bytes — the `msg.sender`-namespaced one
+`src/lib/LibICloneableFactoryV5.sol` is the executable form of
+`ICloneableFactoryV5` as internal library logic. The two clone `CREATE2` salt
+derivations the interfaces pin to exact bytes — the `msg.sender`-namespaced one
 and the open-salt one — are pure functions that import the domain tags from the
 interface, so the tags have a single source of truth and a factory, an indexer
 or a consumer predicting a clone address computes the salt from one place. On
@@ -45,10 +45,9 @@ factory is one delegation per entry point. The tests live here under
 the interface's spec byte for byte, and pin the EIP1167 construction against
 OpenZeppelin `Clones` as a foreign implementation of the same standard.
 
-`src/lib/LibICloneableFactoryV5.sol` adds the beacon-proxy derivation of
-`ICloneableFactoryV5`: its effective salt, the OpenZeppelin `BeaconProxy`
-creation code, the beacon guard and the two entry points, on top of
-`LibICloneableFactoryV4`'s shared `deployChild` and `initializeChild`, emitting
+The same library holds the beacon-proxy derivation: its effective salt, the
+OpenZeppelin `BeaconProxy` creation code, the beacon guard and the two entry
+points, on the shared `deployChild` and `initializeChild`, emitting
 `NewBeaconProxy` in place of `NewClone`. The creation code is the
 `BEACON_PROXY_CREATION_CODE` constant in `src/generated/BeaconProxy.sol`, which
 `script/Build.sol` writes and CI regenerates and diffs; a test pins it to

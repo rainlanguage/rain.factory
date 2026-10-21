@@ -12,21 +12,21 @@ import {
     CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
-} from "../../../src/lib/LibICloneableFactoryV4.sol";
+} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
 import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete/TestCloneableRevert.sol";
 
-/// @title LibICloneableFactoryV4CloneDeterministicTest
-/// @notice Tests `LibICloneableFactoryV4.cloneDeterministic` /
+/// @title LibICloneableFactoryV5CloneDeterministicTest
+/// @notice Tests `LibICloneableFactoryV5.cloneDeterministic` /
 /// `predictDeterministicAddress` — the namespaced pair — through
 /// `TestCloneFactory`, a pure-delegation concrete, because `msg.sender`
 /// namespacing and the `NewClone` event only exist across an external call.
 /// The defining property is that the address commits to WHO deployed —
 /// `(deployer, salt)` — and not to WHAT was initialized.
-contract LibICloneableFactoryV4CloneDeterministicTest is Test {
+contract LibICloneableFactoryV5CloneDeterministicTest is Test {
     /// The `TestCloneFactory` instance under test. Stateless, so reused
     /// everywhere.
     TestCloneFactory internal immutable I_CLONE_FACTORY;

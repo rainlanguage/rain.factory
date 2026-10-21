@@ -4,16 +4,16 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
-import {LibICloneableFactoryV4} from "../../../src/lib/LibICloneableFactoryV4.sol";
+import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
 
-contract LibICloneableFactoryV4DeployChildTest is Test {
+contract LibICloneableFactoryV5DeployChildTest is Test {
     /// Every creation code this repo passes to `deployChild`, each
     /// delegating to `target`. A new derivation adds its code here.
     function shippedCreationCodes(address target) internal returns (bytes[] memory) {
         bytes[] memory codes = new bytes[](2);
-        codes[0] = LibICloneableFactoryV4.cloneCreationCode(target);
+        codes[0] = LibICloneableFactoryV5.cloneCreationCode(target);
         codes[1] = LibICloneableFactoryV5.beaconProxyCreationCode(address(new UpgradeableBeacon(target, address(this))));
         return codes;
     }

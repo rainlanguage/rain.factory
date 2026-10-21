@@ -5,15 +5,15 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
-import {DelegatedImplementation, InitializationFailed} from "../../../src/lib/LibICloneableFactoryV4.sol";
+import {DelegatedImplementation, InitializationFailed} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
 import {TestCloneableRawAnswer} from "../../concrete/TestCloneableRawAnswer.sol";
 
-/// @title LibICloneableFactoryV4CloneAndInitializeTest
+/// @title LibICloneableFactoryV5CloneAndInitializeTest
 /// @notice How `cloneAndInitialize` guards the implementation and treats each
 /// `initialize` answer, through both clone entry points.
-contract LibICloneableFactoryV4CloneAndInitializeTest is Test {
+contract LibICloneableFactoryV5CloneAndInitializeTest is Test {
     TestCloneFactory internal immutable I_CLONE_FACTORY;
 
     constructor() {

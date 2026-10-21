@@ -5,7 +5,7 @@ do not re-raise them.
 
 ## Mutant T20: `deployChild` returns `predicted` instead of `child`
 
-- **Where:** `src/lib/LibICloneableFactoryV4.sol`, `deployChild`.
+- **Where:** `src/lib/LibICloneableFactoryV5.sol`, `deployChild`.
 - **Mutation:** `return child;` becomes `return predicted;`.
 - **Why it is equivalent:** the return is reached only when `CREATE2` returned a
   non-zero address. EIP-1014 fixes that address as
@@ -17,8 +17,8 @@ do not re-raise them.
 
 ## Mutant V05: an open-salt preimage hashed with `abi.encodePacked`
 
-- **Where:** `src/lib/LibICloneableFactoryV4.sol`, `effectiveOpenSalt`, and
-  `src/lib/LibICloneableFactoryV5.sol`, `effectiveBeaconProxyOpenSalt`.
+- **Where:** `src/lib/LibICloneableFactoryV5.sol`, `effectiveOpenSalt` and
+  `effectiveBeaconProxyOpenSalt`.
 - **Mutation:** `keccak256(abi.encode(DOMAIN, salt, keccak256(data)))` becomes
   `keccak256(abi.encodePacked(DOMAIN, salt, keccak256(data)))`.
 - **Why it is equivalent:** all three arguments are `bytes32`. `abi.encode`
