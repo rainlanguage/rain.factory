@@ -413,7 +413,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTes
         TestCloneable implementation = new TestCloneable();
 
         bytes memory data = new bytes(10_000);
-        for (uint256 i = 0; i < data.length; ++i) {
+        for (uint256 i = 0; i < data.length; i++) {
             data[i] = fill;
         }
 
