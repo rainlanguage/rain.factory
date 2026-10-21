@@ -13,6 +13,7 @@ import {
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
 import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
@@ -26,15 +27,7 @@ import {TestCloneableRevert, TestCloneableRevertInitialize} from "../../concrete
 /// namespacing and the `NewClone` event only exist across an external call.
 /// The defining property is that the address commits to WHO deployed —
 /// `(deployer, salt)` — and not to WHAT was initialized.
-contract LibICloneableFactoryV5CloneDeterministicTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract LibICloneableFactoryV5CloneDeterministicTest is CloneFactoryTest {
     /// The effective `CREATE2` salt is exactly the derivation
     /// `ICloneableFactoryV4` fixes:
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN, msg.sender, salt))`.
@@ -186,9 +179,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
     }
 
     /// An implementation that initializes to a non-success code reverts
@@ -322,9 +313,7 @@ contract LibICloneableFactoryV5CloneDeterministicTest is Test {
 
         assertEq(entries.length, 2);
 
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
 
         assertEq(entries[1].emitter, child);
         assertEq(entries[1].topics[0], bytes32(uint256(keccak256("Initializing(bytes)"))));

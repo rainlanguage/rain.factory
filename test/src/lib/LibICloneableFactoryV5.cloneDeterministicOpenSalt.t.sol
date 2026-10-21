@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
 import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
-import {ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
@@ -13,11 +13,14 @@ import {
 import {
     LibICloneableFactoryV5,
     CloneAddressOccupied,
+    CloneDeploymentFailed,
     InitializationFailed,
     ZeroImplementationCodeSize
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
+import {CloneFactoryTest} from "../../abstract/CloneFactoryTest.sol";
 import {TestCloneFactory} from "../../concrete/TestCloneFactory.sol";
 import {TestCloneable} from "../../concrete/TestCloneable.sol";
+import {TestCloneableCallRecorder} from "../../concrete/TestCloneableCallRecorder.sol";
 import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 
 /// @title LibICloneableFactoryV5CloneDeterministicOpenSaltTest
@@ -29,15 +32,7 @@ import {TestCloneableFailure} from "../../concrete/TestCloneableFailure.sol";
 /// guarantees. So the two derivations are also tested against each other here,
 /// including the one squat that the pair of distinct domain tags exists to
 /// close.
-contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is Test {
-    /// The `TestCloneFactory` instance under test. Stateless, so reused
-    /// everywhere.
-    TestCloneFactory internal immutable I_CLONE_FACTORY;
-
-    constructor() {
-        I_CLONE_FACTORY = new TestCloneFactory();
-    }
-
+contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is CloneFactoryTest {
     /// The effective `CREATE2` salt is exactly the derivation
     /// `ICloneableFactoryV4` fixes:
     /// `keccak256(abi.encode(ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN, salt, keccak256(data)))`.
@@ -363,9 +358,7 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
         assertEq(entries.length, 1);
-        assertEq(entries[0].emitter, address(I_CLONE_FACTORY));
-        assertEq(entries[0].topics[0], bytes32(uint256(keccak256("NewClone(address,address,address,bytes32,bytes)"))));
-        assertEq(entries[0].data, abi.encode(address(this), address(implementation), child, salt, data));
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
     }
 
     /// An implementation that initializes to a non-success code reverts
@@ -451,5 +444,87 @@ contract LibICloneableFactoryV5CloneDeterministicOpenSaltTest is Test {
             I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, bytes32(type(uint256).max)),
             predictedMax
         );
+    }
+
+    /// `initialize` is the FIRST thing called on the fresh proxy, and the only
+    /// thing: "MUST NOT call anything else on the proxy first", which
+    /// `ICloneableFactoryV4` states on this function. `TestCloneable` only
+    /// exposes its end state, so the recorder is used instead — it appends the
+    /// selector of every call the proxy receives, including ones whose result
+    /// the factory would discard, and the whole recorded sequence is asserted
+    /// rather than just its first entry.
+    function testCloneDeterministicOpenSaltInitializeIsTheOnlyCall(bytes32 salt, bytes memory data) external {
+        TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
+
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        bytes4[] memory selectors = TestCloneableCallRecorder(child).selectors();
+        assertEq(selectors.length, 1);
+        assertEq(selectors[0], ICloneableV2.initialize.selector);
+        assertEq(TestCloneableCallRecorder(child).sData(), data);
+    }
+
+    /// `NewClone` is emitted BEFORE `initialize` runs, so an indexer replaying
+    /// the log stream sees the clone announced before anything the clone itself
+    /// says about being initialized. The recorder logs from inside `initialize`,
+    /// which is what makes the relative order observable at all;
+    /// `…OpenSaltEvent` asserts the count alone and cannot see it.
+    function testCloneDeterministicOpenSaltEventPrecedesInitialize(bytes32 salt, bytes memory data) external {
+        TestCloneableCallRecorder implementation = new TestCloneableCallRecorder();
+
+        vm.recordLogs();
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        assertEq(entries.length, 2);
+
+        assertNewClone(entries[0], address(this), address(implementation), child, salt, data);
+
+        assertEq(entries[1].emitter, child);
+        assertEq(entries[1].topics[0], bytes32(uint256(keccak256("Initializing(bytes)"))));
+        assertEq(entries[1].data, abi.encode(data));
+    }
+
+    /// A codeless clone address with a nonzero nonce fails the `CREATE2`
+    /// itself: `CloneDeploymentFailed`.
+    function testCloneDeterministicOpenSaltNonceOnlyCollisionReverts(bytes32 salt, bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address predicted = I_CLONE_FACTORY.predictDeterministicAddressOpenSalt(address(implementation), data, salt);
+        vm.setNonce(predicted, 1);
+
+        vm.expectRevert(abi.encodeWithSelector(CloneDeploymentFailed.selector));
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+    }
+
+    /// The implementation-code guard runs before the occupancy check: with the
+    /// salt taken and the implementation codeless,
+    /// `ZeroImplementationCodeSize` reverts, not `CloneAddressOccupied`.
+    function testCloneDeterministicOpenSaltCodeGuardRunsBeforeCreate2(bytes32 salt, bytes memory data) external {
+        TestCloneable implementation = new TestCloneable();
+
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+        assertTrue(child.code.length > 0);
+
+        vm.etch(address(implementation), "");
+        assertEq(address(implementation).code.length, 0);
+
+        vm.expectRevert(abi.encodeWithSelector(ZeroImplementationCodeSize.selector));
+        I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+    }
+
+    /// `CREATE2` is given a literal `0` value, so a factory that is holding ETH
+    /// endows the clone with none of it. Balances on both sides are asserted,
+    /// so neither "the clone got funded" nor "the factory got drained" can
+    /// pass.
+    function testCloneDeterministicOpenSaltNoEthForwarded(bytes32 salt, bytes memory data, uint256 balance) external {
+        balance = bound(balance, 1, type(uint128).max);
+        TestCloneable implementation = new TestCloneable();
+        vm.deal(address(I_CLONE_FACTORY), balance);
+
+        address child = I_CLONE_FACTORY.cloneDeterministicOpenSalt(address(implementation), data, salt);
+
+        assertEq(child.balance, 0);
+        assertEq(address(I_CLONE_FACTORY).balance, balance);
     }
 }
