@@ -17,7 +17,7 @@ import {
 import {
     ICloneableFactoryV5,
     ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN
-} from "../../../src/interface/ICloneableFactoryV5.sol";
+} from "../../../src/interface/deprecated/ICloneableFactoryV5.sol";
 import {
     CloneAddressOccupied,
     CloneDeploymentFailed,

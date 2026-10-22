@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {ICloneableFactoryV4} from "./deprecated/ICloneableFactoryV4.sol";
+import {ICloneableFactoryV4} from "./ICloneableFactoryV4.sol";
 
 /// @dev Word 0 of the beacon-proxy effective-salt preimage, distinct from both
 /// `ICloneableFactoryV4` tags.

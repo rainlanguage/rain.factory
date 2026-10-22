@@ -6,7 +6,7 @@ import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../interface/ICloneableV2.sol
 import {
     ICloneableFactoryV5,
     ICLONEABLE_FACTORY_V5_BEACON_PROXY_OPEN_SALT_DOMAIN
-} from "../interface/ICloneableFactoryV5.sol";
+} from "../interface/deprecated/ICloneableFactoryV5.sol";
 import {
     ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN,
     ICLONEABLE_FACTORY_V4_OPEN_SALT_DOMAIN
