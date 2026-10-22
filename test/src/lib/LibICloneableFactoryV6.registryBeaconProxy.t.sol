@@ -116,6 +116,7 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
     /// A binding that is not one clean `abi.encode(address)` word is refused.
     function testNonCanonicalBinding(bytes memory value, bytes memory data, bytes32 salt) external {
         vm.assume(value.length != 0);
+        //forge-lint: disable-next-line(unsafe-typecast)
         vm.assume(value.length != 0x20 || uint256(bytes32(value)) >> 160 != 0);
         iRegistry.bind(AUTHORITY, BEACON_NAME, value);
         vm.expectRevert(

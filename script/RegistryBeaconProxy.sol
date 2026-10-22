@@ -23,6 +23,8 @@ contract RegistryBeaconProxy is Proxy {
     /// @param registry A config registry answering `getV3`.
     /// @param authority The authority the beacon's name is bound under.
     /// @param beaconName The name the beacon is bound to.
+    // A zero registry or authority resolves no binding, so `resolveBeacon` reverts.
+    //forge-lint: disable-next-line(missing-zero-check)
     constructor(address registry, address authority, bytes32 beaconName) {
         address beacon = LibICloneableFactoryV6.resolveBeacon(registry, authority, beaconName);
         ERC1967Utils.upgradeBeaconToAndCall(beacon, "");

@@ -63,6 +63,8 @@ library LibICloneableFactoryV6 {
         if (word >> 160 != 0) {
             revert NonCanonicalBeaconBinding(registry, authority, beaconName);
         }
+        // `word >> 160 == 0`, so the cast drops nothing.
+        //forge-lint: disable-next-line(unsafe-typecast)
         return address(uint160(word));
     }
 
