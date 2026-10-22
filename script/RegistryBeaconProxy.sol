@@ -6,20 +6,25 @@ import {Proxy} from "@openzeppelin-contracts-5.6.1/proxy/Proxy.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {IBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/IBeacon.sol";
 
-import {ICloneableFactoryV6} from "../src/interface/ICloneableFactoryV6.sol";
+import {LibICloneableFactoryV6} from "../src/lib/LibICloneableFactoryV6.sol";
 
 /// @title RegistryBeaconProxy
-/// @notice OpenZeppelin `BeaconProxy` with no constructor argument: it adopts
-/// the beacon its deploying factory holds as `pendingBeacon`, so its creation
-/// code, and so its CREATE2 address, is the same on every chain. Not deployed
-/// on its own: `script/Build.sol` snapshots its creation code into
-/// `src/generated/RegistryBeaconProxy.sol`, which `LibICloneableFactoryV6` deploys.
+/// @notice OpenZeppelin `BeaconProxy` whose beacon is the one `beaconName` is
+/// bound to under `authority` in `registry` on the chain it is deployed to. Its
+/// constructor arguments are the same on every chain, so its creation code,
+/// and so its CREATE2 address, is too. Not deployed on its own:
+/// `script/Build.sol` snapshots its creation code into
+/// `src/generated/RegistryBeaconProxy.sol`, which `LibICloneableFactoryV6`
+/// deploys.
 contract RegistryBeaconProxy is Proxy {
     /// The beacon, as `BeaconProxy` keeps it.
     address private immutable iBeacon;
 
-    constructor() {
-        address beacon = ICloneableFactoryV6(msg.sender).pendingBeacon();
+    /// @param registry A config registry answering `getV3`.
+    /// @param authority The authority the beacon's name is bound under.
+    /// @param beaconName The name the beacon is bound to.
+    constructor(address registry, address authority, bytes32 beaconName) {
+        address beacon = LibICloneableFactoryV6.resolveBeacon(registry, authority, beaconName);
         ERC1967Utils.upgradeBeaconToAndCall(beacon, "");
         iBeacon = beacon;
     }

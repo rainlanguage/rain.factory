@@ -12,8 +12,8 @@ bytes32 constant ICLONEABLE_FACTORY_V6_REGISTRY_BEACON_PROXY_DOMAIN = keccak256(
 /// @notice `ICloneableFactoryV5` plus beacon proxies whose beacon is resolved
 /// from a config registry, so the same proxy has the same address on every
 /// chain while each chain binds its own beacon. The proxy's creation code holds
-/// no beacon: the address commits to the registry, the authority, the beacon's
-/// name, the salt and the init data, and whatever that binding resolves to on
+/// no beacon, only the registry, the authority and the beacon's name: the
+/// address commits to those, the salt and the init data, and whatever that binding resolves to on
 /// the chain is the beacon.
 interface ICloneableFactoryV6 is ICloneableFactoryV5 {
     /// A registry beacon proxy was deployed and initialized.
@@ -69,9 +69,4 @@ interface ICloneableFactoryV6 is ICloneableFactoryV5 {
         bytes calldata data,
         bytes32 salt
     ) external view returns (address);
-
-    /// The beacon a registry beacon proxy being deployed by this factory
-    /// adopts, read by its constructor. The zero address outside a deploy.
-    /// @return The beacon.
-    function pendingBeacon() external view returns (address);
 }
