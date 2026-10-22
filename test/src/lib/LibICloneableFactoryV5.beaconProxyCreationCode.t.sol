@@ -9,7 +9,7 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/Upgr
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 import {LibTestBeaconProxy} from "../../lib/LibTestBeaconProxy.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
-import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH} from "../../../src/interface/ICloneableFactoryV5.sol";
+import {ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH} from "../../../src/interface/deprecated/ICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 

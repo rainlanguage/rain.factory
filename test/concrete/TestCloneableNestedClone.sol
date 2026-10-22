@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {ICloneableV2} from "../../src/interface/ICloneableV2.sol";
-import {ICloneableFactoryV5} from "../../src/interface/ICloneableFactoryV5.sol";
+import {ICloneableFactoryV5} from "../../src/interface/deprecated/ICloneableFactoryV5.sol";
 
 /// Thrown by a second call to `TestCloneableNestedClone.initialize`.
 error TestCloneableNestedCloneAlreadyInitialized();

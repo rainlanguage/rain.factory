@@ -8,18 +8,20 @@ pragma solidity =0.8.25;
 // interface and it must be in scope here.
 import {ICloneableFactoryV3} from "../interface/deprecated/ICloneableFactoryV3.sol";
 import {ICloneableFactoryV4} from "../interface/deprecated/ICloneableFactoryV4.sol";
-import {ICloneableFactoryV5} from "../interface/ICloneableFactoryV5.sol";
+import {ICloneableFactoryV5} from "../interface/deprecated/ICloneableFactoryV5.sol";
+import {ICloneableFactoryV6} from "../interface/ICloneableFactoryV6.sol";
 import {LibICloneableFactoryV5} from "../lib/LibICloneableFactoryV5.sol";
+import {LibICloneableFactoryV6} from "../lib/LibICloneableFactoryV6.sol";
 
 /// @title TestCloneFactory
-/// @notice A concrete `ICloneableFactoryV5` written the way the deploy half is
+/// @notice A concrete `ICloneableFactoryV6` written the way the deploy half is
 /// meant to write one: every function is a single delegation into
-/// `LibICloneableFactoryV5` and nothing else. It
+/// `LibICloneableFactoryV5` or `LibICloneableFactoryV6` and nothing else. It
 /// exists so the flow tests exercise the libraries through a real external
 /// surface — `msg.sender` namespacing and the `NewClone` event are observable
 /// only across an external call — and it doubles as the executable proof that
 /// the library surface suffices for a pure-delegation concrete.
-contract TestCloneFactory is ICloneableFactoryV5 {
+contract TestCloneFactory is ICloneableFactoryV6 {
     /// @inheritdoc ICloneableFactoryV3
     function cloneDeterministic(address implementation, bytes calldata data, bytes32 salt) external returns (address) {
         return LibICloneableFactoryV5.cloneDeterministic(implementation, data, salt);
@@ -66,5 +68,27 @@ contract TestCloneFactory is ICloneableFactoryV5 {
         returns (address)
     {
         return LibICloneableFactoryV5.predictBeaconProxyAddressOpenSalt(beacon, data, salt);
+    }
+
+    /// @inheritdoc ICloneableFactoryV6
+    function registryBeaconProxy(
+        address registry,
+        address authority,
+        bytes32 beaconName,
+        bytes calldata data,
+        bytes32 salt
+    ) external returns (address) {
+        return LibICloneableFactoryV6.registryBeaconProxy(registry, authority, beaconName, data, salt);
+    }
+
+    /// @inheritdoc ICloneableFactoryV6
+    function predictRegistryBeaconProxyAddress(
+        address registry,
+        address authority,
+        bytes32 beaconName,
+        bytes calldata data,
+        bytes32 salt
+    ) external view returns (address) {
+        return LibICloneableFactoryV6.predictRegistryBeaconProxyAddress(registry, authority, beaconName, data, salt);
     }
 }

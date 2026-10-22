@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {ICloneableFactoryV5} from "./ICloneableFactoryV5.sol";
+import {ICloneableFactoryV5} from "./deprecated/ICloneableFactoryV5.sol";
 
 /// @dev Domain separating the registry beacon proxy salt from every other
 /// derivation.
