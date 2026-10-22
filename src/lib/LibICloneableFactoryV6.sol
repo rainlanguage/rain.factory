@@ -53,6 +53,8 @@ library LibICloneableFactoryV6 {
     /// @param beaconName The beacon's name.
     /// @return The beacon.
     function resolveBeacon(address registry, address authority, bytes32 beaconName) internal view returns (address) {
+        // When the binding was written does not matter here.
+        //slither-disable-next-line unused-return
         (bytes memory value,) = IRegistryBeaconSourceV1(registry).getV3(authority, beaconName);
         if (value.length != 0x20) {
             revert NonCanonicalBeaconBinding(registry, authority, beaconName);
