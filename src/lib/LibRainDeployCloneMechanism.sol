@@ -16,7 +16,8 @@ import {
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
+import {ChainBeacon} from "rain-deploy-0.1.27/src/lib/LibRainDeployBeacon.sol";
+import {LibRainDeploySnapshot}from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -32,6 +33,7 @@ import {
     LibRainDeployBeaconProxy
 } from "./LibRainDeployBeaconProxy.sol";
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
+import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
 bytes32 constant CLONE_MECHANISM = keccak256("rain.factory.deploy.mechanism.clone");
@@ -108,9 +110,10 @@ event UnverifiableSource(address sender, address entryAddress, string[] networks
 /// @title LibRainDeployCloneMechanism
 /// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their tags.
 library LibRainDeployCloneMechanism {
-    function handler(bytes32 id) internal pure returns (DeployMechanismHandler memory) {
+    function handler(bytes32 id, bytes memory config) internal pure returns (DeployMechanismHandler memory) {
         return DeployMechanismHandler({
             id: id,
+            config: config,
             deployedAddress: deployedAddress,
             recordedAddress: recordedAddress,
             deployStepData: deployStepData,
@@ -120,7 +123,8 @@ library LibRainDeployCloneMechanism {
             addUnrecordedNetworks: addUnrecordedNetworks,
             addRecordedNetworks: addRecordedNetworks,
             checkNetworkFrozen: checkNetworkFrozen,
-            checkOnChain: stubCheck,
+            checkOnChain: LibRainDeployCloneOnChainChecks.checkOnChain,
+            checkBroadcastSeat: LibRainDeployCloneOnChainChecks.checkBroadcastSeat,
             logVerification: logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData
@@ -128,28 +132,33 @@ library LibRainDeployCloneMechanism {
     }
 
     function cloneHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(CLONE_MECHANISM);
+        return handler(CLONE_MECHANISM, "");
     }
 
     function clonePerNetworkHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(CLONE_PER_NETWORK_MECHANISM);
+        return handler(CLONE_PER_NETWORK_MECHANISM, "");
     }
 
-    function beaconProxyHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(BEACON_PROXY_MECHANISM);
+    function beaconProxyHandler(ChainBeacon[] memory beacons) internal pure returns (DeployMechanismHandler memory) {
+        return handler(BEACON_PROXY_MECHANISM, abi.encode(beacons));
     }
 
-    function beaconProxyPerNetworkHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(BEACON_PROXY_PER_NETWORK_MECHANISM);
+    function beaconProxyPerNetworkHandler(ChainBeacon[] memory beacons)
+        internal
+        pure
+        returns (DeployMechanismHandler memory)
+    {
+        return handler(BEACON_PROXY_PER_NETWORK_MECHANISM, abi.encode(beacons));
     }
 
-    /// Appends the four clone mechanism handlers to `d`.
+    /// Appends the four clone mechanism handlers to `d`, the beacon handlers' config `abi.encode(beacons)`.
     /// @param d The declaration, mutated.
-    function extend(DeployDeclaration memory d) internal pure {
+    /// @param beacons The beacons beacon proxy suites resolve through.
+    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal pure {
         LibRainDeployDeclaration.addMechanism(d, cloneHandler());
         LibRainDeployDeclaration.addMechanism(d, clonePerNetworkHandler());
-        LibRainDeployDeclaration.addMechanism(d, beaconProxyHandler());
-        LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler());
+        LibRainDeployDeclaration.addMechanism(d, beaconProxyHandler(beacons));
+        LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler(beacons));
     }
 
     function deployLocally(Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
@@ -190,10 +199,6 @@ library LibRainDeployCloneMechanism {
             Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), LibRainDeploySnapshot.LIB_FS_ROOT, suite.suite
         );
         suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
-    }
-
-    function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
-        revert("stub");
     }
 
     function logVerification(Vm vm, string[] memory networks, DeploySuite memory suite, address[] memory deployed)
