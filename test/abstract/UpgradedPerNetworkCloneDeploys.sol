@@ -2,12 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {RainDeployCloneSuitesBase} from "../../src/abstract/RainDeployCloneSuitesBase.sol";
+import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
+import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {CloneDeploy, CloneTarget, LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../concrete/MockCloneFactory.sol";
 import {MockCloneableV2} from "../concrete/MockCloneableV2.sol";
-import {PerNetworkCloneDeploys, perNetworkCloneInitData} from "./PerNetworkCloneDeploys.sol";
+import {perNetworkCloneInitData, perNetworkCloneLayers, perNetworkCloneReleased} from "./PerNetworkCloneDeploys.sol";
 
 /// The factory the upgraded candidate clones through.
 /// @return The factory address.
@@ -68,11 +70,13 @@ function upgradedPerNetworkCloneAddress(uint256 chainId) pure returns (address) 
 /// @title UpgradedPerNetworkCloneDeploys
 /// @notice `PerNetworkCloneDeploys` with its candidate moved to another factory and implementation
 /// since its `0_0_1` release was cut.
-abstract contract UpgradedPerNetworkCloneDeploys is PerNetworkCloneDeploys {
-    /// @inheritdoc RainDeployCloneSuitesBase
-    function cloneDeploys() internal pure virtual override returns (CloneDeploy[] memory) {
+abstract contract UpgradedPerNetworkCloneDeploys is RainDeploySuitesBase {
+    function declaration() internal view virtual override returns (DeployDeclaration memory) {
+        DeployDeclaration memory d = perNetworkCloneLayers();
+        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = upgradedPerNetworkClone();
-        return clones;
+        LibCloneCandidates.addClones(d, clones);
+        return d;
     }
 }
