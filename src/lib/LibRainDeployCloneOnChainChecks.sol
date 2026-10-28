@@ -78,13 +78,8 @@ library LibRainDeployCloneOnChainChecks {
         return id == BEACON_PROXY_MECHANISM || id == BEACON_PROXY_PER_NETWORK_MECHANISM;
     }
 
-    function suiteId(DeploySuite memory suite) internal pure returns (bytes32) {
-        (bytes32 id,) = abi.decode(suite.mechanismData, (bytes32, bytes));
-        return id;
-    }
-
     function beacons(DeployDeclaration memory d, DeploySuite memory suite) internal pure returns (ChainBeacon[] memory) {
-        return LibRainDeployCloneMechanism.layerConfig(d, suiteId(suite), suite.suite).beacons;
+        return LibRainDeployCloneMechanism.layerConfig(d, LibRainDeployDeclaration.mechanismIdOf(suite), suite.suite).beacons;
     }
 
     /// @return A copy of the release `name` keys with its recorded networks and the networks among `d.networks` its
@@ -191,7 +186,7 @@ library LibRainDeployCloneOnChainChecks {
         uint256 chainId,
         address
     ) internal {
-        if (!isBeaconId(suiteId(suite))) {
+        if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
             return;
         }
         address proxyBeacon = LibRainDeployCloneMechanism.beacon(suite, chainId);
@@ -267,7 +262,7 @@ library LibRainDeployCloneOnChainChecks {
         internal
         pure
     {
-        if (!isBeaconId(suiteId(suite))) {
+        if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
             return;
         }
         ChainBeacon[] memory chainBeacons = beacons(d, suite);

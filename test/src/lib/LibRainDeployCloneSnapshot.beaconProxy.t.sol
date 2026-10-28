@@ -220,7 +220,8 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     /// @return The candidate's suite.
     function beaconProxySuite(bool initDataPerNetwork) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
-        return LibRainDeployCloneMechanism.beaconProxyCandidate(
+        DeploySuite memory suite =
+        LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "beacon-proxy",
                 address(new MockBeaconProxyFactory()),
@@ -233,6 +234,8 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
             perNetworkCloneChainIds()
         )
         .snapshot;
+        suite.networks = declaration().networks;
+        return suite;
     }
 
     /// Writes `suite`'s record under `ROOT/<tag>`, and returns what it reads back as.
