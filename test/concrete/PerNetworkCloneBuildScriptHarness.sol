@@ -89,8 +89,12 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
 
     /// @inheritdoc BuildScript
     function regenerateSnapshots() internal override {
+        DeployDeclaration memory d = declaration();
+        DeploySuite memory snapshot =
+            LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
+        snapshot.networks = d.networks;
         writeSuiteSnapshot(
-            declaration(),
+            d,
             vm,
             SnapshotFile(
                 recordRoot(),
@@ -99,7 +103,7 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
                 RAIN_SPDX_LICENSE_IDENTIFIER,
                 RAIN_COPYRIGHT_TEXT
             ),
-            LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot
+            snapshot
         );
     }
 
