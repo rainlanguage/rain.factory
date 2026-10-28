@@ -55,7 +55,9 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     /// @param path The record.
     /// @return The mechanism it was cut with.
     function externalRecordedMechanism(string memory path) external view returns (bytes32) {
-        return LibRainDeployCloneSnapshot.recordedMechanismTag(vm, path);
+        return LibRainDeployCloneSnapshot.recordedMechanismTag(
+            vm, path, LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path))
+        );
     }
 
     /// Writes `record` as the one file of a test's own directory.
