@@ -12,6 +12,7 @@ import {
     DeploySuite
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {
     BEACON_PROXY_MECHANISM,
@@ -185,6 +186,43 @@ library LibRainDeployCloneOnChainChecks {
     function checkDeclaration(DeployDeclaration memory) internal {}
 
     function checkNetwork(DeployDeclaration memory, string memory, uint256) internal {}
+
+    function checkNetworkBeaconProxy(DeployDeclaration memory d, string memory network, uint256 chainId) internal {
+        checkNetworkBeacons(d, BEACON_PROXY_MECHANISM, network, chainId);
+    }
+
+    function checkNetworkBeaconProxyPerNetwork(DeployDeclaration memory d, string memory network, uint256 chainId)
+        internal
+    {
+        checkNetworkBeacons(d, BEACON_PROXY_PER_NETWORK_MECHANISM, network, chainId);
+    }
+
+    /// Every beacon `id`'s handler declares on `chainId`, checked on the selected fork at its applied state, with its
+    /// own suite (when named) and that state's implementation suite live with their code.
+    function checkNetworkBeacons(DeployDeclaration memory d, bytes32 id, string memory network, uint256 chainId)
+        internal
+    {
+        (ChainBeacon[] memory chainBeacons,) =
+            abi.decode(LibRainDeployDeclaration.mechanismById(d, id, "").config, (ChainBeacon[], string));
+        for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
+            if (chainBeacons[beaconIndex].chainId != chainId) {
+                continue;
+            }
+            DeployBeacon memory beacon = resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
+            if (bytes(beacon.beaconSuite).length != 0) {
+                LibRainDeploy.checkDeployedCode(
+                    network, beacon.beacon, released(d, beacon.beaconSuite).storedBytecodeHash
+                );
+            }
+            uint256 state = LibRainDeployBeacon.appliedState(network, beacon);
+            DeploySuite memory implementation = released(d, LibRainDeployBeacon.stateAt(beacon, state).implementation);
+            address implementationAddress = handlerOf(d, implementation).deployedAddress(d, implementation, chainId);
+            LibRainDeployBeacon.checkBeacon(
+                network, beacon, implementationAddress, LibRainDeployBeacon.stateAt(beacon, state).owner
+            );
+            LibRainDeploy.checkDeployedCode(network, implementationAddress, implementation.storedBytecodeHash);
+        }
+    }
 
     /// Beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's
     /// config is owned by `deployer`.
