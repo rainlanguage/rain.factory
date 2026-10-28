@@ -4,7 +4,12 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase,
+    SnapshotFile
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
@@ -25,18 +30,17 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
-import {RainDeployCloneSuitesBase} from "../../../src/abstract/RainDeployCloneSuitesBase.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
-import {perNetworkCloneChainIds, perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
+import {perNetworkCloneChainIds, perNetworkCloneLayers} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 
-/// @title LibRainDeploySnapshotBeaconProxyTest
+/// @title LibRainDeployCloneSnapshotBeaconProxyTest
 /// @notice The beacon proxy record marker: what the writer emits, how `recordedMechanism` reads it,
 /// and the released lib entries it produces.
-contract LibRainDeploySnapshotBeaconProxyTest is Test, RainDeployCloneSuitesBase {
-    function releasedSuites() internal pure override returns (DeploySuite[] memory) {
-        return new DeploySuite[](0);
+contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase {
+    function declaration() internal pure override returns (DeployDeclaration memory) {
+        return perNetworkCloneLayers();
     }
 
     string constant ROOT = "fixture-lib/snapshot-beacon-proxy";
@@ -239,7 +243,10 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test, RainDeployCloneSuitesBase
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.createDir(string.concat(ROOT, "/", tag), true);
         return writeSuiteSnapshot(
-            vm, ROOT, tag, "BeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT, suite
+            declaration(),
+            vm,
+            SnapshotFile(ROOT, tag, "BeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+            suite
         );
     }
 
@@ -286,7 +293,7 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test, RainDeployCloneSuitesBase
         assertTrue(vm.contains(imported, "DEPLOYED_ADDRESS as BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_1_MECHANISM_DATA"));
 
-        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, releasedMechanismData);
+        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, declaration());
         assertTrue(vm.contains(entry, "storedDeployedAddress: BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS,\n"));
         assertTrue(
             vm.contains(
@@ -340,7 +347,7 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test, RainDeployCloneSuitesBase
         assertFalse(vm.contains(imported, "DEPLOYED_ADDRESS as"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_2_MECHANISM_DATA"));
 
-        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, releasedMechanismData);
+        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, declaration());
         assertTrue(vm.contains(entry, "storedDeployedAddress: address(0),\n"));
         assertTrue(
             vm.contains(
