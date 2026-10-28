@@ -16,7 +16,7 @@ import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDep
 import {BeaconState, BeaconTransition, ChainBeacon, DeployBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {Prerequisite} from "rain-deploy-0.1.27/src/interface/IMigrationRegistryV4.sol";
+import {Prerequisite} from "rain-deploy-0.1.27/src/interface/IMigrationRegistryV5.sol";
 import {MigrationRegistry} from "rain-deploy-0.1.27/src/concrete/MigrationRegistry.sol";
 import {MockDeployable} from "../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../concrete/MockDeployableV2.sol";
