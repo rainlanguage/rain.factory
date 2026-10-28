@@ -2,14 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {IRegistryBeaconSourceV2} from "../../src/lib/LibICloneableFactoryV7.sol";
 
 /// Thrown for a name nothing is bound to, as the config registry does.
 error TestNameNotRegistered(address authority, bytes32 name);
 
 /// A config registry stand-in: `getV4` answers whatever value and type a test
 /// binds.
-contract TestRegistryBeaconSource is IRegistryBeaconSourceV2 {
+contract TestRegistryBeaconSource {
     mapping(address authority => mapping(bytes32 name => bytes value)) internal sValues;
     mapping(address authority => mapping(bytes32 name => bytes32 valueTypeHash)) internal sValueTypeHashes;
 
