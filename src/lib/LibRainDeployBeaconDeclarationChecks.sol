@@ -28,7 +28,7 @@ error BeaconOnUncheckedNetwork(uint256 chainId, uint256 beaconIndex);
 error BeaconDeclaredTwice(uint256 chainId, uint256 beaconIndex);
 
 /// @title LibRainDeployBeaconDeclarationChecks
-/// @notice The beacon proxy handlers' `checkDeclaration`: every declared beacon resolved offline.
+/// @notice The beacon proxy handler's `checkDeclaration`: every declared beacon resolved offline.
 library LibRainDeployBeaconDeclarationChecks {
     function checkDeclaration(DeployDeclaration memory d) internal {
         (ChainBeacon[] memory chainBeacons,) =

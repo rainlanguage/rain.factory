@@ -191,12 +191,6 @@ library LibRainDeployCloneOnChainChecks {
         checkNetworkBeacons(d, BEACON_PROXY_MECHANISM, network, chainId);
     }
 
-    function checkNetworkBeaconProxyPerNetwork(DeployDeclaration memory d, string memory network, uint256 chainId)
-        internal
-    {
-        checkNetworkBeacons(d, BEACON_PROXY_PER_NETWORK_MECHANISM, network, chainId);
-    }
-
     /// Every beacon `id`'s handler declares on `chainId`, checked on the selected fork at its applied state, with its
     /// own suite (when named) and that state's implementation suite live with their code.
     function checkNetworkBeacons(DeployDeclaration memory d, bytes32 id, string memory network, uint256 chainId)
