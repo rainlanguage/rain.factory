@@ -7,9 +7,13 @@ import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.s
 
 import {
     DeployCandidate,
+    DeployDeclaration,
+    DeployMechanismHandler,
     DeploySuite,
+    SnapshotFile,
     ExtendedNetworksUnexpected
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     CLONE_ARTIFACT_PATH,
@@ -101,6 +105,102 @@ event UnverifiableSource(address sender, address entryAddress, string[] networks
 /// @title LibRainDeployCloneMechanism
 /// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their tags.
 library LibRainDeployCloneMechanism {
+    function handler(bytes32 id) internal pure returns (DeployMechanismHandler memory) {
+        return DeployMechanismHandler({
+            id: id,
+            deployedAddress: stubAddress,
+            recordedAddress: stubAddress,
+            deployStepData: stubDeployStepData,
+            deployStep: stubDeployStep,
+            deployLocally: stubDeployLocally,
+            deployLocallyOnChain: stubDeployLocallyOnChain,
+            addUnrecordedNetworks: stubAddUnrecordedNetworks,
+            addRecordedNetworks: stubAddRecordedNetworks,
+            checkNetworkFrozen: stubCheck,
+            checkOnChain: stubCheck,
+            logVerification: stubLogVerification,
+            writeSuiteSnapshot: stubWriteSuiteSnapshot,
+            releasedMechanismData: stubReleasedMechanismData
+        });
+    }
+
+    function cloneHandler() internal pure returns (DeployMechanismHandler memory) {
+        return handler(CLONE_MECHANISM);
+    }
+
+    function clonePerNetworkHandler() internal pure returns (DeployMechanismHandler memory) {
+        return handler(CLONE_PER_NETWORK_MECHANISM);
+    }
+
+    function beaconProxyHandler() internal pure returns (DeployMechanismHandler memory) {
+        return handler(BEACON_PROXY_MECHANISM);
+    }
+
+    function beaconProxyPerNetworkHandler() internal pure returns (DeployMechanismHandler memory) {
+        return handler(BEACON_PROXY_PER_NETWORK_MECHANISM);
+    }
+
+    /// Appends the four clone mechanism handlers to `d`.
+    /// @param d The declaration, mutated.
+    function extend(DeployDeclaration memory d) internal pure {
+        LibRainDeployDeclaration.addMechanism(d, cloneHandler());
+        LibRainDeployDeclaration.addMechanism(d, clonePerNetworkHandler());
+        LibRainDeployDeclaration.addMechanism(d, beaconProxyHandler());
+        LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler());
+    }
+
+    function stubAddress(DeploySuite memory, uint256) internal pure returns (address) {
+        revert("stub");
+    }
+
+    function stubDeployStepData(DeploySuite memory, uint256) internal pure returns (bytes memory) {
+        revert("stub");
+    }
+
+    function stubDeployStep(DeploySuite memory)
+        internal
+        pure
+        returns (function(Vm, string memory, address, bytes memory) internal returns (address))
+    {
+        revert("stub");
+    }
+
+    function stubDeployLocally(Vm, DeploySuite memory) internal pure returns (address[] memory) {
+        revert("stub");
+    }
+
+    function stubDeployLocallyOnChain(Vm, DeploySuite memory) internal pure {
+        revert("stub");
+    }
+
+    function stubAddUnrecordedNetworks(DeploySuite memory, DeploySuite memory, uint256[] memory) internal pure {
+        revert("stub");
+    }
+
+    function stubAddRecordedNetworks(DeploySuite memory) internal pure {
+        revert("stub");
+    }
+
+    function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
+        revert("stub");
+    }
+
+    function stubLogVerification(Vm, string[] memory, DeploySuite memory, address[] memory) internal pure {
+        revert("stub");
+    }
+
+    function stubWriteSuiteSnapshot(Vm, SnapshotFile memory, DeploySuite memory)
+        internal
+        pure
+        returns (string memory)
+    {
+        revert("stub");
+    }
+
+    function stubReleasedMechanismData(Vm, string memory, string memory) internal pure returns (string memory) {
+        revert("stub");
+    }
+
     /// @param mechanismData A suite's mechanism data.
     /// @return Its leading word, or zero when it is shorter than one.
     function mechanismTag(bytes memory mechanismData) internal pure returns (bytes32) {
