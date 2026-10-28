@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {CLONE_PER_NETWORK_MECHANISM, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
@@ -182,7 +182,7 @@ function perNetworkCloneReleased() pure returns (DeploySuite[] memory) {
         storedRuntimeCode: PER_NETWORK_CLONE_RUNTIME_CODE,
         artifactPath: CLONE_ARTIFACT_PATH,
         dependencies: abi.decode(PER_NETWORK_CLONE_DEPENDENCIES, (DeployDependency[])),
-        mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, PER_NETWORK_CLONE_MECHANISM_DATA),
+        mechanismData: PER_NETWORK_CLONE_MECHANISM_DATA,
         networks: new string[](0)
     });
     return suites;

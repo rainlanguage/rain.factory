@@ -128,9 +128,14 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         swapped = LibRainDeployCloneMechanism.withPayload(swapped, abi.encode(clones));
 
         assertEq(
-            abi.encode(deployedAddresses(declaration(), swapped)),
-            abi.encode(deployedAddresses(declaration(), declaration().released[0])),
-            "the swapped release derives the same address list"
+            deployedAddress(declaration(), swapped, PER_NETWORK_CLONE_POLYGON_CHAIN_ID),
+            deployedAddress(declaration(), released[0], PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID),
+            "the swapped release derives arbitrum's address under polygon's chain id"
+        );
+        assertEq(
+            deployedAddress(declaration(), swapped, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID),
+            deployedAddress(declaration(), released[0], PER_NETWORK_CLONE_POLYGON_CHAIN_ID),
+            "the swapped release derives polygon's address under arbitrum's chain id"
         );
         this.externalCheckInternallyConsistent(swapped);
 

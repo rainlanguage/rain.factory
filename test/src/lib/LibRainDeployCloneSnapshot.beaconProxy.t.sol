@@ -220,7 +220,8 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     /// @return The candidate's suite.
     function beaconProxySuite(bool initDataPerNetwork) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
-        return LibRainDeployCloneMechanism.beaconProxyCandidate(
+        DeploySuite memory suite =
+        LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "beacon-proxy",
                 address(new MockBeaconProxyFactory()),
@@ -233,6 +234,8 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
             perNetworkCloneChainIds()
         )
         .snapshot;
+        suite.networks = declaration().networks;
+        return suite;
     }
 
     /// Writes `suite`'s record under `ROOT/<tag>`, and returns what it reads back as.
@@ -283,7 +286,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertTrue(
             vm.contains(
                 record,
-                "/// @dev The beacon proxy factory call this release was cut with: the\n/// `abi.encode`d `CloneTarget`"
+                "/// @dev The beacon proxy factory call this release was cut with: the\n/// tagged `abi.encode`d `CloneTarget`"
             )
         );
         assertFalse(vm.contains(record, "EIP-1167"));
@@ -295,16 +298,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
 
         string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, declaration());
         assertTrue(vm.contains(entry, "storedDeployedAddress: BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS,\n"));
-        assertTrue(
-            vm.contains(
-                entry,
-                string.concat(
-                    "mechanismData: abi.encode(bytes32(",
-                    vm.toString(BEACON_PROXY_MECHANISM),
-                    "), BeaconProxyRecord_0_0_1_MECHANISM_DATA)\n"
-                )
-            )
-        );
+        assertTrue(vm.contains(entry, "mechanismData: BeaconProxyRecord_0_0_1_MECHANISM_DATA,\n"));
         assertTrue(vm.contains(entry, string.concat("artifactPath: \"", BEACON_PROXY_ARTIFACT_PATH, "\"")));
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(string.concat(ROOT, "/0_0_1"), true);
@@ -337,7 +331,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertTrue(
             vm.contains(
                 record,
-                "/// @dev The beacon proxy factory call this release was cut with: the\n/// `abi.encode`d `CloneNetworks`"
+                "/// @dev The beacon proxy factory call this release was cut with: the\n/// tagged `abi.encode`d `CloneNetworks`"
             )
         );
         assertFalse(vm.contains(record, "EIP-1167"));
@@ -349,16 +343,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
 
         string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, declaration());
         assertTrue(vm.contains(entry, "storedDeployedAddress: address(0),\n"));
-        assertTrue(
-            vm.contains(
-                entry,
-                string.concat(
-                    "mechanismData: abi.encode(bytes32(",
-                    vm.toString(BEACON_PROXY_PER_NETWORK_MECHANISM),
-                    "), BeaconProxyRecord_0_0_2_MECHANISM_DATA)\n"
-                )
-            )
-        );
+        assertTrue(vm.contains(entry, "mechanismData: BeaconProxyRecord_0_0_2_MECHANISM_DATA,\n"));
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(string.concat(ROOT, "/0_0_2"), true);
     }

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {CLONE_MECHANISM, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {
     DeployDeclaration,
@@ -82,7 +82,7 @@ function exampleCloneReleased() pure returns (DeploySuite[] memory) {
         storedRuntimeCode: EXAMPLE_CLONE_RUNTIME_CODE,
         artifactPath: CLONE_ARTIFACT_PATH,
         dependencies: abi.decode(EXAMPLE_CLONE_DEPENDENCIES, (DeployDependency[])),
-        mechanismData: abi.encode(CLONE_MECHANISM, EXAMPLE_CLONE_MECHANISM_DATA),
+        mechanismData: EXAMPLE_CLONE_MECHANISM_DATA,
         networks: new string[](0)
     });
     return suites;
