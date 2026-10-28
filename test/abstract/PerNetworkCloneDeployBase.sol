@@ -5,8 +5,7 @@ pragma solidity ^0.8.25;
 import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
 import {RainDeployBroadcast} from "rain-deploy-0.1.27/src/abstract/RainDeployBroadcast.sol";
 import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneNetwork} from "../../src/lib/LibRainDeployClone.sol";
-import {LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy, LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {LibExtendedNetworksFixture} from "../lib/LibExtendedNetworksFixture.sol";
 import {ExternalCloneDeploySuites} from "./ExternalCloneDeploySuites.sol";
@@ -20,7 +19,7 @@ abstract contract PerNetworkCloneDeployBase is ExternalCloneDeploySuites, Extern
     string internal sExtendedSuite;
 
     /// The networks `extendedNetworks` declares for `sExtendedSuite`. Empty by default.
-    CloneNetwork[] internal sExtendedNetworks;
+    ChainDeploy[] internal sExtendedNetworks;
 
     /// The record root `extendedNetworksRoot` gives once `setExtendedNetworks` has run.
     string internal sExtendedRoot;
@@ -30,7 +29,7 @@ abstract contract PerNetworkCloneDeployBase is ExternalCloneDeploySuites, Extern
     /// @param label The fixture root's directory under `fixture-lib/extended-networks`, one per test.
     /// @param suite The release's suite key.
     /// @param networks The networks it declares for that release.
-    function setExtendedNetworks(string memory label, string memory suite, CloneNetwork[] memory networks) external {
+    function setExtendedNetworks(string memory label, string memory suite, ChainDeploy[] memory networks) external {
         declareExtendedNetworks(label, suite, networks);
         LibRainDeployExtendedNetworks.writeExtendedNetworks(StdConstants.VM, sExtendedRoot, suite, networks);
     }
@@ -39,7 +38,7 @@ abstract contract PerNetworkCloneDeployBase is ExternalCloneDeploySuites, Extern
     /// @param label The fixture root's directory under `fixture-lib/extended-networks`, one per test.
     /// @param suite The release's suite key.
     /// @param networks The networks it declares for that release.
-    function declareExtendedNetworks(string memory label, string memory suite, CloneNetwork[] memory networks) public {
+    function declareExtendedNetworks(string memory label, string memory suite, ChainDeploy[] memory networks) public {
         sExtendedRoot =
             LibExtendedNetworksFixture.freshRoot(StdConstants.VM, "fixture-lib/extended-networks", label, suite);
         sExtendedSuite = suite;
@@ -61,9 +60,9 @@ abstract contract PerNetworkCloneDeployBase is ExternalCloneDeploySuites, Extern
     /// `sExtendedNetworks` for `sExtendedSuite`, else none.
     /// @param suite The release's suite key.
     /// @return The networks.
-    function extendedNetworks(string memory suite) internal view virtual override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory suite) internal view virtual override returns (ChainDeploy[] memory) {
         if (keccak256(bytes(suite)) != keccak256(bytes(sExtendedSuite))) {
-            return new CloneNetwork[](0);
+            return new ChainDeploy[](0);
         }
         return sExtendedNetworks;
     }

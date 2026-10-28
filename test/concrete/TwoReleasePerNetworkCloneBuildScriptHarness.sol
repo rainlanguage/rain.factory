@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneNetwork} from "../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {PerNetworkCloneDeploys} from "../abstract/PerNetworkCloneDeploys.sol";
 import {PerNetworkCloneBuildScriptHarness} from "./PerNetworkCloneBuildScriptHarness.sol";
 
@@ -15,7 +15,7 @@ string constant SECOND_RELEASE_KEY = "per-network-clone@0_0_2";
 /// `SECOND_RELEASE_KEY`, each with its own extended networks.
 contract TwoReleasePerNetworkCloneBuildScriptHarness is PerNetworkCloneBuildScriptHarness {
     /// The networks `extendedNetworks` declares for `SECOND_RELEASE_KEY`. Empty by default.
-    CloneNetwork[] internal sSecondExtendedNetworks;
+    ChainDeploy[] internal sSecondExtendedNetworks;
 
     /// @param root The record root to regenerate into.
     /// @param libDir The directory the released-suites lib is written to.
@@ -39,7 +39,7 @@ contract TwoReleasePerNetworkCloneBuildScriptHarness is PerNetworkCloneBuildScri
 
     /// Sets what `extendedNetworks` declares for `SECOND_RELEASE_KEY`.
     /// @param networks The networks.
-    function setSecondExtendedNetworks(CloneNetwork[] memory networks) external {
+    function setSecondExtendedNetworks(ChainDeploy[] memory networks) external {
         delete sSecondExtendedNetworks;
         for (uint256 i = 0; i < networks.length; i++) {
             sSecondExtendedNetworks.push(networks[i]);
@@ -47,7 +47,7 @@ contract TwoReleasePerNetworkCloneBuildScriptHarness is PerNetworkCloneBuildScri
     }
 
     /// @inheritdoc PerNetworkCloneBuildScriptHarness
-    function extendedNetworks(string memory suite) internal view override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory suite) internal view override returns (ChainDeploy[] memory) {
         if (keccak256(bytes(suite)) == keccak256(bytes(SECOND_RELEASE_KEY))) {
             return sSecondExtendedNetworks;
         }

@@ -8,11 +8,11 @@ import {DeployMechanism, DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.
 import {
     CLONE_ARTIFACT_PATH,
     CloneDeploy,
-    CloneNetwork,
     CloneNetworks,
     CloneTarget,
     LibRainDeployClone
 } from "../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {exampleCloneDependencies, exampleCloneFactory, exampleCloneImplementation} from "./ExampleCloneDeploys.sol";
 import {
@@ -98,8 +98,8 @@ function perNetworkCloneRelease() pure returns (CloneDeploy memory) {
 /// @return The release, recording its first network alone.
 function onlyFirstRecordedNetwork(DeploySuite memory release) pure returns (DeploySuite memory) {
     CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
-    CloneNetwork memory first = clones.networks[0];
-    clones.networks = new CloneNetwork[](1);
+    ChainDeploy memory first = clones.networks[0];
+    clones.networks = new ChainDeploy[](1);
     clones.networks[0] = first;
     release.mechanismData = abi.encode(clones);
     return release;

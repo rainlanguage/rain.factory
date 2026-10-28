@@ -4,7 +4,8 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {CloneNetwork, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     exampleCloneDependencies,
     exampleCloneFactory,
@@ -32,11 +33,11 @@ contract LibRainDeployClonePerNetworkTest is Test {
             factory: factory,
             implementation: implementation,
             salt: TEST_SALT,
-            networks: new CloneNetwork[](chainIds.length)
+            networks: new ChainDeploy[](chainIds.length)
         });
         for (uint256 i = 0; i < chainIds.length; i++) {
             clones.networks[i] =
-                CloneNetwork({chainId: chainIds[i], data: abi.encode(chainIds[i]), deployedAddress: address(0)});
+                ChainDeploy({chainId: chainIds[i], data: abi.encode(chainIds[i]), deployedAddress: address(0)});
             clones.networks[i].deployedAddress =
                 LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
         }

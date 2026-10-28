@@ -5,11 +5,11 @@ pragma solidity =0.8.25;
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
-    CloneNetwork,
     CloneNetworks,
     CloneTarget,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     ExtendedNetworkUnfrozen,
     LibRainDeployMechanism,
@@ -66,11 +66,11 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
             factory: exampleCloneFactory(),
             implementation: exampleCloneImplementation(),
             salt: TEST_SALT,
-            networks: new CloneNetwork[](2)
+            networks: new ChainDeploy[](2)
         });
         clones.networks[0] =
-            CloneNetwork({chainId: 42161, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
-        clones.networks[1] = CloneNetwork({chainId: 137, data: abi.encode(uint256(137)), deployedAddress: address(0)});
+            ChainDeploy({chainId: 42161, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
+        clones.networks[1] = ChainDeploy({chainId: 137, data: abi.encode(uint256(137)), deployedAddress: address(0)});
         for (uint256 i = 0; i < clones.networks.length; i++) {
             clones.networks[i].deployedAddress =
                 LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
@@ -111,9 +111,9 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// @return The frozen suite.
     function frozenExampleCloneNetworks() internal pure returns (DeploySuite memory) {
         CloneNetworks memory clones = exampleCloneNetworks();
-        CloneNetwork[] memory extended = new CloneNetwork[](1);
+        ChainDeploy[] memory extended = new ChainDeploy[](1);
         extended[0] = clones.networks[1];
-        clones.networks = new CloneNetwork[](1);
+        clones.networks = new ChainDeploy[](1);
         clones.networks[0] = exampleCloneNetworks().networks[0];
         return LibRainDeployMechanism.withExtendedNetworks(perNetworkSuite(clones), extended);
     }
@@ -343,10 +343,10 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         address implementation = LibRainDeploy.etchAndDeployZoltu(vm, type(MockCloneable).creationCode);
         CloneNetworks memory candidate = exampleCloneNetworks();
         CloneNetworks memory recorded = exampleCloneNetworks();
-        recorded.networks = new CloneNetwork[](1);
+        recorded.networks = new ChainDeploy[](1);
         recorded.networks[0] = candidate.networks[0];
-        CloneNetwork[] memory extended = new CloneNetwork[](1);
-        extended[0] = CloneNetwork({chainId: 137, data: abi.encode(uint256(0xc4)), deployedAddress: address(0)});
+        ChainDeploy[] memory extended = new ChainDeploy[](1);
+        extended[0] = ChainDeploy({chainId: 137, data: abi.encode(uint256(0xc4)), deployedAddress: address(0)});
         CloneNetworks memory declaredClones = exampleCloneNetworks();
         declaredClones.networks[1].data = extended[0].data;
         extended[0].deployedAddress =
@@ -367,7 +367,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// fork rather than broadcast there.
     function testTheReleaseAsItsOwnCandidateIsRefusedAnUnrecordedNetworkBeforeForking() external {
         CloneNetworks memory recorded = exampleCloneNetworks();
-        recorded.networks = new CloneNetwork[](1);
+        recorded.networks = new ChainDeploy[](1);
         recorded.networks[0] = exampleCloneNetworks().networks[0];
         DeploySuite memory release = perNetworkSuite(recorded);
 
@@ -457,7 +457,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         CloneNetworks memory clones = exampleCloneNetworks();
         DeploySuite memory onNetworks = perNetworkSuite(clones);
         CloneNetworks memory recorded = exampleCloneNetworks();
-        recorded.networks = new CloneNetwork[](1);
+        recorded.networks = new ChainDeploy[](1);
         recorded.networks[0] = clones.networks[0];
 
         vm.expectRevert(

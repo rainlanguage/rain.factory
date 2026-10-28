@@ -8,11 +8,11 @@ import {ExtendedNetworksUnrecorded} from "rain-deploy-0.1.27/src/lib/LibRainDepl
 import {ExtendedNetworkAddressMismatch, ExtendedNetworkUnfrozen} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     CloneDeploy,
-    CloneNetwork,
     CloneNetworks,
     CloneTarget,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN,
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
@@ -61,9 +61,9 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// Polygon at its admin's init data and the address the release derives there, as `extendedNetworks` declares
     /// it before it is broadcast.
     /// @return The declaration.
-    function declaredPolygon() internal pure returns (CloneNetwork[] memory) {
-        CloneNetwork[] memory networks = new CloneNetwork[](1);
-        networks[0] = CloneNetwork({
+    function declaredPolygon() internal pure returns (ChainDeploy[] memory) {
+        ChainDeploy[] memory networks = new ChainDeploy[](1);
+        networks[0] = ChainDeploy({
             chainId: PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
             data: abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN),
             deployedAddress: perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID)
@@ -284,7 +284,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// refused before any network is forked, naming both addresses.
     function testBroadcastRefusesAMisdeclaredExtendedNetworkBeforeAnyFork() external {
         PerNetworkCloneDeploy deploy = new PerNetworkCloneDeploy();
-        CloneNetwork[] memory declared = declaredPolygon();
+        ChainDeploy[] memory declared = declaredPolygon();
         address derived = declared[0].deployedAddress;
         declared[0].deployedAddress = address(0xdead);
         deploy.setExtendedNetworks(
@@ -352,8 +352,8 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         );
         address candidateAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         assertNotEq(declaredAddress, candidateAddress);
-        CloneNetwork[] memory declared = new CloneNetwork[](1);
-        declared[0] = CloneNetwork({
+        ChainDeploy[] memory declared = new ChainDeploy[](1);
+        declared[0] = ChainDeploy({
             chainId: PER_NETWORK_CLONE_POLYGON_CHAIN_ID, data: declaredData, deployedAddress: declaredAddress
         });
         deploy.setExtendedNetworks(

@@ -8,11 +8,11 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {DeployCandidate, DeployMechanism, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     CLONE_ARTIFACT_PATH,
-    CloneNetwork,
     CloneNetworks,
     CloneTarget,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     BEACON_PROXY_ARTIFACT_PATH,
     BEACON_PROXY_UNANCHORABLE_REASON,
@@ -321,7 +321,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     /// @return The suite with its other networks dropped.
     function firstNetworkOnly(DeploySuite memory suite) internal pure returns (DeploySuite memory) {
         CloneNetworks memory clones = abi.decode(suite.mechanismData, (CloneNetworks));
-        CloneNetwork[] memory first = new CloneNetwork[](1);
+        ChainDeploy[] memory first = new ChainDeploy[](1);
         first[0] = clones.networks[0];
         clones.networks = first;
         return LibRainDeployMechanism.withMechanismData(suite, abi.encode(clones));
@@ -330,7 +330,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     /// @param suite The release.
     /// @param extended The networks declared for it.
     /// @return The release with them.
-    function externalWithExtendedNetworks(DeploySuite memory suite, CloneNetwork[] memory extended)
+    function externalWithExtendedNetworks(DeploySuite memory suite, ChainDeploy[] memory extended)
         external
         pure
         returns (DeploySuite memory)
@@ -382,7 +382,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         DeploySuite memory release = firstNetworkOnly(candidate);
 
         DeploySuite memory onNetworks = LibRainDeployMechanism.withUnrecordedNetworks(release, candidate, chainIds);
-        CloneNetwork[] memory networks = abi.decode(onNetworks.mechanismData, (CloneNetworks)).networks;
+        ChainDeploy[] memory networks = abi.decode(onNetworks.mechanismData, (CloneNetworks)).networks;
         assertEq(networks.length, 2);
         assertEq(networks[0].chainId, chainIds[0]);
         assertEq(networks[0].deployedAddress, beaconProxyAddressOn(proxy, chainIds[0]));
@@ -403,8 +403,8 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         BeaconProxyDeploy memory proxy = declaredBeaconProxy(true);
         uint256[] memory chainIds = perNetworkCloneChainIds();
         DeploySuite memory release = firstNetworkOnly(candidateOf(proxy, chainIds).snapshot);
-        CloneNetwork[] memory extended = new CloneNetwork[](1);
-        extended[0] = CloneNetwork({
+        ChainDeploy[] memory extended = new ChainDeploy[](1);
+        extended[0] = ChainDeploy({
             chainId: chainIds[1],
             data: perNetworkCloneInitData(chainIds[1]),
             deployedAddress: beaconProxyAddressOn(proxy, chainIds[1])
@@ -418,8 +418,8 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     /// Extended networks on a one-data beacon proxy suite are refused.
     function testExtendedNetworksOnAOneDataBeaconProxyAreRefused() external {
         DeploySuite memory oneData = candidateOf(declaredBeaconProxy(false), perNetworkCloneChainIds()).snapshot;
-        CloneNetwork[] memory extended = new CloneNetwork[](1);
-        extended[0] = CloneNetwork({chainId: 137, data: TEST_DATA, deployedAddress: oneData.storedDeployedAddress});
+        ChainDeploy[] memory extended = new ChainDeploy[](1);
+        extended[0] = ChainDeploy({chainId: 137, data: TEST_DATA, deployedAddress: oneData.storedDeployedAddress});
         vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksUnexpected.selector, oneData.suite));
         this.externalWithExtendedNetworks(oneData, extended);
     }

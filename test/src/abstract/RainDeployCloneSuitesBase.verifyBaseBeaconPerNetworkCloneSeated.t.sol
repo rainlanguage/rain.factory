@@ -6,10 +6,10 @@ import {DeployDependency, DeployMechanism, DeploySuite} from "rain-deploy-0.1.27
 import {ChainBeacon} from "rain-deploy-0.1.27/src/lib/LibRainDeployBeacon.sol";
 import {
     CLONE_ARTIFACT_PATH,
-    CloneNetwork,
     CloneNetworks,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockChainRefusingCloneable} from "../../concrete/MockChainRefusingCloneable.sol";
@@ -37,13 +37,13 @@ contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixt
             deployedAddress: implementation, runtimeCode: type(MockChainRefusingCloneable).runtimeCode
         });
         CloneNetworks memory clones = CloneNetworks({
-            factory: factory, implementation: implementation, salt: bytes32(uint256(7)), networks: new CloneNetwork[](2)
+            factory: factory, implementation: implementation, salt: bytes32(uint256(7)), networks: new ChainDeploy[](2)
         });
         // Each network's clone refuses the other network's chain id.
         clones.networks[0] =
-            CloneNetwork({chainId: 42161, data: abi.encode(uint256(8453)), deployedAddress: address(0)});
+            ChainDeploy({chainId: 42161, data: abi.encode(uint256(8453)), deployedAddress: address(0)});
         clones.networks[1] =
-            CloneNetwork({chainId: 8453, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
+            ChainDeploy({chainId: 8453, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
         bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(implementation);
         released[fixture.length] = DeploySuite({
             suite: "chain-refusing-clone-beacon@0_0_1",

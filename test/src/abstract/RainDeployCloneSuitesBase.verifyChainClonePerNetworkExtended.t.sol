@@ -6,8 +6,9 @@ import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {CloneDeploy, CloneNetwork} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy} from "../../../src/lib/LibRainDeployClone.sol";
 import {
+    ChainDeploy,
     ExtendedNetworksUnrecorded,
     LibRainDeployExtendedNetworks
 } from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
@@ -84,12 +85,12 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
     /// Polygon at its original init data, as it was broadcast, once `sFrozen` is set.
     /// @param suite The release's suite key.
     /// @return The networks.
-    function extendedNetworks(string memory suite) internal view override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory suite) internal view override returns (ChainDeploy[] memory) {
         if (!sFrozen || keccak256(bytes(suite)) != keccak256("per-network-clone@0_0_1")) {
-            return new CloneNetwork[](0);
+            return new ChainDeploy[](0);
         }
-        CloneNetwork[] memory networks = new CloneNetwork[](1);
-        networks[0] = CloneNetwork({
+        ChainDeploy[] memory networks = new ChainDeploy[](1);
+        networks[0] = ChainDeploy({
             chainId: PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
             data: perNetworkCloneInitData(PER_NETWORK_CLONE_POLYGON_CHAIN_ID),
             deployedAddress: sFrozenAddress

@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {BuildScript} from "rain-deploy-0.1.27/src/abstract/BuildScript.sol";
 import {RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneNetwork} from "../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
@@ -21,7 +21,7 @@ contract CloneBuildScriptHarness is ExampleCloneDeploys, BuildScript {
     string internal sLibDir;
 
     /// The networks `extendedNetworks` declares for every key. Empty by default.
-    CloneNetwork[] internal sExtendedNetworks;
+    ChainDeploy[] internal sExtendedNetworks;
 
     /// @param root The record root to regenerate and cut into.
     /// @param libDir The directory the released-suites lib is written to.
@@ -83,7 +83,7 @@ contract CloneBuildScriptHarness is ExampleCloneDeploys, BuildScript {
 
     /// Sets what `extendedNetworks` declares for every key.
     /// @param networks The networks.
-    function setExtendedNetworks(CloneNetwork[] memory networks) external {
+    function setExtendedNetworks(ChainDeploy[] memory networks) external {
         delete sExtendedNetworks;
         for (uint256 i = 0; i < networks.length; i++) {
             sExtendedNetworks.push(networks[i]);
@@ -91,7 +91,7 @@ contract CloneBuildScriptHarness is ExampleCloneDeploys, BuildScript {
     }
 
     /// @inheritdoc RainDeploySuitesBase
-    function extendedNetworks(string memory) internal view override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory) internal view override returns (ChainDeploy[] memory) {
         return sExtendedNetworks;
     }
 

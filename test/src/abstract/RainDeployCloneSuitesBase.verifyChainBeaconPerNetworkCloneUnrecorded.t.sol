@@ -3,8 +3,7 @@
 pragma solidity =0.8.25;
 
 import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneNetwork} from "../../../src/lib/LibRainDeployClone.sol";
-import {LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy, LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
     PerNetworkCloneDeploys,
@@ -52,12 +51,12 @@ contract RainDeployVerifyChainBeaconPerNetworkCloneUnrecordedTest is
     /// Polygon at the address it derives under its init data.
     /// @param suite The release's suite key.
     /// @return The networks.
-    function extendedNetworks(string memory suite) internal pure override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory suite) internal pure override returns (ChainDeploy[] memory) {
         if (keccak256(bytes(suite)) != keccak256("per-network-clone@0_0_1")) {
-            return new CloneNetwork[](0);
+            return new ChainDeploy[](0);
         }
-        CloneNetwork[] memory networks = new CloneNetwork[](1);
-        networks[0] = CloneNetwork({
+        ChainDeploy[] memory networks = new ChainDeploy[](1);
+        networks[0] = ChainDeploy({
             chainId: PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
             data: perNetworkCloneInitData(PER_NETWORK_CLONE_POLYGON_CHAIN_ID),
             deployedAddress: perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID)

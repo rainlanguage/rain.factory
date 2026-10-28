@@ -10,11 +10,11 @@ import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
     CloneDeploy,
-    CloneNetwork,
     CloneNetworks,
     CloneTarget,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {
     CloneCreationCodeMismatch,
@@ -464,10 +464,10 @@ contract LibRainDeployMechanismTest is Test {
             factory: exampleCloneFactory(),
             implementation: exampleCloneImplementation(),
             salt: TEST_SALT,
-            networks: new CloneNetwork[](2)
+            networks: new ChainDeploy[](2)
         });
-        expected.networks[0] = CloneNetwork({chainId: 42161, data: arbitrumData, deployedAddress: arbitrumAddress});
-        expected.networks[1] = CloneNetwork({chainId: 137, data: polygonData, deployedAddress: polygonAddress});
+        expected.networks[0] = ChainDeploy({chainId: 42161, data: arbitrumData, deployedAddress: arbitrumAddress});
+        expected.networks[1] = ChainDeploy({chainId: 137, data: polygonData, deployedAddress: polygonAddress});
 
         assertEq(suite.suite, clone.suite);
         assertEq(uint256(suite.mechanism), uint256(DeployMechanism.ClonePerNetwork));
@@ -540,7 +540,7 @@ contract LibRainDeployMechanismTest is Test {
                 factory: exampleCloneFactory(),
                 implementation: exampleCloneImplementation(),
                 salt: TEST_SALT,
-                networks: new CloneNetwork[](0)
+                networks: new ChainDeploy[](0)
             })
         );
         bytes memory refusal = abi.encodeWithSelector(LibRainDeployClone.NoCloneNetworks.selector);
@@ -764,11 +764,11 @@ contract LibRainDeployMechanismTest is Test {
             factory: exampleCloneFactory(),
             implementation: exampleCloneImplementation(),
             salt: releaseSalt,
-            networks: new CloneNetwork[](2)
+            networks: new ChainDeploy[](2)
         });
         expected.networks[0] = recorded.networks[0];
         bytes memory polygonData = abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN);
-        expected.networks[1] = CloneNetwork({
+        expected.networks[1] = ChainDeploy({
             chainId: 137,
             data: polygonData,
             deployedAddress: LibRainDeployClone.cloneDeployedAddress(
@@ -939,7 +939,7 @@ contract LibRainDeployMechanismTest is Test {
     /// @param suite The release.
     /// @param extended The networks it was extended to.
     /// @return The release with them.
-    function externalWithExtendedNetworks(DeploySuite memory suite, CloneNetwork[] memory extended)
+    function externalWithExtendedNetworks(DeploySuite memory suite, ChainDeploy[] memory extended)
         external
         pure
         returns (DeploySuite memory)
@@ -958,9 +958,9 @@ contract LibRainDeployMechanismTest is Test {
     /// Polygon at the given init data, at the address it derives under the example clone at `TEST_SALT`.
     /// @param data The init data.
     /// @return The entry.
-    function polygonAt(bytes memory data) internal pure returns (CloneNetwork[] memory) {
-        CloneNetwork[] memory networks = new CloneNetwork[](1);
-        networks[0] = CloneNetwork({chainId: 137, data: data, deployedAddress: exampleCloneAddress(data)});
+    function polygonAt(bytes memory data) internal pure returns (ChainDeploy[] memory) {
+        ChainDeploy[] memory networks = new ChainDeploy[](1);
+        networks[0] = ChainDeploy({chainId: 137, data: data, deployedAddress: exampleCloneAddress(data)});
         return networks;
     }
 
@@ -969,12 +969,12 @@ contract LibRainDeployMechanismTest is Test {
     function testExtendedNetworkIsAppendedAsDeclared() external view {
         DeploySuite memory release = perNetworkSuiteAt(TEST_SALT, onlyChainId(42161));
         bytes memory data = abi.encode(address(0xc3c3c3c3c3c3c3c3c3C3C3c3C3C3C3c3C3C3c3c3));
-        CloneNetwork[] memory extension = polygonAt(data);
+        ChainDeploy[] memory extension = polygonAt(data);
         DeploySuite memory extended = this.externalWithExtendedNetworks(release, extension);
 
         CloneNetworks memory expected = abi.decode(release.mechanismData, (CloneNetworks));
-        CloneNetwork memory recorded = expected.networks[0];
-        expected.networks = new CloneNetwork[](2);
+        ChainDeploy memory recorded = expected.networks[0];
+        expected.networks = new ChainDeploy[](2);
         expected.networks[0] = recorded;
         expected.networks[1] = extension[0];
         assertEq(extended.mechanismData, abi.encode(expected));
@@ -991,7 +991,7 @@ contract LibRainDeployMechanismTest is Test {
     /// No extended network leaves any suite as it is.
     function testNoExtendedNetworkLeavesTheSuiteUnchanged() external view {
         DeploySuite memory oneData = exampleCloneSuite();
-        assertEq(abi.encode(this.externalWithExtendedNetworks(oneData, new CloneNetwork[](0))), abi.encode(oneData));
+        assertEq(abi.encode(this.externalWithExtendedNetworks(oneData, new ChainDeploy[](0))), abi.encode(oneData));
     }
 
     /// Extended networks on a suite that is not per network are refused.
@@ -1010,7 +1010,7 @@ contract LibRainDeployMechanismTest is Test {
     /// An extended network at an address its init data does not derive is refused, naming both.
     function testExtendedNetworkAtAnotherAddressIsRefused() external {
         DeploySuite memory release = perNetworkSuiteAt(TEST_SALT, onlyChainId(42161));
-        CloneNetwork[] memory extension = polygonAt(TEST_DATA);
+        ChainDeploy[] memory extension = polygonAt(TEST_DATA);
         address derived = extension[0].deployedAddress;
         extension[0].deployedAddress = address(0xdead);
         vm.expectRevert(
@@ -1026,9 +1026,9 @@ contract LibRainDeployMechanismTest is Test {
     function testSecondExtendedNetworkAtAnotherAddressIsRefused() external {
         DeploySuite memory release = perNetworkSuiteAt(TEST_SALT, onlyChainId(42161));
         bytes memory baseData = abi.encode(address(0xb4b4B4B4b4b4B4B4b4b4B4B4b4b4b4b4B4B4B4B4));
-        CloneNetwork[] memory extension = new CloneNetwork[](2);
+        ChainDeploy[] memory extension = new ChainDeploy[](2);
         extension[0] = polygonAt(TEST_DATA)[0];
-        extension[1] = CloneNetwork({chainId: 8453, data: baseData, deployedAddress: address(0xdead)});
+        extension[1] = ChainDeploy({chainId: 8453, data: baseData, deployedAddress: address(0xdead)});
         address derived = exampleCloneAddress(baseData);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1049,7 +1049,7 @@ contract LibRainDeployMechanismTest is Test {
     /// A network declared twice as extended is refused as a duplicate.
     function testExtendedNetworkDeclaredTwiceIsRefused() external {
         DeploySuite memory release = perNetworkSuiteAt(TEST_SALT, onlyChainId(42161));
-        CloneNetwork[] memory extension = new CloneNetwork[](2);
+        ChainDeploy[] memory extension = new ChainDeploy[](2);
         extension[0] = polygonAt(TEST_DATA)[0];
         extension[1] = polygonAt(TEST_DATA)[0];
         vm.expectRevert(abi.encodeWithSelector(LibRainDeployClone.DuplicateCloneNetwork.selector, uint256(137)));
@@ -1082,8 +1082,8 @@ contract LibRainDeployMechanismTest is Test {
     /// does not derive.
     function testExtendedNetworkTheReleaseRecordsAtAnotherAddressIsRefusedAsADuplicate() external {
         DeploySuite memory release = perNetworkSuiteAt(TEST_SALT, onlyChainId(42161));
-        CloneNetwork[] memory extension = new CloneNetwork[](1);
-        extension[0] = CloneNetwork({chainId: 42161, data: TEST_DATA, deployedAddress: address(0xdead)});
+        ChainDeploy[] memory extension = new ChainDeploy[](1);
+        extension[0] = ChainDeploy({chainId: 42161, data: TEST_DATA, deployedAddress: address(0xdead)});
         vm.expectRevert(abi.encodeWithSelector(LibRainDeployClone.DuplicateCloneNetwork.selector, uint256(42161)));
         this.externalWithExtendedNetworks(release, extension);
     }

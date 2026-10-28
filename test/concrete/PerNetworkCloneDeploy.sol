@@ -3,7 +3,8 @@
 pragma solidity =0.8.25;
 
 import {RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneDeploy, CloneNetwork} from "../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {RainDeployCloneSuitesBase} from "../../src/abstract/RainDeployCloneSuitesBase.sol";
 import {PerNetworkCloneDeployBase} from "../abstract/PerNetworkCloneDeployBase.sol";
 import {PerNetworkCloneDeploys} from "../abstract/PerNetworkCloneDeploys.sol";
@@ -36,7 +37,7 @@ contract PerNetworkCloneDeploy is PerNetworkCloneDeploys, PerNetworkCloneDeployB
         internal
         view
         override(PerNetworkCloneDeployBase, RainDeploySuitesBase)
-        returns (CloneNetwork[] memory)
+        returns (ChainDeploy[] memory)
     {
         return PerNetworkCloneDeployBase.extendedNetworks(suite);
     }

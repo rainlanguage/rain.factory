@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {BuildScript} from "rain-deploy-0.1.27/src/abstract/BuildScript.sol";
 import {RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {CloneNetwork} from "../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
@@ -22,7 +22,7 @@ contract PerNetworkCloneBuildScriptHarness is PerNetworkCloneDeploys, BuildScrip
     string internal sLibDir;
 
     /// The networks `extendedNetworks` declares for the release. Empty by default.
-    CloneNetwork[] internal sExtendedNetworks;
+    ChainDeploy[] internal sExtendedNetworks;
 
     /// The licence `extendedNetworksSpdxLicenseIdentifier` gives once `setExtendedNetworksLicence` has run.
     string internal sSpdxLicenseIdentifier;
@@ -85,7 +85,7 @@ contract PerNetworkCloneBuildScriptHarness is PerNetworkCloneDeploys, BuildScrip
 
     /// Sets what `extendedNetworks` declares for the release.
     /// @param networks The networks.
-    function setExtendedNetworks(CloneNetwork[] memory networks) external {
+    function setExtendedNetworks(ChainDeploy[] memory networks) external {
         delete sExtendedNetworks;
         for (uint256 i = 0; i < networks.length; i++) {
             sExtendedNetworks.push(networks[i]);
@@ -101,9 +101,9 @@ contract PerNetworkCloneBuildScriptHarness is PerNetworkCloneDeploys, BuildScrip
     }
 
     /// @inheritdoc RainDeploySuitesBase
-    function extendedNetworks(string memory suite) internal view virtual override returns (CloneNetwork[] memory) {
+    function extendedNetworks(string memory suite) internal view virtual override returns (ChainDeploy[] memory) {
         if (keccak256(bytes(suite)) != keccak256("per-network-clone@0_0_1")) {
-            return new CloneNetwork[](0);
+            return new ChainDeploy[](0);
         }
         return sExtendedNetworks;
     }
