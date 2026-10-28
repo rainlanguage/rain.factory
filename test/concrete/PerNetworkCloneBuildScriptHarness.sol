@@ -10,10 +10,7 @@ import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySna
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
-import {
-    ExtendedNetworksDeclaration,
-    LibRainDeployCloneMechanism
-} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {

@@ -167,7 +167,8 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         DeployCandidate memory candidate = candidateOf(proxy, chainIds);
 
         assertEq(
-            LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), BEACON_PROXY_PER_NETWORK_MECHANISM
+            LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData),
+            BEACON_PROXY_PER_NETWORK_MECHANISM
         );
         assertEq(candidate.snapshot.storedDeployedAddress, address(0));
         assertEq(candidate.snapshot.creationCode, LibRainDeployBeaconProxy.beaconProxyCreationCode(proxy.beacon));
@@ -397,8 +398,7 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         DeploySuite memory candidate = suiteOf(proxy, chainIds);
         DeploySuite memory release = firstNetworkOnly(candidate);
 
-        DeploySuite memory onNetworks =
-            LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
+        DeploySuite memory onNetworks = LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
         ChainDeploy[] memory networks = networksOf(onNetworks).networks;
         assertEq(networks.length, 2);
         assertEq(networks[0].chainId, chainIds[0]);
@@ -457,8 +457,7 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         string[] memory networks = new string[](2);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         networks[1] = LibRainDeploy.POLYGON;
-        DeploySuite memory onNetworks =
-            LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
+        DeploySuite memory onNetworks = LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
         vm.expectRevert(
             abi.encodeWithSelector(
                 ExtendedNetworkUnfrozen.selector, release.suite, LibRainDeploy.POLYGON, polygonAddress

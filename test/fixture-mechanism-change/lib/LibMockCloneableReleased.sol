@@ -6,6 +6,8 @@ pragma solidity ^0.8.25;
 
 import {DeployDependency, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+import {CLONE_MECHANISM} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {CLONE_PER_NETWORK_MECHANISM} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 
 import {
     DEPLOYED_ADDRESS as MockCloneable_0_0_1_DEPLOYED_ADDRESS,
@@ -72,7 +74,7 @@ library LibMockCloneableReleased {
             storedRuntimeCode: MockCloneable_0_0_2_RUNTIME_CODE,
             artifactPath: "rain-factory/EIP1167Clone.sol:EIP1167Clone",
             dependencies: abi.decode(MockCloneable_0_0_2_DEPENDENCIES, (DeployDependency[])),
-            mechanismData: abi.encode(bytes32(0x88405a420dd678dcadd1ebdc52575ddf02207c371bc87159c113d345e4276e62), MockCloneable_0_0_2_MECHANISM_DATA),
+            mechanismData: abi.encode(CLONE_MECHANISM, MockCloneable_0_0_2_MECHANISM_DATA),
             networks: new string[](0)
         });
         suites[2] = DeploySuite({
@@ -83,7 +85,7 @@ library LibMockCloneableReleased {
             storedRuntimeCode: MockCloneable_0_0_3_RUNTIME_CODE,
             artifactPath: "rain-factory/EIP1167Clone.sol:EIP1167Clone",
             dependencies: abi.decode(MockCloneable_0_0_3_DEPENDENCIES, (DeployDependency[])),
-            mechanismData: abi.encode(bytes32(0xa5ae15cdc6aef5b59636ceda496744303b4235834522c2b9ba30a10b87e728ed), MockCloneable_0_0_3_MECHANISM_DATA),
+            mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, MockCloneable_0_0_3_MECHANISM_DATA),
             networks: new string[](0)
         });
         return suites;

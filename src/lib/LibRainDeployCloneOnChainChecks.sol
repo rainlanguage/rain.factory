@@ -143,10 +143,12 @@ library LibRainDeployCloneOnChainChecks {
 
     /// The beacon at `beaconIndex`, with `beacon` and `beaconCodeHash` resolved from its `beaconSuite` deployed
     /// locally under `chainId`, refusing a seated owner or implementation other than its initial state's.
-    function resolveBeacon(DeployDeclaration memory d, DeployBeacon memory declaration, uint256 chainId, uint256 beaconIndex)
-        internal
-        returns (DeployBeacon memory)
-    {
+    function resolveBeacon(
+        DeployDeclaration memory d,
+        DeployBeacon memory declaration,
+        uint256 chainId,
+        uint256 beaconIndex
+    ) internal returns (DeployBeacon memory) {
         DeployBeacon memory beacon = DeployBeacon({
             beaconSuite: declaration.beaconSuite,
             beacon: declaration.beacon,

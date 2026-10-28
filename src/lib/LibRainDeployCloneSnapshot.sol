@@ -185,11 +185,7 @@ library LibRainDeployCloneSnapshot {
     /// @param path The record file the lines were read from.
     /// @param lines Its `recordLines`.
     /// @return The tag.
-    function recordedMechanismTag(Vm vm, string memory path, string[] memory lines)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function recordedMechanismTag(Vm vm, string memory path, string[] memory lines) internal pure returns (bytes32) {
         (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
         uint256 mechanismData = 0;
         uint256 markers = 0;
@@ -369,7 +365,11 @@ library LibRainDeployCloneSnapshot {
     }
 
     /// @return `releasedImportForTag` of `BEACON_PROXY_MECHANISM`.
-    function releasedBeaconProxyImport(DeployDeclaration memory d, string memory) internal pure returns (string memory) {
+    function releasedBeaconProxyImport(DeployDeclaration memory d, string memory)
+        internal
+        pure
+        returns (string memory)
+    {
         return releasedImportForTag(d, BEACON_PROXY_MECHANISM);
     }
 

@@ -54,10 +54,12 @@ library LibRainDeployBeaconDeclarationChecks {
     }
 
     /// @return The beacon's address on `chainId`.
-    function resolveBeacon(DeployDeclaration memory d, DeployBeacon memory declaration, uint256 chainId, uint256 beaconIndex)
-        internal
-        returns (address)
-    {
+    function resolveBeacon(
+        DeployDeclaration memory d,
+        DeployBeacon memory declaration,
+        uint256 chainId,
+        uint256 beaconIndex
+    ) internal returns (address) {
         DeployBeacon memory beacon = DeployBeacon({
             beaconSuite: declaration.beaconSuite,
             beacon: declaration.beacon,

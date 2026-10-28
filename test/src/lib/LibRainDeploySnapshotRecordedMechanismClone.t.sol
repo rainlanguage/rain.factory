@@ -55,6 +55,7 @@ contract LibRainDeploySnapshotRecordedMechanismCloneTest is Test {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setFactoryImportRoot(d, "../../../src/");
         return d;
     }
 

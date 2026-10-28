@@ -8,10 +8,7 @@ import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeploy
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {
-    ExtendedNetworksDeclaration,
-    LibRainDeployCloneMechanism
-} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {perNetworkCloneNetworks, perNetworkCloneReleased} from "../abstract/PerNetworkCloneDeploys.sol";
 import {UpgradedPerNetworkCloneDeploys, upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";

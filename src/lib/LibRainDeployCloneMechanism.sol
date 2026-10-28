@@ -16,7 +16,7 @@ import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ChainBeacon} from "./LibRainDeployBeacon.sol";
-import {LibRainDeploySnapshot}from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -236,6 +236,14 @@ library LibRainDeployCloneMechanism {
         setLayerConfig(d, config);
     }
 
+    /// @param d The declaration, extended, mutated.
+    /// @param root The root a generated lib reaches this package's `src/` by, in place of the one `foundry.toml` gives.
+    function setFactoryImportRoot(DeployDeclaration memory d, string memory root) internal pure {
+        CloneLayerConfig memory config = layerConfig(d);
+        config.factoryImportRoot = root;
+        setLayerConfig(d, config);
+    }
+
     /// The layer's `checkDeclaration`: the declared beacons and the declared extended networks.
     /// @param d The declaration.
     function checkDeclaration(DeployDeclaration memory d) internal {
@@ -270,7 +278,10 @@ library LibRainDeployCloneMechanism {
 
     /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
     /// per-network suite's own clone there. An address shared by earlier networks is deployed once.
-    function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
+    function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite)
+        internal
+        returns (address[] memory)
+    {
         uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
         LibRainDeploy.etchDependencies(vm, suite.dependencies);
@@ -289,10 +300,12 @@ library LibRainDeployCloneMechanism {
         deployTarget(vm, suite, block.chainid, deployedAddress(d, suite, block.chainid));
     }
 
-    function addUnrecordedNetworks(DeployDeclaration memory, DeploySuite memory suite, DeploySuite memory candidate, uint256[] memory chainIds)
-        internal
-        pure
-    {
+    function addUnrecordedNetworks(
+        DeployDeclaration memory,
+        DeploySuite memory suite,
+        DeploySuite memory candidate,
+        uint256[] memory chainIds
+    ) internal pure {
         suite.mechanismData = withUnrecordedNetworks(suite, candidate, chainIds).mechanismData;
     }
 
@@ -311,8 +324,7 @@ library LibRainDeployCloneMechanism {
     /// A clone or beacon proxy has no source of its own to verify: nothing is logged, whatever its artifact path.
     function logVerification(DeployDeclaration memory, Vm, string[] memory, DeploySuite memory, address[] memory)
         internal
-        pure
-    {}
+        pure {}
 
     /// @param mechanismData A suite's mechanism data.
     /// @return Its leading word, or zero when it is shorter than one.
@@ -394,14 +406,22 @@ library LibRainDeployCloneMechanism {
     /// @param suite A clone or beacon proxy suite.
     /// @param chainId The network's chain id.
     /// @return The address its factory call derives there.
-    function deployedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId) internal pure returns (address) {
+    function deployedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId)
+        internal
+        pure
+        returns (address)
+    {
         return targetAddress(suite, cloneTargetOn(suite, chainId));
     }
 
     /// @param suite A clone or beacon proxy suite.
     /// @param chainId The network's chain id.
     /// @return The address it records there.
-    function recordedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId) internal pure returns (address) {
+    function recordedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId)
+        internal
+        pure
+        returns (address)
+    {
         if (isPerNetwork(suite)) {
             CloneNetworks memory clones = cloneNetworks(suite);
             return clones.networks[LibRainDeployClone.cloneNetworkIndex(clones, chainId)].deployedAddress;
@@ -426,7 +446,11 @@ library LibRainDeployCloneMechanism {
     /// @param suite A clone or beacon proxy suite.
     /// @param chainId The network's chain id.
     /// @return The `abi.encode`d factory call its step makes there.
-    function deployStepData(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId) internal pure returns (bytes memory) {
+    function deployStepData(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encode(cloneTargetOn(suite, chainId));
     }
 
@@ -526,10 +550,13 @@ library LibRainDeployCloneMechanism {
     /// @param network The network's name.
     /// @param chainId The network's chain id.
     /// @param where The address checked on it.
-    function checkNetworkFrozen(DeployDeclaration memory, DeploySuite memory frozen, string memory network, uint256 chainId, address where)
-        internal
-        pure
-    {
+    function checkNetworkFrozen(
+        DeployDeclaration memory,
+        DeploySuite memory frozen,
+        string memory network,
+        uint256 chainId,
+        address where
+    ) internal pure {
         if (!isPerNetwork(frozen)) {
             return;
         }
