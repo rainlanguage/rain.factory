@@ -222,6 +222,7 @@ library LibRainDeployCloneOnChainChecks {
     /// config is owned by `deployer`.
     function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256, address deployer)
         internal
+        pure
     {
         if (!isBeaconId(suiteId(suite))) {
             return;
