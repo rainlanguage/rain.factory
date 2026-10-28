@@ -152,7 +152,9 @@ library LibRainDeployCloneMechanism {
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData,
             checkDeclaration: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployBeaconDeclarationChecks.checkDeclaration
-                : LibRainDeployCloneOnChainChecks.checkDeclaration,
+                : id == CLONE_PER_NETWORK_MECHANISM
+                    ? LibRainDeployCloneOnChainChecks.checkDeclarationPerNetwork
+                    : LibRainDeployCloneOnChainChecks.checkDeclaration,
             checkNetwork: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployCloneOnChainChecks.checkNetworkBeaconProxy
                 : LibRainDeployCloneOnChainChecks.checkNetwork,

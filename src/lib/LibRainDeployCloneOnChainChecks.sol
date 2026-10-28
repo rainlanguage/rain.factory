@@ -17,8 +17,11 @@ import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBea
 import {
     BEACON_PROXY_MECHANISM,
     BEACON_PROXY_PER_NETWORK_MECHANISM,
+    CLONE_PER_NETWORK_MECHANISM,
+    CloneLayerConfig,
     LibRainDeployCloneMechanism
 } from "./LibRainDeployCloneMechanism.sol";
+import {LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 
 /// @param suite The beacon proxy suite.
 /// @param network The network.
@@ -182,6 +185,17 @@ library LibRainDeployCloneOnChainChecks {
     }
 
     function checkDeclaration(DeployDeclaration memory) internal {}
+
+    /// The clone-per-network handler's `checkDeclaration`: every release's declared extended networks are exactly
+    /// the ones its record under the config's root holds, else `ExtendedNetworksUnrecorded`.
+    function checkDeclarationPerNetwork(DeployDeclaration memory d) internal {
+        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d, CLONE_PER_NETWORK_MECHANISM, "");
+        for (uint256 i = 0; i < config.extended.length; i++) {
+            LibRainDeployExtendedNetworks.checkExtendedNetworksRecorded(
+                StdConstants.VM, config.extendedNetworksRoot, config.extended[i].suite, config.extended[i].networks
+            );
+        }
+    }
 
     function checkNetwork(DeployDeclaration memory, string memory, uint256) internal {}
 
