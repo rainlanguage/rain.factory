@@ -110,7 +110,7 @@ library LibRainDeployCloneMechanism {
             id: id,
             deployedAddress: deployedAddress,
             recordedAddress: recordedAddress,
-            deployStepData: stubDeployStepData,
+            deployStepData: deployStepData,
             deployStep: stubDeployStep,
             deployLocally: stubDeployLocally,
             deployLocallyOnChain: stubDeployLocallyOnChain,
@@ -150,9 +150,6 @@ library LibRainDeployCloneMechanism {
     }
 
 
-    function stubDeployStepData(DeploySuite memory, uint256) internal pure returns (bytes memory) {
-        revert("stub");
-    }
 
     function stubDeployStep(DeploySuite memory)
         internal
