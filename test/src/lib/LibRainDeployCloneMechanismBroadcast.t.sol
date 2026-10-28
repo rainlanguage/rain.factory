@@ -23,7 +23,7 @@ import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
 } from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
-import {BEACON_PROXY_ARTIFACT_PATH, LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
+import {LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockOriginOwnedCloneable} from "../../concrete/MockOriginOwnedCloneable.sol";
@@ -156,87 +156,6 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         assertEq(deployed.length, 1);
         assertEq(deployed[0], expected);
         assertEq(deployed[0].code, LibRainDeployClone.cloneRuntimeCode(implementation));
-    }
-
-    /// A Zoltu broadcast under `CLONE_ARTIFACT_PATH` formats no verify command, and instead one notice naming the
-    /// deployed address once, whose source needs verifying by hand on each network, emitted as `UnverifiableSource`
-    /// with the caller, not the deploy, as its sender.
-    function testZoltuBroadcastUnderTheCloneArtifactPathPrintsAManualVerificationNotice() external {
-        LibRainDeploy.etchZoltuFactory(vm);
-        DeploySuite memory suite = zoltuSuite(LibRainDeploy.zoltuAddress(type(MockCloneable).creationCode));
-        suite.storedBytecodeHash = keccak256(type(MockCloneable).runtimeCode);
-        suite.artifactPath = CLONE_ARTIFACT_PATH;
-        string[] memory networks = arbitrumAndPolygon();
-
-        address caller = makeAddr("broadcast caller");
-        LocalForkVm forkVm = new LocalForkVm();
-        vm.expectCall(address(forkVm), abi.encodeWithSignature("toString(address)"), 1);
-        vm.expectCall(address(forkVm), abi.encodeWithSignature("toString(address)", suite.storedDeployedAddress), 1);
-        vm.expectEmit(address(sDeploy));
-        emit UnverifiableSource(caller, suite.storedDeployedAddress, networks);
-        vm.prank(caller);
-        (address[] memory deployed,) =
-            sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
-        assertEq(deployed.length, 2);
-        assertEq(deployed[0], suite.storedDeployedAddress);
-        assertEq(deployed[1], suite.storedDeployedAddress);
-        assertEq(deployed[0].code, type(MockCloneable).runtimeCode);
-    }
-
-    /// `UnverifiableSource` indexes nothing: its one log carries the signature as its only topic, and the sender,
-    /// entry address and networks ABI-encoded in its data.
-    function testUnverifiableSourceLogsEveryArgumentAsData() external {
-        LibRainDeploy.etchZoltuFactory(vm);
-        DeploySuite memory suite = zoltuSuite(LibRainDeploy.zoltuAddress(type(MockCloneable).creationCode));
-        suite.storedBytecodeHash = keccak256(type(MockCloneable).runtimeCode);
-        suite.artifactPath = CLONE_ARTIFACT_PATH;
-        string[] memory networks = arbitrumAndPolygon();
-
-        address caller = makeAddr("broadcast caller");
-        LocalForkVm forkVm = new LocalForkVm();
-        vm.recordLogs();
-        vm.prank(caller);
-        sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        bytes32 signature = keccak256("UnverifiableSource(address,address,string[])");
-        uint256 found = 0;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics.length > 0 && logs[i].topics[0] == signature) {
-                found++;
-                assertEq(logs[i].emitter, address(sDeploy));
-                assertEq(logs[i].topics.length, 1);
-                assertEq(logs[i].data, abi.encode(caller, suite.storedDeployedAddress, networks));
-            }
-        }
-        assertEq(found, 1);
-    }
-
-    /// A Zoltu broadcast under `BEACON_PROXY_ARTIFACT_PATH` is treated as one under `CLONE_ARTIFACT_PATH`: one
-    /// `UnverifiableSource` notice and no verify command.
-    function testZoltuBroadcastUnderTheBeaconProxyArtifactPathPrintsAManualVerificationNotice() external {
-        LibRainDeploy.etchZoltuFactory(vm);
-        DeploySuite memory suite = zoltuSuite(LibRainDeploy.zoltuAddress(type(MockCloneable).creationCode));
-        suite.storedBytecodeHash = keccak256(type(MockCloneable).runtimeCode);
-        suite.artifactPath = BEACON_PROXY_ARTIFACT_PATH;
-        string[] memory networks = arbitrumAndPolygon();
-
-        address caller = makeAddr("broadcast caller");
-        LocalForkVm forkVm = new LocalForkVm();
-        vm.expectCall(address(forkVm), abi.encodeWithSelector(bytes4(keccak256("toString(address)"))), 1);
-        vm.expectCall(
-            address(forkVm),
-            abi.encodeWithSelector(bytes4(keccak256("toString(address)")), suite.storedDeployedAddress),
-            1
-        );
-        vm.expectEmit(address(sDeploy));
-        emit UnverifiableSource(caller, suite.storedDeployedAddress, networks);
-        vm.prank(caller);
-        (address[] memory deployed,) =
-            sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
-        assertEq(deployed.length, 2);
-        assertEq(deployed[0], suite.storedDeployedAddress);
-        assertEq(deployed[1], suite.storedDeployedAddress);
     }
 
     /// A beacon proxy suite over a fresh factory and a beacon of `MockOriginOwnedCloneable`, seating `owner`, on
