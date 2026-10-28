@@ -35,13 +35,6 @@ error FrozenSnapshotBeaconProxyMarkerAmbiguous(string path);
 /// @param path The record file.
 error FrozenSnapshotBeaconProxyMechanismDataMissing(string path);
 
-/// `Vm`'s `foundry.toml` reads, declared pure: a handler's `releasedImport` is pure and derives this package's import
-/// root from the manifest the way core's view `importPathForToml` derives rain-deploy's.
-interface VmPureToml {
-    function readFile(string calldata path) external pure returns (string memory);
-    function keyExistsToml(string calldata toml, string calldata key) external pure returns (bool);
-}
-
 /// @title LibRainDeployCloneSnapshot
 /// @notice The record a clone or beacon proxy release is frozen as, and how a released-suites lib reads it back.
 /// The record carries the untagged payload as `MECHANISM_DATA`, the `BEACON_PROXY` marker for a beacon proxy and
@@ -259,26 +252,19 @@ library LibRainDeployCloneSnapshot {
         return "../";
     }
 
-    /// `factoryImportRootForToml` against the `foundry.toml` on disk.
-    function derivedFactoryImportRoot() internal pure returns (string memory) {
-        Vm vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-        return factoryImportRootForToml(vm, VmPureToml(address(vm)).readFile("foundry.toml"));
-    }
-
     /// The root a generated lib reaches this package's `SOURCE_ROOT` by: `rain-factory-<version>/src/` when `toml`
     /// pins a rain-factory dependency, else `factoryImportRootInThisRepo`, the tree being this repo.
     /// @param vm The Vm instance for TOML operations.
     /// @param toml The manifest contents to read the pin from.
     /// @return The root.
-    function factoryImportRootForToml(Vm vm, string memory toml) internal pure returns (string memory) {
+    function factoryImportRootForToml(Vm vm, string memory toml) internal view returns (string memory) {
         string memory key = string.concat(".dependencies.", PACKAGE_NAME);
-        if (!VmPureToml(address(vm)).keyExistsToml(toml, key)) {
+        if (!vm.keyExistsToml(toml, key)) {
             return factoryImportRootInThisRepo();
         }
         string memory versionKey = string.concat(key, ".version");
-        string memory version = VmPureToml(address(vm)).keyExistsToml(toml, versionKey)
-            ? vm.parseTomlString(toml, versionKey)
-            : vm.parseTomlString(toml, key);
+        string memory version =
+            vm.keyExistsToml(toml, versionKey) ? vm.parseTomlString(toml, versionKey) : vm.parseTomlString(toml, key);
         return string.concat(PACKAGE_NAME, "-", version, "/", SOURCE_ROOT, "/");
     }
 
@@ -387,45 +373,46 @@ library LibRainDeployCloneSnapshot {
     }
 
     /// The import `releasedMechanismDataExpression` needs for `tag`. The root core passes reaches rain-deploy, not
-    /// this package, so this package's root is derived from `foundry.toml` instead.
+    /// this package, so this package's root is read from the handler's `CloneLayerConfig.factoryImportRoot`.
+    /// @param d The declaration carrying the handler.
     /// @param tag A mechanism tag.
     /// @return The import line.
-    function releasedImportForTag(bytes32 tag) internal pure returns (string memory) {
+    function releasedImportForTag(DeployDeclaration memory d, bytes32 tag) internal pure returns (string memory) {
         return string.concat(
             "import {",
             mechanismConstantName(tag),
             "} from \"",
-            derivedFactoryImportRoot(),
+            LibRainDeployCloneMechanism.layerConfig(d, tag, "").factoryImportRoot,
             CLONE_MECHANISM_SOURCE_SUBPATH,
             "\";\n"
         );
     }
 
     /// @return `releasedImportForTag` of `CLONE_MECHANISM`.
-    function releasedCloneImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
-        return releasedImportForTag(CLONE_MECHANISM);
+    function releasedCloneImport(DeployDeclaration memory d, string memory) internal pure returns (string memory) {
+        return releasedImportForTag(d, CLONE_MECHANISM);
     }
 
     /// @return `releasedImportForTag` of `CLONE_PER_NETWORK_MECHANISM`.
-    function releasedClonePerNetworkImport(DeployDeclaration memory, string memory)
+    function releasedClonePerNetworkImport(DeployDeclaration memory d, string memory)
         internal
         pure
         returns (string memory)
     {
-        return releasedImportForTag(CLONE_PER_NETWORK_MECHANISM);
+        return releasedImportForTag(d, CLONE_PER_NETWORK_MECHANISM);
     }
 
     /// @return `releasedImportForTag` of `BEACON_PROXY_MECHANISM`.
-    function releasedBeaconProxyImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
-        return releasedImportForTag(BEACON_PROXY_MECHANISM);
+    function releasedBeaconProxyImport(DeployDeclaration memory d, string memory) internal pure returns (string memory) {
+        return releasedImportForTag(d, BEACON_PROXY_MECHANISM);
     }
 
     /// @return `releasedImportForTag` of `BEACON_PROXY_PER_NETWORK_MECHANISM`.
-    function releasedBeaconProxyPerNetworkImport(DeployDeclaration memory, string memory)
+    function releasedBeaconProxyPerNetworkImport(DeployDeclaration memory d, string memory)
         internal
         pure
         returns (string memory)
     {
-        return releasedImportForTag(BEACON_PROXY_PER_NETWORK_MECHANISM);
+        return releasedImportForTag(d, BEACON_PROXY_PER_NETWORK_MECHANISM);
     }
 }

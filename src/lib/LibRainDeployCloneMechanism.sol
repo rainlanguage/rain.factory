@@ -3,6 +3,7 @@
 pragma solidity ^0.8.25;
 
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
+import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 
 import {
@@ -50,6 +51,8 @@ struct CloneLayerConfig {
     string extendedNetworksRoot;
     /// Each per-network release's extended networks.
     ExtendedNetworksDeclaration[] extended;
+    /// The root a generated lib reaches this package's `src/` by; `extend` derives it from `foundry.toml`.
+    string factoryImportRoot;
 }
 
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
@@ -207,7 +210,7 @@ library LibRainDeployCloneMechanism {
     /// Appends the four clone mechanism handlers to `d`, extended networks read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
     /// @param d The declaration, mutated.
     /// @param beacons The beacons beacon proxy suites resolve through.
-    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal pure {
+    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal view {
         extend(d, beacons, LibRainDeploySnapshot.LIB_FS_ROOT);
     }
 
@@ -215,20 +218,33 @@ library LibRainDeployCloneMechanism {
     /// @param d The declaration, mutated.
     /// @param beacons The beacons beacon proxy suites resolve through.
     /// @param root The root extended networks records are read under.
-    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons, string memory root) internal pure {
+    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons, string memory root) internal view {
         extend(
             d,
             CloneLayerConfig({
-                beacons: beacons, extendedNetworksRoot: root, extended: new ExtendedNetworksDeclaration[](0)
+                beacons: beacons,
+                extendedNetworksRoot: root,
+                extended: new ExtendedNetworksDeclaration[](0),
+                factoryImportRoot: ""
             })
         );
     }
 
-    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(config)`.
+    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(config)` with `factoryImportRoot`
+    /// derived from `foundry.toml` in place of whatever `config` carries.
     /// @param d The declaration, mutated.
     /// @param config The layer config every clone handler carries.
-    function extend(DeployDeclaration memory d, CloneLayerConfig memory config) internal pure {
-        bytes memory layer = abi.encode(config);
+    function extend(DeployDeclaration memory d, CloneLayerConfig memory config) internal view {
+        bytes memory layer = abi.encode(
+            CloneLayerConfig({
+                beacons: config.beacons,
+                extendedNetworksRoot: config.extendedNetworksRoot,
+                extended: config.extended,
+                factoryImportRoot: LibRainDeployCloneSnapshot.factoryImportRootForToml(
+                    StdConstants.VM, StdConstants.VM.readFile("foundry.toml")
+                )
+            })
+        );
         LibRainDeployDeclaration.addMechanism(d, handler(CLONE_MECHANISM, layer));
         LibRainDeployDeclaration.addMechanism(d, handler(CLONE_PER_NETWORK_MECHANISM, layer));
         LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_MECHANISM, layer));
