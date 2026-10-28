@@ -5,7 +5,7 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuite, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
@@ -232,4 +232,27 @@ library LibRainDeployCloneSnapshot {
 
     /// A clone or beacon proxy names no compiled source to verify, so nothing is logged.
     function logVerification(Vm, string[] memory, DeploySuite memory, address[] memory) internal pure {}
+
+    /// Deploys `suite` locally under a reverted state snapshot and writes its record.
+    /// @return The path written.
+    function writeSuiteSnapshot(Vm vm, SnapshotFile memory file, DeploySuite memory suite)
+        internal
+        returns (string memory)
+    {
+        uint256 snapshotId = vm.snapshotState();
+        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(vm, suite);
+        writeCloneSnapshotFile(
+            vm,
+            LibRainDeploySnapshot.dirForSnapshot(file.root, file.dir),
+            file.contractName,
+            file.spdxLicenseIdentifier,
+            file.copyrightText,
+            suite,
+            deployed
+        );
+        if (!vm.revertToState(snapshotId)) {
+            revert SnapshotStateRevertFailed(suite.suite, snapshotId);
+        }
+        return LibRainDeploySnapshot.pathForSnapshot(file.root, file.dir, file.contractName);
+    }
 }

@@ -122,7 +122,7 @@ library LibRainDeployCloneMechanism {
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
             logVerification: LibRainDeployCloneSnapshot.logVerification,
-            writeSuiteSnapshot: stubWriteSuiteSnapshot,
+            writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
             releasedMechanismData: stubReleasedMechanismData
         });
     }
@@ -193,14 +193,6 @@ library LibRainDeployCloneMechanism {
     }
 
     function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
-        revert("stub");
-    }
-
-    function stubWriteSuiteSnapshot(Vm, SnapshotFile memory, DeploySuite memory)
-        internal
-        pure
-        returns (string memory)
-    {
         revert("stub");
     }
 
