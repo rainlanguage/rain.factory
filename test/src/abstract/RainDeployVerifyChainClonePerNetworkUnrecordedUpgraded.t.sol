@@ -2,15 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {ExtendedNetworkUnfrozen} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ExtendedNetworkUnfrozen, LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {CloneDeploy, CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
-    PerNetworkCloneDeploys,
     etchPerNetworkCloneRelease,
     onlyFirstRecordedNetwork,
     onlyFirstRecordedNetworkSuites,
@@ -31,38 +30,25 @@ contract RainDeployVerifyChainClonePerNetworkUnrecordedUpgradedTest is
     UpgradedPerNetworkCloneDeploys,
     RainDeployVerifyChain
 {
-    /// @inheritdoc PerNetworkCloneDeploys
-    function supportedNetworks()
-        internal
-        view
-        override(PerNetworkCloneDeploys, RainDeploySuitesBase)
-        returns (string[] memory)
-    {
-        return PerNetworkCloneDeploys.supportedNetworks();
-    }
-
     /// Puts the release's dependencies, and its clone at the release's address for each network, on
     /// every fork.
     function setUp() external {
-        etchPerNetworkCloneRelease(vm, releasedSuites()[0], perNetworkCloneReleaseAddresses());
+        etchPerNetworkCloneRelease(vm, declaration().released[0], perNetworkCloneReleaseAddresses());
     }
 
     /// External wrapper for `checkDeployedOnSupportedNetworks`.
     /// @param suites The suites to check.
     function externalCheckDeployedOnSupportedNetworks(DeploySuite[] memory suites) external {
-        checkDeployedOnSupportedNetworks(suites);
+        checkDeployedOnSupportedNetworks(declaration(), suites);
     }
 
     /// The release takes Polygon at the candidate's init data under its own implementation.
     function testUnrecordedNetworkTakesTheCandidatesDataUnderTheReleasesImplementation() external view {
-        CloneNetworks memory extended = abi.decode(
-            onSupportedNetworks(
-                withExtendedNetworks(onlyFirstRecordedNetwork(releasedSuites()[0])),
-                LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(supportedNetworks()))
-            )
-            .mechanismData,
-            (CloneNetworks)
-        );
+        DeployDeclaration memory d = declaration();
+        DeploySuite memory suite = onlyFirstRecordedNetwork(d.released[0]);
+        addRecordedNetworks(d, suite);
+        addCandidateNetworks(d, suite, LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(d.networks)));
+        CloneNetworks memory extended = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         assertEq(extended.networks.length, 2);
         assertEq(extended.networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         assertEq(
@@ -74,8 +60,8 @@ contract RainDeployVerifyChainClonePerNetworkUnrecordedUpgradedTest is
     /// whether its clone is there or that address is empty: the frozen check runs before the code
     /// check.
     function testUnrecordedNetworkIsRefusedAsUnfrozenAtTheReleaseDerivedAddress() external {
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(releasedSuites()[0]);
-        CloneNetworks memory release = abi.decode(suites[0].mechanismData, (CloneNetworks));
+        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(declaration().released[0]);
+        CloneNetworks memory release = abi.decode(LibRainDeployCloneMechanism.payload(suites[0]), (CloneNetworks));
         assertEq(release.networks.length, 1);
         assertEq(release.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
         CloneDeploy memory candidate = upgradedPerNetworkClone();
