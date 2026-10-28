@@ -15,7 +15,8 @@ import {
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
-import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy, LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -116,7 +117,7 @@ library LibRainDeployCloneMechanism {
             deployLocally: deployLocally,
             deployLocallyOnChain: deployLocallyOnChain,
             addUnrecordedNetworks: addUnrecordedNetworks,
-            addRecordedNetworks: stubAddRecordedNetworks,
+            addRecordedNetworks: addRecordedNetworks,
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
             logVerification: stubLogVerification,
@@ -179,8 +180,15 @@ library LibRainDeployCloneMechanism {
         suite.mechanismData = withUnrecordedNetworks(suite, candidate, chainIds).mechanismData;
     }
 
-    function stubAddRecordedNetworks(DeploySuite memory) internal pure {
-        revert("stub");
+    /// Appends a per-network release's extended networks record, read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
+    function addRecordedNetworks(DeploySuite memory suite) internal view {
+        if (!isPerNetwork(suite)) {
+            return;
+        }
+        ChainDeploy[] memory extended = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
+            Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), LibRainDeploySnapshot.LIB_FS_ROOT, suite.suite
+        );
+        suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
     }
 
     function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
