@@ -10,7 +10,6 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite,
-    SnapshotFile,
     ExtendedNetworksUnexpected
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
@@ -123,7 +122,7 @@ library LibRainDeployCloneMechanism {
             checkOnChain: stubCheck,
             logVerification: LibRainDeployCloneSnapshot.logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
-            releasedMechanismData: stubReleasedMechanismData
+            releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData
         });
     }
 
@@ -193,10 +192,6 @@ library LibRainDeployCloneMechanism {
     }
 
     function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
-        revert("stub");
-    }
-
-    function stubReleasedMechanismData(Vm, string memory, string memory) internal pure returns (string memory) {
         revert("stub");
     }
 

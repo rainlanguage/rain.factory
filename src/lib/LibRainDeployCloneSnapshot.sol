@@ -255,4 +255,19 @@ library LibRainDeployCloneSnapshot {
         }
         return LibRainDeploySnapshot.pathForSnapshot(file.root, file.dir, file.contractName);
     }
+
+    /// Maps the record at `path` to its mechanism id and refuses `FrozenSnapshotMechanismDataMissing` for one with no
+    /// `MECHANISM_DATA`.
+    /// @return The expression of the released suite's `mechanismData`.
+    function releasedMechanismData(Vm vm, string memory path, string memory prefix)
+        internal
+        view
+        returns (string memory)
+    {
+        bytes32 tag = recordedMechanismTag(vm, path);
+        if (tag == bytes32(0)) {
+            revert FrozenSnapshotMechanismDataMissing(path);
+        }
+        return releasedMechanismDataExpression(vm, tag, prefix);
+    }
 }
