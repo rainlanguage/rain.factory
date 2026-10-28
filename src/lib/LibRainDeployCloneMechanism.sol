@@ -274,6 +274,9 @@ library LibRainDeployCloneMechanism {
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
         uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
+        if (chainIds.length == 0) {
+            return deployed;
+        }
         uint256 callerChainId = block.chainid;
         LibRainDeploy.etchDependencies(vm, suite.dependencies);
         for (uint256 i = 1; i < chainIds.length; i++) {
