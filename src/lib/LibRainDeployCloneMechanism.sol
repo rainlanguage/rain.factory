@@ -223,8 +223,12 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_PER_NETWORK_MECHANISM, layer));
     }
 
+    /// @return One address per network: a one-data suite's one address once per each of its `networks`, a per-network
+    /// suite's address on each network it lists, in its address order.
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
-        uint256[] memory chainIds = addressChainIds(suite);
+        uint256[] memory chainIds = isPerNetwork(suite)
+            ? addressChainIds(suite)
+            : LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
         for (uint256 i = 0; i < chainIds.length; i++) {
             deployed[i] = deployedAddress(d, suite, chainIds[i]);
@@ -543,19 +547,11 @@ library LibRainDeployCloneMechanism {
 
     /// @param suite A clone or beacon proxy suite.
     /// @param data The new payload.
-    /// @return A copy of `suite` whose mechanism data wraps `data` under its tag.
+    /// @return A deep copy of `suite` whose mechanism data wraps `data` under its tag; `suite` is not changed.
     function withPayload(DeploySuite memory suite, bytes memory data) internal pure returns (DeploySuite memory) {
-        return DeploySuite({
-            suite: suite.suite,
-            creationCode: suite.creationCode,
-            storedDeployedAddress: suite.storedDeployedAddress,
-            storedBytecodeHash: suite.storedBytecodeHash,
-            storedRuntimeCode: suite.storedRuntimeCode,
-            artifactPath: suite.artifactPath,
-            dependencies: suite.dependencies,
-            mechanismData: abi.encode(mechanismTag(suite.mechanismData), data),
-            networks: suite.networks
-        });
+        DeploySuite memory copy = abi.decode(abi.encode(suite), (DeploySuite));
+        copy.mechanismData = abi.encode(mechanismTag(suite.mechanismData), data);
+        return copy;
     }
 
     /// @param suite A per-network clone or beacon proxy suite.
