@@ -268,4 +268,9 @@ library LibRainDeployCloneSnapshot {
         }
         return releasedMechanismDataExpression(vm, tag, prefix);
     }
+
+    /// @return The empty string: `releasedMechanismData`'s expression names only the record's own constants.
+    function releasedImport(string memory) internal pure returns (string memory) {
+        return "";
+    }
 }

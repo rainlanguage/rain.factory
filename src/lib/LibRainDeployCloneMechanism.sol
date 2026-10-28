@@ -127,7 +127,8 @@ library LibRainDeployCloneMechanism {
             checkBroadcastSeat: LibRainDeployCloneOnChainChecks.checkBroadcastSeat,
             logVerification: logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
-            releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData
+            releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData,
+            releasedImport: LibRainDeployCloneSnapshot.releasedImport
         });
     }
 
