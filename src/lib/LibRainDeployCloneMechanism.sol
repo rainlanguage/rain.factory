@@ -33,6 +33,7 @@ import {
 } from "./LibRainDeployBeaconProxy.sol";
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
+import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
 
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
 bytes32 constant CLONE_MECHANISM = keccak256("rain.factory.deploy.mechanism.clone");
@@ -131,7 +132,9 @@ library LibRainDeployCloneMechanism {
             logVerification: logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData,
-            checkDeclaration: LibRainDeployCloneOnChainChecks.checkDeclaration,
+            checkDeclaration: LibRainDeployCloneOnChainChecks.isBeaconId(id)
+                ? LibRainDeployBeaconDeclarationChecks.checkDeclaration
+                : LibRainDeployCloneOnChainChecks.checkDeclaration,
             checkNetwork: LibRainDeployCloneOnChainChecks.checkNetwork,
             releasedImport: LibRainDeployCloneSnapshot.releasedImport
         });
