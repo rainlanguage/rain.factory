@@ -128,13 +128,18 @@ library LibRainDeployCloneOnChainChecks {
         uint256 snapshotId = vm.snapshotState();
         vm.chainId(chainId);
         handlerOf(d, suite).deployLocallyOnChain(d, vm, suite);
-        BeaconProbe memory probe;
-        probe.codeHash = beacon.codehash;
         // slither-disable-next-line low-level-calls
-        (probe.ownerAnswered, probe.owner) = beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
+        (bool ownerAnswered, bytes memory owner) = beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
         // slither-disable-next-line low-level-calls
-        (probe.implementationAnswered, probe.implementation) =
+        (bool implementationAnswered, bytes memory implementation) =
             beacon.staticcall(abi.encodeCall(IBeacon.implementation, ()));
+        BeaconProbe memory probe = BeaconProbe({
+            codeHash: beacon.codehash,
+            ownerAnswered: ownerAnswered,
+            owner: owner,
+            implementationAnswered: implementationAnswered,
+            implementation: implementation
+        });
         if (!vm.revertToState(snapshotId)) {
             revert BeaconSnapshotRevertFailed(suite.suite, snapshotId);
         }

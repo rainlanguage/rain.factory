@@ -68,6 +68,8 @@ library LibRainDeployBeaconDeclarationChecks {
             transitions: declaration.transitions
         });
         bool named = bytes(beacon.beaconSuite).length != 0;
+        // Read only under `named`, which assigns it.
+        // slither-disable-next-line uninitialized-local
         DeploySuite memory suite;
         if (named) {
             if (beacon.beacon != address(0) || beacon.beaconCodeHash != bytes32(0)) {
@@ -81,6 +83,8 @@ library LibRainDeployBeaconDeclarationChecks {
         LibRainDeployBeacon.checkTransitionMigrations(chainId, beacon);
         address initialImplementation = LibRainDeployCloneOnChainChecks.implementationAt(d, beacon, 0, chainId);
         for (uint256 state = 1; state <= beacon.transitions.length; state++) {
+            // Called for its refusals: every later state's implementation must be released and recorded on `chainId`.
+            // slither-disable-next-line unused-return
             LibRainDeployCloneOnChainChecks.implementationAt(d, beacon, state, chainId);
         }
         if (named) {

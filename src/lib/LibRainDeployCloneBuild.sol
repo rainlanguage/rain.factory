@@ -30,6 +30,8 @@ library LibRainDeployCloneBuild {
         CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d);
         for (uint256 i = 0; i < d.released.length; i++) {
             ChainDeploy[] memory declared = LibRainDeployCloneMechanism.extendedNetworksOf(config, d.released[i].suite);
+            // Called for its refusals: `declared` is what is written, once each network derives its declared address.
+            // slither-disable-next-line unused-return
             LibRainDeployCloneMechanism.appendExtendedNetworks(d.released[i], declared);
             LibRainDeployExtendedNetworks.writeExtendedNetworks(
                 vm, config.extendedNetworksRoot, d.released[i].suite, declared, spdxLicenseIdentifier, copyrightText
@@ -53,6 +55,8 @@ library LibRainDeployCloneBuild {
         string[] memory written = new string[](d.released.length);
         uint256 count = 0;
         for (uint256 i = 0; i < d.released.length; i++) {
+            // The path alone names the record; its directory is not needed.
+            // slither-disable-next-line unused-return
             (, string memory path) = LibRainDeployExtendedNetworks.writtenExtendedNetworksPath(
                 config.extendedNetworksRoot,
                 d.released[i].suite,

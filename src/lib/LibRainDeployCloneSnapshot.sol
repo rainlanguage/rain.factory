@@ -186,6 +186,8 @@ library LibRainDeployCloneSnapshot {
     /// @param lines Its `recordLines`.
     /// @return The tag.
     function recordedMechanismTag(Vm vm, string memory path, string[] memory lines) internal pure returns (bytes32) {
+        // Only whether the record is per network is needed, not its addresses.
+        // slither-disable-next-line unused-return
         (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
         uint256 mechanismData = 0;
         uint256 markers = 0;
@@ -280,6 +282,8 @@ library LibRainDeployCloneSnapshot {
     /// @return The tag.
     function legacyRecordTag(Vm vm, string memory path) internal view returns (bytes32) {
         string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
+        // Only whether the record declares `MECHANISM_DATA` is needed.
+        // slither-disable-next-line unused-return
         (bool mechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path, lines);
         if (!mechanismData || !isLegacyRecord(vm, path, lines)) {
             return bytes32(0);
@@ -324,6 +328,8 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
+        // Only whether the record declares `MECHANISM_DATA` is needed.
+        // slither-disable-next-line unused-return
         (bool mechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path, lines);
         if (!mechanismData) {
             revert FrozenSnapshotMechanismDataMissing(path);
