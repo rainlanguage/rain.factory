@@ -4,17 +4,28 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployDependency, DeployMechanism, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {
-    FrozenSnapshotBeaconProxyMarkerAmbiguous,
-    FrozenSnapshotBeaconProxyMechanismDataMissing,
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
 } from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {
+    BEACON_PROXY_MECHANISM,
+    BEACON_PROXY_PER_NETWORK_MECHANISM,
+    CLONE_MECHANISM,
+    CLONE_PER_NETWORK_MECHANISM,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {
+    FrozenSnapshotBeaconProxyMarkerAmbiguous,
+    FrozenSnapshotBeaconProxyMechanismDataMissing,
+    LibRainDeployCloneSnapshot
+} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
+import {RainDeployCloneSuitesBase} from "../../../src/abstract/RainDeployCloneSuitesBase.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneChainIds, perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
@@ -23,7 +34,11 @@ import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 /// @title LibRainDeploySnapshotBeaconProxyTest
 /// @notice The beacon proxy record marker: what the writer emits, how `recordedMechanism` reads it,
 /// and the released lib entries it produces.
-contract LibRainDeploySnapshotBeaconProxyTest is Test {
+contract LibRainDeploySnapshotBeaconProxyTest is Test, RainDeployCloneSuitesBase {
+    function releasedSuites() internal pure override returns (DeploySuite[] memory) {
+        return new DeploySuite[](0);
+    }
+
     string constant ROOT = "fixture-lib/snapshot-beacon-proxy";
 
     string constant MARKER_LINE = "bool constant BEACON_PROXY = true;\n";
@@ -35,8 +50,8 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
 
     /// @param path The record.
     /// @return The mechanism it was cut with.
-    function externalRecordedMechanism(string memory path) external view returns (DeployMechanism) {
-        return LibRainDeploySnapshot.recordedMechanism(vm, path);
+    function externalRecordedMechanism(string memory path) external view returns (bytes32) {
+        return LibRainDeployCloneSnapshot.recordedMechanismTag(vm, path);
     }
 
     /// Writes `record` as the one file of a test's own directory.
@@ -82,12 +97,12 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
     /// @param name The test's directory under `ROOT`.
     /// @param record The record's contents.
     /// @param expected The mechanism expected.
-    function checkRead(string memory name, string memory record, DeployMechanism expected) internal {
+    function checkRead(string memory name, string memory record, bytes32 expected) internal {
         (string memory dir, string memory path) = writeRecord(name, record);
-        DeployMechanism read = this.externalRecordedMechanism(path);
+        bytes32 read = this.externalRecordedMechanism(path);
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(dir, true);
-        assertEq(uint256(read), uint256(expected));
+        assertEq(read, expected);
     }
 
     /// The marker beside `MECHANISM_DATA` reads as a beacon proxy, one-address or per-network by
@@ -96,29 +111,29 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
         checkRead(
             "one",
             string.concat(MECHANISM_DATA_LINE, MARKER_LINE, everyNetworkLine(address(1))),
-            DeployMechanism.BeaconProxy
+            BEACON_PROXY_MECHANISM
         );
         checkRead(
             "one-marker-first",
             string.concat(MARKER_LINE, everyNetworkLine(address(1)), MECHANISM_DATA_LINE),
-            DeployMechanism.BeaconProxy
+            BEACON_PROXY_MECHANISM
         );
         checkRead(
             "per-network",
             string.concat(
                 perNetworkLine(137, address(2)), MARKER_LINE, MECHANISM_DATA_LINE, perNetworkLine(42161, address(3))
             ),
-            DeployMechanism.BeaconProxyPerNetwork
+            BEACON_PROXY_PER_NETWORK_MECHANISM
         );
     }
 
     /// The same records without the marker read as clones.
     function testNoMarkerReadsAsAClone() external {
-        checkRead("clone", string.concat(MECHANISM_DATA_LINE, everyNetworkLine(address(1))), DeployMechanism.Clone);
+        checkRead("clone", string.concat(MECHANISM_DATA_LINE, everyNetworkLine(address(1))), CLONE_MECHANISM);
         checkRead(
             "clone-per-network",
             string.concat(perNetworkLine(137, address(2)), MECHANISM_DATA_LINE, perNetworkLine(42161, address(3))),
-            DeployMechanism.ClonePerNetwork
+            CLONE_PER_NETWORK_MECHANISM
         );
     }
 
@@ -196,26 +211,6 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
         );
     }
 
-    /// Every mechanism's name is its enum member, and only the per-network ones record an address
-    /// per network.
-    function testMechanismNameAndPerNetworkKind() external pure {
-        assertEq(LibRainDeploySnapshot.mechanismName(DeployMechanism.Zoltu), "DeployMechanism.Zoltu");
-        assertEq(LibRainDeploySnapshot.mechanismName(DeployMechanism.Clone), "DeployMechanism.Clone");
-        assertEq(
-            LibRainDeploySnapshot.mechanismName(DeployMechanism.ClonePerNetwork), "DeployMechanism.ClonePerNetwork"
-        );
-        assertEq(LibRainDeploySnapshot.mechanismName(DeployMechanism.BeaconProxy), "DeployMechanism.BeaconProxy");
-        assertEq(
-            LibRainDeploySnapshot.mechanismName(DeployMechanism.BeaconProxyPerNetwork),
-            "DeployMechanism.BeaconProxyPerNetwork"
-        );
-        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.Zoltu));
-        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.Clone));
-        assertTrue(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.ClonePerNetwork));
-        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxy));
-        assertTrue(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxyPerNetwork));
-    }
-
     /// A beacon proxy candidate over a fresh factory and beacon, both declared as its dependencies.
     /// @param initDataPerNetwork Whether the init data is per network.
     /// @return The candidate's suite.
@@ -243,7 +238,9 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
     function writeBeaconProxyRecord(string memory tag, DeploySuite memory suite) internal returns (string memory) {
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.createDir(string.concat(ROOT, "/", tag), true);
-        return LibRainDeploySnapshot.writeSnapshot(vm, ROOT, tag, "BeaconProxyRecord", suite);
+        return writeSuiteSnapshot(
+            vm, ROOT, tag, "BeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT, suite
+        );
     }
 
     /// @param haystack The text.
@@ -269,7 +266,7 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
             1
         );
         assertEq(occurrences(record, string.concat(";\n", MARKER_BLOCK)), 1);
-        assertEq(uint256(this.externalRecordedMechanism(path)), uint256(DeployMechanism.BeaconProxy));
+        assertEq(this.externalRecordedMechanism(path), BEACON_PROXY_MECHANISM);
         assertTrue(
             vm.contains(
                 record,
@@ -289,10 +286,18 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
         assertTrue(vm.contains(imported, "DEPLOYED_ADDRESS as BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_1_MECHANISM_DATA"));
 
-        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite);
+        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, releasedMechanismData);
         assertTrue(vm.contains(entry, "storedDeployedAddress: BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS,\n"));
-        assertTrue(vm.contains(entry, "mechanism: DeployMechanism.BeaconProxy,\n"));
-        assertTrue(vm.contains(entry, "mechanismData: BeaconProxyRecord_0_0_1_MECHANISM_DATA\n"));
+        assertTrue(
+            vm.contains(
+                entry,
+                string.concat(
+                    "mechanismData: abi.encode(bytes32(",
+                    vm.toString(BEACON_PROXY_MECHANISM),
+                    "), BeaconProxyRecord_0_0_1_MECHANISM_DATA)\n"
+                )
+            )
+        );
         assertTrue(vm.contains(entry, string.concat("artifactPath: \"", BEACON_PROXY_ARTIFACT_PATH, "\"")));
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(string.concat(ROOT, "/0_0_1"), true);
@@ -314,7 +319,7 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
             1
         );
         assertEq(occurrences(record, string.concat(";\n", MARKER_BLOCK)), 1);
-        assertEq(uint256(this.externalRecordedMechanism(path)), uint256(DeployMechanism.BeaconProxyPerNetwork));
+        assertEq(this.externalRecordedMechanism(path), BEACON_PROXY_PER_NETWORK_MECHANISM);
         assertTrue(
             vm.contains(record, "/// @dev The deterministic deploy address of the beacon proxy on chain id\n/// 42161,")
         );
@@ -335,10 +340,18 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
         assertFalse(vm.contains(imported, "DEPLOYED_ADDRESS as"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_2_MECHANISM_DATA"));
 
-        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite);
+        string memory entry = LibRainDeploySnapshot.releasedSuiteEntry(vm, 0, path, suite, releasedMechanismData);
         assertTrue(vm.contains(entry, "storedDeployedAddress: address(0),\n"));
-        assertTrue(vm.contains(entry, "mechanism: DeployMechanism.BeaconProxyPerNetwork,\n"));
-        assertTrue(vm.contains(entry, "mechanismData: BeaconProxyRecord_0_0_2_MECHANISM_DATA\n"));
+        assertTrue(
+            vm.contains(
+                entry,
+                string.concat(
+                    "mechanismData: abi.encode(bytes32(",
+                    vm.toString(BEACON_PROXY_PER_NETWORK_MECHANISM),
+                    "), BeaconProxyRecord_0_0_2_MECHANISM_DATA)\n"
+                )
+            )
+        );
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(string.concat(ROOT, "/0_0_2"), true);
     }
