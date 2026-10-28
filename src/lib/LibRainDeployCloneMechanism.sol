@@ -13,6 +13,7 @@ import {
     SnapshotFile,
     ExtendedNetworksUnexpected
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
@@ -112,7 +113,7 @@ library LibRainDeployCloneMechanism {
             recordedAddress: recordedAddress,
             deployStepData: deployStepData,
             deployStep: deployStep,
-            deployLocally: stubDeployLocally,
+            deployLocally: deployLocally,
             deployLocallyOnChain: stubDeployLocallyOnChain,
             addUnrecordedNetworks: stubAddUnrecordedNetworks,
             addRecordedNetworks: stubAddRecordedNetworks,
@@ -149,8 +150,15 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler());
     }
 
-    function stubDeployLocally(Vm, DeploySuite memory) internal pure returns (address[] memory) {
-        revert("stub");
+    function deployLocally(Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
+        uint256[] memory chainIds = addressChainIds(suite);
+        address[] memory deployed = new address[](chainIds.length);
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            deployed[i] = deployedAddress(suite, chainIds[i]);
+        }
+        LibRainDeploy.etchDependencies(vm, suite.dependencies);
+        deployTargets(vm, suite, deployed);
+        return deployed;
     }
 
     function stubDeployLocallyOnChain(Vm, DeploySuite memory) internal pure {
