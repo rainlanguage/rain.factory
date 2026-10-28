@@ -132,10 +132,10 @@ event UnverifiableSource(address sender, address entryAddress, string[] networks
 /// @title LibRainDeployCloneMechanism
 /// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their tags.
 library LibRainDeployCloneMechanism {
-    function handler(bytes32 id, bytes memory layerConfig) internal pure returns (DeployMechanismHandler memory) {
+    function handler(bytes32 id, bytes memory config) internal pure returns (DeployMechanismHandler memory) {
         return DeployMechanismHandler({
             id: id,
-            config: layerConfig,
+            config: config,
             deployedAddress: deployedAddress,
             recordedAddress: recordedAddress,
             deployStepData: deployStepData,

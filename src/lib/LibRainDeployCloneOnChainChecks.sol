@@ -216,7 +216,7 @@ library LibRainDeployCloneOnChainChecks {
 
     /// The clone-per-network handler's `checkDeclaration`: every release's declared extended networks are exactly
     /// the ones its record under the config's root holds, else `ExtendedNetworksUnrecorded`.
-    function checkDeclarationPerNetwork(DeployDeclaration memory d) internal {
+    function checkDeclarationPerNetwork(DeployDeclaration memory d) internal view {
         CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d, CLONE_PER_NETWORK_MECHANISM, "");
         for (uint256 i = 0; i < config.extended.length; i++) {
             LibRainDeployExtendedNetworks.checkExtendedNetworksRecorded(
