@@ -1,3 +1,10 @@
+# Release metadata, not foundry config: `LibRainDeploySnapshot.deployTag` reads
+# `version` as the release being built. Newest published release, moved only by
+# the release PR that cuts the next tag.
+[external.package]
+name = "rain-factory"
+version = "0.2.5"
+
 [profile.default]
 src = 'src'
 test = 'test'
