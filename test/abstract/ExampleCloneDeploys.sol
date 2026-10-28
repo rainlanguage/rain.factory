@@ -2,9 +2,16 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {CLONE_MECHANISM} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {RainDeployCloneSuitesBase} from "../../src/abstract/RainDeployCloneSuitesBase.sol";
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {CLONE_MECHANISM, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {CLONE_ARTIFACT_PATH, CloneDeploy, LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../concrete/MockCloneFactory.sol";
@@ -64,48 +71,63 @@ function exampleCloneRelease() pure returns (CloneDeploy memory) {
     });
 }
 
-/// @title ExampleCloneDeploys
-/// @notice A clone deploy repo's declaration, as the abstracts see it.
-abstract contract ExampleCloneDeploys is RainDeployCloneSuitesBase {
-    /// @inheritdoc RainDeploySuitesBase
-    function releasedSuites() internal pure override returns (DeploySuite[] memory) {
-        DeploySuite[] memory suites = new DeploySuite[](1);
-        suites[0] = DeploySuite({
-            suite: "example-clone@0_0_1",
-            creationCode: EXAMPLE_CLONE_CREATION_CODE,
-            storedDeployedAddress: EXAMPLE_CLONE_DEPLOYED_ADDRESS,
-            storedBytecodeHash: EXAMPLE_CLONE_BYTECODE_HASH,
-            storedRuntimeCode: EXAMPLE_CLONE_RUNTIME_CODE,
-            artifactPath: CLONE_ARTIFACT_PATH,
-            dependencies: abi.decode(EXAMPLE_CLONE_DEPENDENCIES, (DeployDependency[])),
-            mechanismData: abi.encode(CLONE_MECHANISM, EXAMPLE_CLONE_MECHANISM_DATA)
-        });
-        return suites;
-    }
+/// @return The example clone's committed release.
+function exampleCloneReleased() pure returns (DeploySuite[] memory) {
+    DeploySuite[] memory suites = new DeploySuite[](1);
+    suites[0] = DeploySuite({
+        suite: "example-clone@0_0_1",
+        creationCode: EXAMPLE_CLONE_CREATION_CODE,
+        storedDeployedAddress: EXAMPLE_CLONE_DEPLOYED_ADDRESS,
+        storedBytecodeHash: EXAMPLE_CLONE_BYTECODE_HASH,
+        storedRuntimeCode: EXAMPLE_CLONE_RUNTIME_CODE,
+        artifactPath: CLONE_ARTIFACT_PATH,
+        dependencies: abi.decode(EXAMPLE_CLONE_DEPENDENCIES, (DeployDependency[])),
+        mechanismData: abi.encode(CLONE_MECHANISM, EXAMPLE_CLONE_MECHANISM_DATA),
+        networks: new string[](0)
+    });
+    return suites;
+}
 
-    /// @inheritdoc RainDeployCloneSuitesBase
-    function cloneDeploys() internal pure virtual override returns (CloneDeploy[] memory) {
-        CloneDeploy[] memory clones = new CloneDeploy[](2);
-        clones[0] = CloneDeploy({
-            suite: "example-clone",
-            factory: exampleCloneFactory(),
-            implementation: exampleCloneImplementation(),
-            data: "",
-            initDataPerNetwork: false,
-            initData: LibRainDeployClone.noInitDataPerNetwork,
-            salt: bytes32(uint256(1)),
-            dependencies: exampleCloneDependencies()
-        });
-        clones[1] = CloneDeploy({
-            suite: "example-clone-second-salt",
-            factory: exampleCloneFactory(),
-            implementation: exampleCloneImplementation(),
-            data: hex"abcd",
-            initDataPerNetwork: false,
-            initData: LibRainDeployClone.noInitDataPerNetwork,
-            salt: bytes32(uint256(2)),
-            dependencies: exampleCloneDependencies()
-        });
-        return clones;
+/// @return The example clones a candidate is derived from.
+function exampleCloneDeploys() pure returns (CloneDeploy[] memory) {
+    CloneDeploy[] memory clones = new CloneDeploy[](2);
+    clones[0] = CloneDeploy({
+        suite: "example-clone",
+        factory: exampleCloneFactory(),
+        implementation: exampleCloneImplementation(),
+        data: "",
+        initDataPerNetwork: false,
+        initData: LibRainDeployClone.noInitDataPerNetwork,
+        salt: bytes32(uint256(1)),
+        dependencies: exampleCloneDependencies()
+    });
+    clones[1] = CloneDeploy({
+        suite: "example-clone-second-salt",
+        factory: exampleCloneFactory(),
+        implementation: exampleCloneImplementation(),
+        data: hex"abcd",
+        initDataPerNetwork: false,
+        initData: LibRainDeployClone.noInitDataPerNetwork,
+        salt: bytes32(uint256(2)),
+        dependencies: exampleCloneDependencies()
+    });
+    return clones;
+}
+
+function addExampleClone(DeployDeclaration memory d) view {
+    LibRainDeployDeclaration.addReleased(d, exampleCloneReleased());
+    LibCloneCandidates.addClones(d, exampleCloneDeploys());
+}
+
+/// @title ExampleCloneDeploys
+/// @notice A clone deploy repo's declaration: the core, Zoltu and clone layers, then the example clones.
+abstract contract ExampleCloneDeploys is RainDeploySuitesBase {
+    function declaration() internal view virtual override returns (DeployDeclaration memory) {
+        DeployDeclaration memory d;
+        LibRainDeployDeclaration.extend(d);
+        LibRainDeployZoltuMechanism.extend(d);
+        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+        addExampleClone(d);
+        return d;
     }
 }
