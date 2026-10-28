@@ -65,12 +65,11 @@ contract BuildScriptCloneTest is Test {
         }
     }
 
-    /// The released-suites lib expression of a record's `mechanismData` under `tag`.
-    /// @param tag The mechanism tag.
+    /// The released-suites lib entry of a tagged record's `mechanismData`: the record's constant verbatim.
     /// @param prefix The record's constant prefix.
-    /// @return The expression.
-    function mechanismDataExpression(bytes32 tag, string memory prefix) internal pure returns (string memory) {
-        return string.concat("mechanismData: abi.encode(bytes32(", vm.toString(tag), "), ", prefix, "_MECHANISM_DATA)");
+    /// @return The entry.
+    function mechanismDataEntry(string memory prefix) internal pure returns (string memory) {
+        return string.concat("mechanismData: ", prefix, "_MECHANISM_DATA,");
     }
 
     /// PROPERTY: `cutRelease()` freezes the regenerated clone snapshot as the committed clone record and releases it
@@ -108,9 +107,8 @@ contract BuildScriptCloneTest is Test {
             vm.contains(lib, string.concat("suite: \"example-clone@", LibRainDeploySnapshot.deployTag(vm), "\"")),
             "the release is keyed by the template suite and the tag"
         );
-        assertTrue(
-            vm.contains(lib, mechanismDataExpression(CLONE_MECHANISM, prefix)), "the release is declared a clone"
-        );
+        assertTrue(vm.contains(lib, mechanismDataEntry(prefix)), "the release is declared a clone");
+        assertFalse(vm.contains(lib, "abi.encode("), "by the tagged record, not a lib-side tag");
         assertTrue(
             vm.contains(lib, string.concat("storedDeployedAddress: ", prefix, "_DEPLOYED_ADDRESS")),
             "at one address on every network"
@@ -160,10 +158,8 @@ contract BuildScriptCloneTest is Test {
             vm.contains(lib, string.concat("suite: \"per-network-clone@", LibRainDeploySnapshot.deployTag(vm), "\"")),
             "the release is keyed by the template suite and the tag"
         );
-        assertTrue(
-            vm.contains(lib, mechanismDataExpression(CLONE_PER_NETWORK_MECHANISM, prefix)),
-            "the release is declared per network"
-        );
+        assertTrue(vm.contains(lib, mechanismDataEntry(prefix)), "the release is declared per network");
+        assertFalse(vm.contains(lib, "abi.encode("), "by the tagged record, not a lib-side tag");
         assertFalse(vm.contains(lib, vm.toString(CLONE_MECHANISM)), "and not as one clone everywhere");
         assertFalse(vm.contains(lib, "LibRainDeployZoltuMechanism"), "nor as a Zoltu release");
         assertTrue(vm.contains(lib, "storedDeployedAddress: address(0)"), "it stores no single address");
