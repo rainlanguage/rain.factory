@@ -31,6 +31,7 @@ import {
     BeaconProxyDeploy,
     LibRainDeployBeaconProxy
 } from "./LibRainDeployBeaconProxy.sol";
+import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
 
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
 bytes32 constant CLONE_MECHANISM = keccak256("rain.factory.deploy.mechanism.clone");
@@ -120,7 +121,7 @@ library LibRainDeployCloneMechanism {
             addRecordedNetworks: addRecordedNetworks,
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
-            logVerification: stubLogVerification,
+            logVerification: LibRainDeployCloneSnapshot.logVerification,
             writeSuiteSnapshot: stubWriteSuiteSnapshot,
             releasedMechanismData: stubReleasedMechanismData
         });
@@ -192,10 +193,6 @@ library LibRainDeployCloneMechanism {
     }
 
     function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
-        revert("stub");
-    }
-
-    function stubLogVerification(Vm, string[] memory, DeploySuite memory, address[] memory) internal pure {
         revert("stub");
     }
 
