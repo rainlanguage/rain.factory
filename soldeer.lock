@@ -13,6 +13,13 @@ checksum = "a77ad38d5fbef0ec10d1f4d191698e5fbaa2bffbee5d1aced91a39da5e9b908c"
 integrity = "fa706c8a7caf3426c90f75e6aafa3224b0a6c899b490800cf6944e4ec42f9344"
 
 [[dependencies]]
+name = "rain-deploy"
+version = "0.1.27"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-deploy/0_1_27_28-10-2026_18:45:20_rain.zip"
+checksum = "b0cd03b4e3326d1273252e6f26ada439132156c8d958a91d932ad8e93795ca66"
+integrity = "8ad62edf4808a164366c5d45b538a064767f9279c86d01c172d86a71f4d294c6"
+
+[[dependencies]]
 name = "rain-metadata"
 version = "0.1.43"
 url = "https://soldeer-revisions.s3.amazonaws.com/rain-metadata/0_1_43_03-09-2026_09:14:04_rain.zip"
