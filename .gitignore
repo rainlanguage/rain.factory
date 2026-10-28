@@ -8,3 +8,4 @@ remappings.txt
 .pre-commit-config.yaml
 .gas-snapshot
 fixture-lib
+.staged-config
