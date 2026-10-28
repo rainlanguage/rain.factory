@@ -151,7 +151,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
 
         LocalForkVm forkVm = new LocalForkVm();
         vm.expectCall(address(forkVm), abi.encodeWithSignature("toString(address)"), 0);
-        (address[] memory deployed,) = sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
+        (address[] memory deployed,) =
+            sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
         assertEq(deployed.length, 1);
         assertEq(deployed[0], expected);
         assertEq(deployed[0].code, LibRainDeployClone.cloneRuntimeCode(implementation));
@@ -174,7 +175,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         vm.expectEmit(address(sDeploy));
         emit UnverifiableSource(caller, suite.storedDeployedAddress, networks);
         vm.prank(caller);
-        (address[] memory deployed,) = sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
+        (address[] memory deployed,) =
+            sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
         assertEq(deployed.length, 2);
         assertEq(deployed[0], suite.storedDeployedAddress);
         assertEq(deployed[1], suite.storedDeployedAddress);
@@ -230,7 +232,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         vm.expectEmit(address(sDeploy));
         emit UnverifiableSource(caller, suite.storedDeployedAddress, networks);
         vm.prank(caller);
-        (address[] memory deployed,) = sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
+        (address[] memory deployed,) =
+            sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
         assertEq(deployed.length, 2);
         assertEq(deployed[0], suite.storedDeployedAddress);
         assertEq(deployed[1], suite.storedDeployedAddress);
@@ -242,7 +245,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// @return The suite.
     function ownedBeaconProxySuite(address owner) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
-        DeploySuite memory suite = LibRainDeployCloneMechanism.beaconProxyCandidate(
+        DeploySuite memory suite =
+        LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "owned-beacon-proxy",
                 address(new MockBeaconProxyFactory()),
