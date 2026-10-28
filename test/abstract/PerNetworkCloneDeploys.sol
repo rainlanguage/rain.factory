@@ -2,10 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {CLONE_PER_NETWORK_MECHANISM} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {CLONE_PER_NETWORK_MECHANISM, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {RainDeployCloneSuitesBase} from "../../src/abstract/RainDeployCloneSuitesBase.sol";
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneDeploy,
@@ -13,7 +16,7 @@ import {
     CloneTarget,
     LibRainDeployClone
 } from "../../src/lib/LibRainDeployClone.sol";
-import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {exampleCloneDependencies, exampleCloneFactory, exampleCloneImplementation} from "./ExampleCloneDeploys.sol";
 import {
@@ -157,39 +160,58 @@ function onlyFirstRecordedNetworkSuites(DeploySuite memory release) pure returns
     return suites;
 }
 
+/// @return Arbitrum One then Polygon, the networks the per-network clone is declared on.
+function perNetworkCloneNetworks() pure returns (string[] memory) {
+    string[] memory networks = new string[](2);
+    networks[0] = LibRainDeploy.ARBITRUM_ONE;
+    networks[1] = LibRainDeploy.POLYGON;
+    return networks;
+}
+
+/// @return The per-network clone's committed release.
+function perNetworkCloneReleased() pure returns (DeploySuite[] memory) {
+    DeploySuite[] memory suites = new DeploySuite[](1);
+    suites[0] = DeploySuite({
+        suite: "per-network-clone@0_0_1",
+        creationCode: PER_NETWORK_CLONE_CREATION_CODE,
+        storedDeployedAddress: address(0),
+        storedBytecodeHash: PER_NETWORK_CLONE_BYTECODE_HASH,
+        storedRuntimeCode: PER_NETWORK_CLONE_RUNTIME_CODE,
+        artifactPath: CLONE_ARTIFACT_PATH,
+        dependencies: abi.decode(PER_NETWORK_CLONE_DEPENDENCIES, (DeployDependency[])),
+        mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, PER_NETWORK_CLONE_MECHANISM_DATA),
+        networks: new string[](0)
+    });
+    return suites;
+}
+
+/// @return The per-network clone a candidate is derived from.
+function perNetworkCloneDeploys() pure returns (CloneDeploy[] memory) {
+    CloneDeploy[] memory clones = new CloneDeploy[](1);
+    clones[0] = perNetworkClone("per-network-clone", bytes32(uint256(4)));
+    return clones;
+}
+
+/// The core, Zoltu and clone layers on the per-network clone's networks, without suites.
+/// @return The declaration.
+function perNetworkCloneLayers() pure returns (DeployDeclaration memory) {
+    DeployDeclaration memory d;
+    LibRainDeployDeclaration.extend(d);
+    LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
+    LibRainDeployZoltuMechanism.extend(d);
+    LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+    return d;
+}
+
 /// @title PerNetworkCloneDeploys
 /// @notice A clone deploy repo whose clone is initialized with a different admin on each network —
 /// an issuer's authoriser whose admin is that chain's Safe — so the clone lands at a different
 /// address on each.
-abstract contract PerNetworkCloneDeploys is RainDeployCloneSuitesBase {
-    /// @inheritdoc RainDeploySuitesBase
-    function supportedNetworks() internal view virtual override returns (string[] memory) {
-        string[] memory networks = new string[](2);
-        networks[0] = LibRainDeploy.ARBITRUM_ONE;
-        networks[1] = LibRainDeploy.POLYGON;
-        return networks;
-    }
-
-    /// @inheritdoc RainDeploySuitesBase
-    function releasedSuites() internal pure virtual override returns (DeploySuite[] memory) {
-        DeploySuite[] memory suites = new DeploySuite[](1);
-        suites[0] = DeploySuite({
-            suite: "per-network-clone@0_0_1",
-            creationCode: PER_NETWORK_CLONE_CREATION_CODE,
-            storedDeployedAddress: address(0),
-            storedBytecodeHash: PER_NETWORK_CLONE_BYTECODE_HASH,
-            storedRuntimeCode: PER_NETWORK_CLONE_RUNTIME_CODE,
-            artifactPath: CLONE_ARTIFACT_PATH,
-            dependencies: abi.decode(PER_NETWORK_CLONE_DEPENDENCIES, (DeployDependency[])),
-            mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, PER_NETWORK_CLONE_MECHANISM_DATA)
-        });
-        return suites;
-    }
-
-    /// @inheritdoc RainDeployCloneSuitesBase
-    function cloneDeploys() internal pure virtual override returns (CloneDeploy[] memory) {
-        CloneDeploy[] memory clones = new CloneDeploy[](1);
-        clones[0] = perNetworkClone("per-network-clone", bytes32(uint256(4)));
-        return clones;
+abstract contract PerNetworkCloneDeploys is RainDeploySuitesBase {
+    function declaration() internal view virtual override returns (DeployDeclaration memory) {
+        DeployDeclaration memory d = perNetworkCloneLayers();
+        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
+        LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
+        return d;
     }
 }
