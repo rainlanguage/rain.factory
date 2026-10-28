@@ -38,10 +38,8 @@ contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixt
             factory: factory, implementation: implementation, salt: bytes32(uint256(7)), networks: new ChainDeploy[](2)
         });
         // Each network's clone refuses the other network's chain id.
-        clones.networks[0] =
-            ChainDeploy({chainId: 42161, data: abi.encode(uint256(8453)), deployedAddress: address(0)});
-        clones.networks[1] =
-            ChainDeploy({chainId: 8453, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
+        clones.networks[0] = ChainDeploy({chainId: 42161, data: abi.encode(uint256(8453)), deployedAddress: address(0)});
+        clones.networks[1] = ChainDeploy({chainId: 8453, data: abi.encode(uint256(42161)), deployedAddress: address(0)});
         bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(implementation);
         released[fixture.length] = DeploySuite({
             suite: "chain-refusing-clone-beacon@0_0_1",
