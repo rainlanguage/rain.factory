@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Script} from "forge-std-1.17.0/src/Script.sol";
-import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
+import {BeaconProxy} from "@openzeppelin-contracts-5.7.0/proxy/beacon/BeaconProxy.sol";
 import {RegistryBeaconProxy} from "./RegistryBeaconProxy.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";

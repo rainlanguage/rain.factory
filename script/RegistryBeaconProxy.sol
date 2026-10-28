@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Proxy} from "@openzeppelin-contracts-5.6.1/proxy/Proxy.sol";
-import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
-import {IBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/IBeacon.sol";
+import {Proxy} from "@openzeppelin-contracts-5.7.0/proxy/Proxy.sol";
+import {ERC1967Utils} from "@openzeppelin-contracts-5.7.0/proxy/ERC1967/ERC1967Utils.sol";
+import {IBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/IBeacon.sol";
 
 import {LibICloneableFactoryV7} from "../src/lib/LibICloneableFactoryV7.sol";
 

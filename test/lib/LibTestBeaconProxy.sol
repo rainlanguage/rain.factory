@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {IERC1967} from "@openzeppelin-contracts-5.6.1/interfaces/IERC1967.sol";
+import {IERC1967} from "@openzeppelin-contracts-5.7.0/interfaces/IERC1967.sol";
 
 /// @title LibTestBeaconProxy
 /// @notice Shared assertions on a deployed OZ `BeaconProxy`.

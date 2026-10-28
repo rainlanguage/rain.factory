@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 
-import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
+import {Clones} from "@openzeppelin-contracts-5.7.0/proxy/Clones.sol";
 import {LibICloneableFactoryV5} from "../../../src/lib/LibICloneableFactoryV5.sol";
 
 /// @title LibICloneableFactoryV5PredictCloneAddressTest

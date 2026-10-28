@@ -4,9 +4,9 @@ pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
-import {BeaconProxy} from "@openzeppelin-contracts-5.6.1/proxy/beacon/BeaconProxy.sol";
-import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
-import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
+import {BeaconProxy} from "@openzeppelin-contracts-5.7.0/proxy/beacon/BeaconProxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
+import {ERC1967Utils} from "@openzeppelin-contracts-5.7.0/proxy/ERC1967/ERC1967Utils.sol";
 import {LibTestBeaconProxy} from "../../lib/LibTestBeaconProxy.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {

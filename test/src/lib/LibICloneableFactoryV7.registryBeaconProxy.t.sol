@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
-import {Create2} from "@openzeppelin-contracts-5.6.1/utils/Create2.sol";
-import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
-import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
+import {Create2} from "@openzeppelin-contracts-5.7.0/utils/Create2.sol";
+import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
+import {ERC1967Utils} from "@openzeppelin-contracts-5.7.0/proxy/ERC1967/ERC1967Utils.sol";
 
 import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.sol";
 import {NonCanonicalBeaconBinding, BeaconBindingTypeMismatch} from "../../../src/lib/LibICloneableFactoryV7.sol";
