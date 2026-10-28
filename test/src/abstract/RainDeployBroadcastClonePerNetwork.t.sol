@@ -4,15 +4,13 @@ pragma solidity =0.8.25;
 
 import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {ExtendedNetworksUnrecorded} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
-import {ExtendedNetworkAddressMismatch, ExtendedNetworkUnfrozen} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
-    CloneDeploy,
-    CloneNetworks,
-    CloneTarget,
-    LibRainDeployClone
-} from "../../../src/lib/LibRainDeployClone.sol";
-import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+    ExtendedNetworkAddressMismatch,
+    ExtendedNetworkUnfrozen,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {CloneDeploy, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN,
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
@@ -42,7 +40,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// @param release The release suite.
     /// @return The decoded per-network clone.
     function releaseNetworks(DeploySuite memory release) internal pure returns (CloneNetworks memory) {
-        CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         assertEq(clones.networks.length, 2);
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
         assertEq(clones.networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
@@ -152,7 +150,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         address derived = clones.networks[1].deployedAddress;
         address stale = address(uint160(derived) + 1);
         clones.networks[1].deployedAddress = stale;
-        release.mechanismData = abi.encode(clones);
+        release = LibRainDeployCloneMechanism.withPayload(release, abi.encode(clones));
 
         vm.expectRevert(abi.encodeWithSelector(LibRainDeploy.UnexpectedDeployedAddress.selector, stale, derived));
         deploy.externalBroadcastSuite(release, bothNetworks(), 1);
@@ -170,7 +168,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(deploy));
 
         DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
-        CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         assertEq(clones.networks.length, 1);
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
         address arbitrumAddress = clones.networks[0].deployedAddress;
@@ -222,7 +220,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(deploy));
 
         DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
-        CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         assertEq(clones.networks.length, 1);
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
         CloneDeploy memory candidate = upgradedPerNetworkClone();
@@ -269,11 +267,11 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
             declaredPolygon()
         );
         DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
-        CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         address derived = clones.networks[0].deployedAddress;
         address stale = address(uint160(derived) + 1);
         clones.networks[0].deployedAddress = stale;
-        release.mechanismData = abi.encode(clones);
+        release = LibRainDeployCloneMechanism.withPayload(release, abi.encode(clones));
 
         vm.expectRevert(abi.encodeWithSelector(LibRainDeploy.UnexpectedDeployedAddress.selector, stale, derived));
         deploy.externalBroadcastSuite(release, bothNetworks(), 1);
@@ -305,8 +303,9 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         assertFalse(anyForkExists(), "a network was forked before the misdeclared one was refused");
     }
 
-    /// A release recording Arbitrum One alone, with Polygon declared but absent from its extended networks record, is
-    /// refused before any network is forked.
+    /// A release recording Arbitrum One alone, with Polygon declared in the clone layer's config but absent from its
+    /// extended networks record, is broadcast from the record alone: Polygon is refused as unfrozen, at the address
+    /// the release derives there, before any network is forked.
     function testBroadcastRefusesADeclarationTheRecordDoesNotHoldBeforeAnyFork() external {
         PerNetworkCloneDeploy deploy = new PerNetworkCloneDeploy();
         deploy.declareExtendedNetworks(
@@ -316,7 +315,14 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         );
         DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
 
-        vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksUnrecorded.selector, "per-network-clone@0_0_1"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkUnfrozen.selector,
+                release.suite,
+                LibRainDeploy.POLYGON,
+                perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID)
+            )
+        );
         deploy.externalBroadcastSuite(release, bothNetworks(), 1);
         assertFalse(anyForkExists(), "a network was forked before the unrecorded declaration was refused");
     }
@@ -394,7 +400,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(deploy));
 
         DeploySuite memory suite = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
-        CloneNetworks memory clones = abi.decode(suite.mechanismData, (CloneNetworks));
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         assertEq(clones.networks.length, 1);
         assertNotEq(clones.implementation, upgradedPerNetworkClone().implementation);
 
