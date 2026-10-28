@@ -3,16 +3,23 @@
 pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy} from "../../../src/lib/LibRainDeployClone.sol";
+import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
+import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
-    ChainDeploy,
-    ExtendedNetworksUnrecorded,
-    LibRainDeployExtendedNetworks
-} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
-import {ExtendedNetworkAddressMismatch, ExtendedNetworkUnfrozen} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+    ExtendedNetworkAddressMismatch,
+    ExtendedNetworkUnfrozen,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
     PerNetworkCloneDeploys,
@@ -20,10 +27,13 @@ import {
     onlyFirstRecordedNetworkSuites,
     perNetworkClone,
     perNetworkCloneInitData,
+    perNetworkCloneNetworks,
     perNetworkCloneReleaseAddress,
     perNetworkCloneReleaseAddressAt,
-    perNetworkCloneReleaseAddresses
+    perNetworkCloneReleaseAddresses,
+    perNetworkCloneReleased
 } from "../../abstract/PerNetworkCloneDeploys.sol";
+import {LibCloneCandidates} from "../../lib/LibCloneCandidates.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {LibExtendedNetworksFixture} from "../../lib/LibExtendedNetworksFixture.sol";
 
@@ -63,29 +73,31 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
     /// another.
     string internal sExtendedRoot = "fixture-lib/extended-networks/verify-extended-none";
 
-    /// @inheritdoc PerNetworkCloneDeploys
-    function supportedNetworks()
+    /// The per-network clone layers reading extended networks under `sExtendedRoot`, the committed release and the
+    /// candidate with Polygon's init data moved.
+    function declaration()
         internal
         view
         override(PerNetworkCloneDeploys, RainDeploySuitesBase)
-        returns (string[] memory)
+        returns (DeployDeclaration memory)
     {
-        return PerNetworkCloneDeploys.supportedNetworks();
-    }
-
-    /// The candidate, with Polygon's init data moved.
-    /// @return The candidate's declaration.
-    function cloneDeploys() internal pure override returns (CloneDeploy[] memory) {
+        DeployDeclaration memory d;
+        LibRainDeployDeclaration.extend(d);
+        LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
+        LibRainDeployZoltuMechanism.extend(d);
+        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0), sExtendedRoot);
+        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = perNetworkClone("per-network-clone", bytes32(uint256(4)));
         clones[0].initData = movedInitData;
-        return clones;
+        LibCloneCandidates.addClones(d, clones);
+        return d;
     }
 
     /// Polygon at its original init data, as it was broadcast, once `sFrozen` is set.
     /// @param suite The release's suite key.
     /// @return The networks.
-    function extendedNetworks(string memory suite) internal view override returns (ChainDeploy[] memory) {
+    function extendedNetworks(string memory suite) internal view returns (ChainDeploy[] memory) {
         if (!sFrozen || keccak256(bytes(suite)) != keccak256("per-network-clone@0_0_1")) {
             return new ChainDeploy[](0);
         }
@@ -96,11 +108,6 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
             deployedAddress: sFrozenAddress
         });
         return networks;
-    }
-
-    /// @inheritdoc RainDeploySuitesBase
-    function extendedNetworksRoot() internal view override returns (string memory) {
-        return sExtendedRoot;
     }
 
     /// Records what `extendedNetworks` now declares, as the build would, under a fixture root of its own after
@@ -116,15 +123,16 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
 
     /// Puts the release's dependencies, and its clone at its original address on each network, on every fork.
     function setUp() external {
-        etchPerNetworkCloneRelease(vm, releasedSuites()[0], perNetworkCloneReleaseAddresses());
+        etchPerNetworkCloneRelease(vm, declaration().released[0], perNetworkCloneReleaseAddresses());
         sFrozenAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         sForkVm = new LocalForkVm();
     }
 
     /// The matrix on local forks, over the release recording Arbitrum One alone.
     function externalCheckOnLocalForks() external {
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(releasedSuites()[0]);
-        checkDeployedOnNetworks(Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(supportedNetworks()), suites);
+        DeployDeclaration memory d = declaration();
+        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(d.released[0]);
+        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(d.networks), suites);
     }
 
     /// Unfrozen, Polygon takes the candidate's moved init data and is refused as unfrozen, naming the address, whether
@@ -140,7 +148,7 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         );
         this.externalCheckOnLocalForks();
 
-        vm.etch(moved, releasedSuites()[0].storedRuntimeCode);
+        vm.etch(moved, declaration().released[0].storedRuntimeCode);
         vm.expectRevert(
             abi.encodeWithSelector(
                 ExtendedNetworkUnfrozen.selector, "per-network-clone@0_0_1", LibRainDeploy.POLYGON, moved
@@ -151,16 +159,17 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
 
     /// The matrix on local forks over Polygon alone, over the release recording Arbitrum One alone.
     function externalCheckPolygonOnLocalForks() external {
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(releasedSuites()[0]);
+        DeployDeclaration memory d = declaration();
+        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(d.released[0]);
         string[] memory networks = new string[](1);
         networks[0] = LibRainDeploy.POLYGON;
-        checkDeployedOnNetworks(Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), suites);
+        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), suites);
     }
 
     /// Unfrozen, Polygon is refused as unfrozen even when a dependency is missing there: what the network lacks is a
     /// declaration, and the dependency check would describe a release the matrix cannot place on it.
     function testUnfrozenNetworkMissingADependencyIsRefusedAsUnfrozen() external {
-        DeploySuite memory release = releasedSuites()[0];
+        DeploySuite memory release = declaration().released[0];
         assertGt(release.dependencies.length, 0);
         vm.etch(release.dependencies[0].deployedAddress, hex"");
         vm.expectRevert(
@@ -181,18 +190,27 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         this.externalCheckOnLocalForks();
 
         vm.etch(sFrozenAddress, hex"");
-        vm.etch(movedReleaseAddress(), releasedSuites()[0].storedRuntimeCode);
+        vm.etch(movedReleaseAddress(), declaration().released[0].storedRuntimeCode);
         vm.expectRevert(
             abi.encodeWithSelector(LibRainDeploy.NotDeployedOnNetwork.selector, LibRainDeploy.POLYGON, sFrozenAddress)
         );
         this.externalCheckOnLocalForks();
     }
 
-    /// A declared network the release's extended networks record does not hold is refused before any fork.
+    /// A declared network the release's extended networks record does not hold is, to the matrix, unfrozen: the
+    /// check reads the record alone, so Polygon takes the candidate's moved init data and is refused before any
+    /// fork.
     function testDeclaredNetworkWithoutARecordIsRefused() external {
         sFrozen = true;
         vm.expectCall(address(sForkVm), abi.encodeWithSelector(LocalForkVm.createFork.selector), 0);
-        vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksUnrecorded.selector, "per-network-clone@0_0_1"));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkUnfrozen.selector,
+                "per-network-clone@0_0_1",
+                LibRainDeploy.POLYGON,
+                movedReleaseAddress()
+            )
+        );
         this.externalCheckOnLocalForks();
     }
 
