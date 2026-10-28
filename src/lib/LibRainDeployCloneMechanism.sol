@@ -10,7 +10,8 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeployMechanismHandler,
-    DeploySuite
+    DeploySuite,
+    DerivationSnapshotRevertFailed
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
@@ -269,17 +270,25 @@ library LibRainDeployCloneMechanism {
     }
 
     /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
-    /// per-network suite's own clone there. An address shared by earlier networks is deployed once.
+    /// per-network suite's own clone there. Each network deploys under its own chain id; only network 0's is left.
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
         uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
+        uint256 callerChainId = block.chainid;
         LibRainDeploy.etchDependencies(vm, suite.dependencies);
-        for (uint256 i = 0; i < chainIds.length; i++) {
+        for (uint256 i = 1; i < chainIds.length; i++) {
             deployed[i] = deployedAddress(d, suite, chainIds[i]);
-            if (!deployedEarlier(deployed, i)) {
-                deployTarget(vm, suite, chainIds[i], deployed[i]);
+            uint256 snapshotId = vm.snapshotState();
+            vm.chainId(chainIds[i]);
+            deployTarget(vm, suite, chainIds[i], deployed[i]);
+            if (!vm.revertToState(snapshotId)) {
+                revert DerivationSnapshotRevertFailed(suite.suite, snapshotId);
             }
         }
+        deployed[0] = deployedAddress(d, suite, chainIds[0]);
+        vm.chainId(chainIds[0]);
+        deployTarget(vm, suite, chainIds[0], deployed[0]);
+        vm.chainId(callerChainId);
         return deployed;
     }
 
@@ -709,18 +718,6 @@ library LibRainDeployCloneMechanism {
             creator = created ? accesses[k].accessor : address(0);
         }
         return (created, creator);
-    }
-
-    /// @param addresses The addresses.
-    /// @param index The index checked.
-    /// @return Whether an earlier entry of `addresses` equals the one at `index`.
-    function deployedEarlier(address[] memory addresses, uint256 index) internal pure returns (bool) {
-        for (uint256 j = 0; j < index; j++) {
-            if (addresses[j] == addresses[index]) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /// @param clone The clone declaration.
