@@ -223,8 +223,12 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_PER_NETWORK_MECHANISM, layer));
     }
 
+    /// @return One address per network: a one-data suite's one address once per each of its `networks`, a per-network
+    /// suite's address on each network it lists, in its address order.
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
-        uint256[] memory chainIds = addressChainIds(suite);
+        uint256[] memory chainIds = isPerNetwork(suite)
+            ? addressChainIds(suite)
+            : LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
         for (uint256 i = 0; i < chainIds.length; i++) {
             deployed[i] = deployedAddress(d, suite, chainIds[i]);
