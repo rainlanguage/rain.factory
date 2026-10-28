@@ -85,7 +85,8 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0), sExtendedRoot);
+        LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sExtendedRoot);
         LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = perNetworkClone("per-network-clone", bytes32(uint256(4)));

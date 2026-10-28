@@ -124,20 +124,37 @@ error ExtendedNetworkUnfrozen(string suite, string network, address deployedAddr
 /// @param slot The slot read.
 error CloneInitializeReadsStorage(string suite, address account, bytes32 slot);
 
-/// Emitted when a broadcast Zoltu entry under `CLONE_ARTIFACT_PATH` or `BEACON_PROXY_ARTIFACT_PATH` leaves its source
-/// to verify by hand.
-/// @param sender The deploy's `msg.sender`, not the broadcasting key.
-/// @param entryAddress Where the entry is deployed on every network.
-/// @param networks The networks it was broadcast to.
-event UnverifiableSource(address sender, address entryAddress, string[] networks);
-
 /// @title LibRainDeployCloneMechanism
-/// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their tags.
+/// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their ids.
 library LibRainDeployCloneMechanism {
-    function handler(bytes32 id, bytes memory config) internal pure returns (DeployMechanismHandler memory) {
+    /// The `CLONE_MECHANISM` handler, carrying the layer config and every declaration-wide step: the declaration and
+    /// network checks and the legacy record claim for all four ids.
+    /// @return The handler, config the default `CloneLayerConfig`.
+    function handler() internal view returns (DeployMechanismHandler memory) {
+        DeployMechanismHandler memory h = idHandler(CLONE_MECHANISM);
+        h.config = abi.encode(
+            CloneLayerConfig({
+                beacons: new ChainBeacon[](0),
+                extendedNetworksRoot: LibRainDeploySnapshot.LIB_FS_ROOT,
+                extended: new ExtendedNetworksDeclaration[](0),
+                factoryImportRoot: LibRainDeployCloneSnapshot.factoryImportRootForToml(
+                    StdConstants.VM, StdConstants.VM.readFile("foundry.toml")
+                )
+            })
+        );
+        h.checkDeclaration = checkDeclaration;
+        h.checkNetwork = LibRainDeployCloneOnChainChecks.checkNetworkBeacons;
+        h.legacyRecordId = LibRainDeployCloneSnapshot.legacyRecordId;
+        return h;
+    }
+
+    /// The suite steps every id shares, with no config, no declaration-wide step and no legacy record claim.
+    /// @param id The mechanism id.
+    /// @return The handler.
+    function idHandler(bytes32 id) private pure returns (DeployMechanismHandler memory) {
         return DeployMechanismHandler({
             id: id,
-            config: config,
+            config: "",
             deployedAddress: deployedAddress,
             recordedAddress: recordedAddress,
             deployStepData: deployStepData,
@@ -149,17 +166,11 @@ library LibRainDeployCloneMechanism {
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: LibRainDeployCloneOnChainChecks.checkOnChain,
             checkBroadcastSeat: LibRainDeployCloneOnChainChecks.checkBroadcastSeat,
+            checkDeclaration: noDeclarationCheck,
+            checkNetwork: noNetworkCheck,
             logVerification: logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData,
-            checkDeclaration: id == BEACON_PROXY_MECHANISM
-                ? LibRainDeployBeaconDeclarationChecks.checkDeclaration
-                : id == CLONE_PER_NETWORK_MECHANISM
-                    ? LibRainDeployCloneOnChainChecks.checkDeclarationPerNetwork
-                    : LibRainDeployCloneOnChainChecks.checkDeclaration,
-            checkNetwork: id == BEACON_PROXY_MECHANISM
-                ? LibRainDeployCloneOnChainChecks.checkNetworkBeaconProxy
-                : LibRainDeployCloneOnChainChecks.checkNetwork,
             releasedImport: id == CLONE_MECHANISM
                 ? LibRainDeployCloneSnapshot.releasedCloneImport
                 : id == CLONE_PER_NETWORK_MECHANISM
@@ -167,27 +178,77 @@ library LibRainDeployCloneMechanism {
                     : id == BEACON_PROXY_MECHANISM
                         ? LibRainDeployCloneSnapshot.releasedBeaconProxyImport
                         : LibRainDeployCloneSnapshot.releasedBeaconProxyPerNetworkImport,
-            legacyRecordId: id == CLONE_MECHANISM
-                ? LibRainDeployCloneSnapshot.legacyCloneRecordId
-                : id == CLONE_PER_NETWORK_MECHANISM
-                    ? LibRainDeployCloneSnapshot.legacyClonePerNetworkRecordId
-                    : id == BEACON_PROXY_MECHANISM
-                        ? LibRainDeployCloneSnapshot.legacyBeaconProxyRecordId
-                        : LibRainDeployCloneSnapshot.legacyBeaconProxyPerNetworkRecordId
+            legacyRecordId: noLegacyRecord
         });
     }
 
-    /// The layer config handler `id` carries, decoded.
-    /// @param d The declaration.
-    /// @param id The handler's mechanism id.
-    /// @param suite The suite named in the error when `id` has no handler.
-    /// @return The config.
-    function layerConfig(DeployDeclaration memory d, bytes32 id, string memory suite)
+    /// Appends `handler()` and the `CLONE_PER_NETWORK_MECHANISM`, `BEACON_PROXY_MECHANISM` and
+    /// `BEACON_PROXY_PER_NETWORK_MECHANISM` handlers to `d`.
+    /// @param d The declaration, mutated.
+    function extend(DeployDeclaration memory d) internal view {
+        LibRainDeployDeclaration.addMechanism(d, handler());
+        LibRainDeployDeclaration.addMechanism(d, idHandler(CLONE_PER_NETWORK_MECHANISM));
+        LibRainDeployDeclaration.addMechanism(d, idHandler(BEACON_PROXY_MECHANISM));
+        LibRainDeployDeclaration.addMechanism(d, idHandler(BEACON_PROXY_PER_NETWORK_MECHANISM));
+    }
+
+    /// @param d The declaration, extended.
+    /// @return The layer config the `CLONE_MECHANISM` handler carries, decoded.
+    function layerConfig(DeployDeclaration memory d) internal pure returns (CloneLayerConfig memory) {
+        return abi.decode(LibRainDeployDeclaration.mechanismById(d, CLONE_MECHANISM, "").config, (CloneLayerConfig));
+    }
+
+    /// Replaces the layer config the `CLONE_MECHANISM` handler carries.
+    /// @param d The declaration, extended, mutated.
+    /// @param config The config.
+    function setLayerConfig(DeployDeclaration memory d, CloneLayerConfig memory config) private pure {
+        for (uint256 i = 0; i < d.mechanisms.length; i++) {
+            if (d.mechanisms[i].id == CLONE_MECHANISM) {
+                d.mechanisms[i].config = abi.encode(config);
+            }
+        }
+    }
+
+    /// @param d The declaration, extended, mutated.
+    /// @param beacons The beacons beacon proxy suites resolve through.
+    function setBeacons(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal pure {
+        CloneLayerConfig memory config = layerConfig(d);
+        config.beacons = beacons;
+        setLayerConfig(d, config);
+    }
+
+    /// @param d The declaration, extended, mutated.
+    /// @param root The root extended networks records are read and written under.
+    function setExtendedNetworksRoot(DeployDeclaration memory d, string memory root) internal pure {
+        CloneLayerConfig memory config = layerConfig(d);
+        config.extendedNetworksRoot = root;
+        setLayerConfig(d, config);
+    }
+
+    /// @param d The declaration, extended, mutated.
+    /// @param extended Each per-network release's extended networks.
+    function setExtendedNetworks(DeployDeclaration memory d, ExtendedNetworksDeclaration[] memory extended)
         internal
         pure
-        returns (CloneLayerConfig memory)
     {
-        return abi.decode(LibRainDeployDeclaration.mechanismById(d, id, suite).config, (CloneLayerConfig));
+        CloneLayerConfig memory config = layerConfig(d);
+        config.extended = extended;
+        setLayerConfig(d, config);
+    }
+
+    /// The layer's `checkDeclaration`: the declared beacons and the declared extended networks.
+    /// @param d The declaration.
+    function checkDeclaration(DeployDeclaration memory d) internal {
+        LibRainDeployBeaconDeclarationChecks.checkDeclaration(d);
+        LibRainDeployCloneOnChainChecks.checkDeclarationPerNetwork(d);
+    }
+
+    function noDeclarationCheck(DeployDeclaration memory) internal pure {}
+
+    function noNetworkCheck(DeployDeclaration memory, string memory, uint256) internal pure {}
+
+    function noLegacyRecord(DeployDeclaration memory, Vm, string memory) internal pure returns (bytes32) {
+        return 0;
     }
 
     /// The extended networks `config` declares for `suite`, or none.
@@ -284,7 +345,7 @@ library LibRainDeployCloneMechanism {
         if (!isPerNetwork(suite)) {
             return;
         }
-        string memory root = layerConfig(d, mechanismTag(suite.mechanismData), suite.suite).extendedNetworksRoot;
+        string memory root = layerConfig(d).extendedNetworksRoot;
         ChainDeploy[] memory extended = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
             Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), root, suite.suite
         );
@@ -304,14 +365,6 @@ library LibRainDeployCloneMechanism {
             return bytes32(0);
         }
         return abi.decode(mechanismData, (bytes32));
-    }
-
-    /// @param suite The suite.
-    /// @return Whether its mechanism data carries one of the four tags here.
-    function isFactoryMechanism(DeploySuite memory suite) internal pure returns (bool) {
-        bytes32 tag = mechanismTag(suite.mechanismData);
-        return tag == CLONE_MECHANISM || tag == CLONE_PER_NETWORK_MECHANISM || tag == BEACON_PROXY_MECHANISM
-            || tag == BEACON_PROXY_PER_NETWORK_MECHANISM;
     }
 
     /// @param suite The suite.
@@ -712,33 +765,6 @@ library LibRainDeployCloneMechanism {
             }
         }
         return false;
-    }
-
-    /// @param vm The Vm instance to format with.
-    /// @param networks The networks broadcast to.
-    /// @param where Where the entry is.
-    /// @return The notice logged in place of a verify command.
-    function unverifiableSourceNotice(Vm vm, string[] memory networks, address where)
-        internal
-        pure
-        returns (string memory)
-    {
-        string memory notice = string.concat(
-            "no verify command: the Zoltu entry carries a factory proxy artifact path; verify the source at ",
-            vm.toString(where),
-            " by hand on"
-        );
-        for (uint256 i = 0; i < networks.length; i++) {
-            notice = string.concat(notice, " ", networks[i]);
-        }
-        return notice;
-    }
-
-    /// @param artifactPath The artifact path.
-    /// @return Whether it is `CLONE_ARTIFACT_PATH` or `BEACON_PROXY_ARTIFACT_PATH`.
-    function isProxyArtifactPath(string memory artifactPath) internal pure returns (bool) {
-        bytes32 path = keccak256(bytes(artifactPath));
-        return path == keccak256(bytes(CLONE_ARTIFACT_PATH)) || path == keccak256(bytes(BEACON_PROXY_ARTIFACT_PATH));
     }
 
     /// @param clone The clone declaration.

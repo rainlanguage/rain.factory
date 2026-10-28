@@ -23,7 +23,7 @@ contract WideCandidatePerNetworkCloneDeploy is ExternalDeployBroadcast {
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         LibRainDeployDeclaration.setNetworks(d, networks);
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+        LibRainDeployCloneMechanism.extend(d);
         DeployCandidate[] memory candidates = new DeployCandidate[](1);
         candidates[0] = LibRainDeployCloneMechanism.cloneCandidate(upgradedPerNetworkClone(), perNetworkCloneChainIds());
         candidates[0].snapshot.networks = perNetworkCloneNetworks();

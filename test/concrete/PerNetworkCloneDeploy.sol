@@ -47,27 +47,23 @@ contract PerNetworkCloneDeploy is PerNetworkCloneDeploys, ExternalDeployBroadcas
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, cloneLayerConfig());
+        extendCloneLayer(d);
         LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;
     }
 
-    /// @return No beacons, the record root `declareExtendedNetworks` set or the repo's own, and its one declaration if
-    /// it has run.
-    function cloneLayerConfig() internal view returns (CloneLayerConfig memory) {
-        string memory root = sExtendedRoot;
-        if (bytes(root).length == 0) {
-            root = LibRainDeploySnapshot.LIB_FS_ROOT;
-        }
-        ExtendedNetworksDeclaration[] memory extended;
+    /// Extends `d` with the clone layer under the record root `declareExtendedNetworks` set, and its one declaration
+    /// once it has run.
+    function extendCloneLayer(DeployDeclaration memory d) internal view {
+        LibRainDeployCloneMechanism.extend(d);
         if (bytes(sExtendedSuite).length == 0) {
-            extended = new ExtendedNetworksDeclaration[](0);
-        } else {
-            extended = new ExtendedNetworksDeclaration[](1);
-            extended[0] = ExtendedNetworksDeclaration({suite: sExtendedSuite, networks: sExtendedNetworks});
+            return;
         }
-        return CloneLayerConfig({beacons: new ChainBeacon[](0), extendedNetworksRoot: root, extended: extended});
+        LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sExtendedRoot);
+        ExtendedNetworksDeclaration[] memory extended = new ExtendedNetworksDeclaration[](1);
+        extended[0] = ExtendedNetworksDeclaration({suite: sExtendedSuite, networks: sExtendedNetworks});
+        LibRainDeployCloneMechanism.setExtendedNetworks(d, extended);
     }
 
     /// Declares `networks` for `suite`, and records them as the build would under the fixture root, after removing

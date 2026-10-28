@@ -46,9 +46,9 @@ contract CloneBuildScriptHarness is BuildScript {
         LibRainDeployZoltuMechanism.extend(d);
         ExtendedNetworksDeclaration[] memory extended = new ExtendedNetworksDeclaration[](1);
         extended[0] = ExtendedNetworksDeclaration({suite: "example-clone@0_0_1", networks: sExtendedNetworks});
-        LibRainDeployCloneMechanism.extend(
-            d, CloneLayerConfig({beacons: new ChainBeacon[](0), extendedNetworksRoot: sRoot, extended: extended})
-        );
+        LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
+        LibRainDeployCloneMechanism.setExtendedNetworks(d, extended);
         addExampleClone(d);
         return d;
     }

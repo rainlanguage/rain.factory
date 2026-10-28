@@ -202,7 +202,7 @@ function perNetworkCloneLayers() pure returns (DeployDeclaration memory) {
     LibRainDeployDeclaration.extend(d);
     LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
     LibRainDeployZoltuMechanism.extend(d);
-    LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+    LibRainDeployCloneMechanism.extend(d);
     return d;
 }
 

@@ -59,7 +59,9 @@ abstract contract PerNetworkCloneBeaconVerifyChain is RainDeployVerifyChain {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, beacons(), extendedNetworksRoot());
+        LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setBeacons(d, beacons());
+        LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, extendedNetworksRoot());
         LibRainDeployDeclaration.addReleased(d, released());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;

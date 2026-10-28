@@ -126,7 +126,7 @@ abstract contract ExampleCloneDeploys is RainDeploySuitesBase {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+        LibRainDeployCloneMechanism.extend(d);
         addExampleClone(d);
         return d;
     }

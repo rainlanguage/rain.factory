@@ -17,7 +17,6 @@ import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBea
 import {
     BEACON_PROXY_MECHANISM,
     BEACON_PROXY_PER_NETWORK_MECHANISM,
-    CLONE_PER_NETWORK_MECHANISM,
     CloneLayerConfig,
     LibRainDeployCloneMechanism
 } from "./LibRainDeployCloneMechanism.sol";
@@ -79,7 +78,7 @@ library LibRainDeployCloneOnChainChecks {
     }
 
     function beacons(DeployDeclaration memory d, DeploySuite memory suite) internal pure returns (ChainBeacon[] memory) {
-        return LibRainDeployCloneMechanism.layerConfig(d, LibRainDeployDeclaration.mechanismIdOf(suite), suite.suite).beacons;
+        return LibRainDeployCloneMechanism.layerConfig(d).beacons;
     }
 
     /// @return A copy of the release `name` keys with its recorded networks and the networks among `d.networks` its
@@ -211,12 +210,10 @@ library LibRainDeployCloneOnChainChecks {
         revert BeaconProxyBeaconUndeclared(suite.suite, network, proxyBeacon);
     }
 
-    function checkDeclaration(DeployDeclaration memory) internal {}
-
-    /// The clone-per-network handler's `checkDeclaration`: every release's declared extended networks are exactly
-    /// the ones its record under the config's root holds, else `ExtendedNetworksUnrecorded`.
+    /// Every release's declared extended networks are exactly the ones its record under the config's root holds, else
+    /// `ExtendedNetworksUnrecorded`.
     function checkDeclarationPerNetwork(DeployDeclaration memory d) internal view {
-        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d, CLONE_PER_NETWORK_MECHANISM, "");
+        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d);
         for (uint256 i = 0; i < config.extended.length; i++) {
             LibRainDeployExtendedNetworks.checkExtendedNetworksRecorded(
                 StdConstants.VM, config.extendedNetworksRoot, config.extended[i].suite, config.extended[i].networks
@@ -224,18 +221,10 @@ library LibRainDeployCloneOnChainChecks {
         }
     }
 
-    function checkNetwork(DeployDeclaration memory, string memory, uint256) internal {}
-
-    function checkNetworkBeaconProxy(DeployDeclaration memory d, string memory network, uint256 chainId) internal {
-        checkNetworkBeacons(d, BEACON_PROXY_MECHANISM, network, chainId);
-    }
-
-    /// Every beacon `id`'s handler declares on `chainId`, checked on the selected fork at its applied state, with its
+    /// Every beacon the layer config declares on `chainId`, checked on the selected fork at its applied state, with its
     /// own suite (when named) and that state's implementation suite live with their code.
-    function checkNetworkBeacons(DeployDeclaration memory d, bytes32 id, string memory network, uint256 chainId)
-        internal
-    {
-        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d, id, "").beacons;
+    function checkNetworkBeacons(DeployDeclaration memory d, string memory network, uint256 chainId) internal {
+        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d).beacons;
         for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
             if (chainBeacons[beaconIndex].chainId != chainId) {
                 continue;

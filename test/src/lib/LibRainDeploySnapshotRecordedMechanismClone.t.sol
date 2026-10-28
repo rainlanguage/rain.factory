@@ -55,7 +55,7 @@ contract LibRainDeploySnapshotRecordedMechanismCloneTest is Test {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+        LibRainDeployCloneMechanism.extend(d);
         return d;
     }
 

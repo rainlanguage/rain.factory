@@ -67,9 +67,9 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(
-            d, CloneLayerConfig({beacons: new ChainBeacon[](0), extendedNetworksRoot: sRoot, extended: extended()})
-        );
+        LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
+        LibRainDeployCloneMechanism.setExtendedNetworks(d, extended());
         LibRainDeployDeclaration.addReleased(d, released());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;

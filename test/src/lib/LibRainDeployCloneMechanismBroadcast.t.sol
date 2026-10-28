@@ -15,8 +15,7 @@ import {
     CLONE_PER_NETWORK_MECHANISM,
     ExtendedNetworkUnfrozen,
     LibRainDeployCloneMechanism,
-    UnexpectedStoredDeployedAddress,
-    UnverifiableSource
+    UnexpectedStoredDeployedAddress
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {DeploySuite, UnexpectedMechanismData} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
@@ -271,8 +270,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         assertFalse(anyForkExists());
     }
 
-    /// A Zoltu broadcast under a compiled artifact path formats one verify command per network and emits no
-    /// `UnverifiableSource`.
+    /// A Zoltu broadcast under a compiled artifact path formats one verify command per network.
     function testZoltuBroadcastUnderACompiledArtifactPrintsVerifyCommands() external {
         LibRainDeploy.etchZoltuFactory(vm);
         DeploySuite memory suite = zoltuSuite(LibRainDeploy.zoltuAddress(type(MockCloneable).creationCode));
@@ -280,12 +278,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         string[] memory networks = arbitrumAndPolygon();
         LocalForkVm forkVm = new LocalForkVm();
         vm.expectCall(address(forkVm), abi.encodeWithSignature("toString(address)", suite.storedDeployedAddress), 2);
-        vm.recordLogs();
         sDeploy.externalDeployAndBroadcast(Vm(address(forkVm)), networks, 1, suite, suite);
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        for (uint256 i = 0; i < logs.length; i++) {
-            assertTrue(logs[i].topics.length == 0 || logs[i].topics[0] != UnverifiableSource.selector);
-        }
     }
 
     function anyForkExists() internal returns (bool) {

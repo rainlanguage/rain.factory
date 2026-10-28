@@ -70,7 +70,7 @@ contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, originOwnedCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
+        LibRainDeployCloneMechanism.extend(d);
         LibCloneCandidates.addClones(d, originOwnedCloneDeploys());
         return d;
     }

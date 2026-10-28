@@ -9,7 +9,7 @@ import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/Ra
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
-import {BEACON_PROXY_MECHANISM, LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 import {
     BeaconNamedTwice,
     BeaconSeatedImplementation,
@@ -31,7 +31,7 @@ error BeaconDeclaredTwice(uint256 chainId, uint256 beaconIndex);
 /// @notice The beacon proxy handler's `checkDeclaration`: every declared beacon resolved offline.
 library LibRainDeployBeaconDeclarationChecks {
     function checkDeclaration(DeployDeclaration memory d) internal {
-        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d, BEACON_PROXY_MECHANISM, "").beacons;
+        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d).beacons;
         if (chainBeacons.length == 0) {
             return;
         }

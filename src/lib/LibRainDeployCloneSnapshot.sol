@@ -291,44 +291,10 @@ library LibRainDeployCloneSnapshot {
         return recordedMechanismTag(vm, path, lines);
     }
 
-    /// @return `CLONE_MECHANISM` for a legacy clone record, else zero.
-    function legacyCloneRecordId(DeployDeclaration memory, Vm vm, string memory path)
-        internal
-        view
-        returns (bytes32)
-    {
-        return legacyRecordTag(vm, path) == CLONE_MECHANISM ? CLONE_MECHANISM : bytes32(0);
+    /// @return `legacyRecordTag` of the record: the id of a legacy clone or beacon proxy record, else zero.
+    function legacyRecordId(DeployDeclaration memory, Vm vm, string memory path) internal view returns (bytes32) {
+        return legacyRecordTag(vm, path);
     }
-
-    /// @return `CLONE_PER_NETWORK_MECHANISM` for a legacy per-network clone record, else zero.
-    function legacyClonePerNetworkRecordId(DeployDeclaration memory, Vm vm, string memory path)
-        internal
-        view
-        returns (bytes32)
-    {
-        return legacyRecordTag(vm, path) == CLONE_PER_NETWORK_MECHANISM ? CLONE_PER_NETWORK_MECHANISM : bytes32(0);
-    }
-
-    /// @return `BEACON_PROXY_MECHANISM` for a legacy beacon proxy record, else zero.
-    function legacyBeaconProxyRecordId(DeployDeclaration memory, Vm vm, string memory path)
-        internal
-        view
-        returns (bytes32)
-    {
-        return legacyRecordTag(vm, path) == BEACON_PROXY_MECHANISM ? BEACON_PROXY_MECHANISM : bytes32(0);
-    }
-
-    /// @return `BEACON_PROXY_PER_NETWORK_MECHANISM` for a legacy per-network beacon proxy record, else zero.
-    function legacyBeaconProxyPerNetworkRecordId(DeployDeclaration memory, Vm vm, string memory path)
-        internal
-        view
-        returns (bytes32)
-    {
-        return legacyRecordTag(vm, path) == BEACON_PROXY_PER_NETWORK_MECHANISM
-            ? BEACON_PROXY_PER_NETWORK_MECHANISM
-            : bytes32(0);
-    }
-
 
     /// Deploys `suite` locally under a reverted state snapshot and writes its record.
     /// @return The path written.
@@ -382,7 +348,7 @@ library LibRainDeployCloneSnapshot {
             "import {",
             mechanismConstantName(tag),
             "} from \"",
-            LibRainDeployCloneMechanism.layerConfig(d, tag, "").factoryImportRoot,
+            LibRainDeployCloneMechanism.layerConfig(d).factoryImportRoot,
             CLONE_MECHANISM_SOURCE_SUBPATH,
             "\";\n"
         );

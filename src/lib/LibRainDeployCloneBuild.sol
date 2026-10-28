@@ -6,7 +6,7 @@ import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {DeployDeclaration} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
-import {CLONE_PER_NETWORK_MECHANISM, CloneLayerConfig, LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
+import {CloneLayerConfig, LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 
 /// @title LibRainDeployCloneBuild
 /// @notice The build-side writer of the extended networks records the clone layer config declares. A consumer's
@@ -27,7 +27,7 @@ library LibRainDeployCloneBuild {
         string memory spdxLicenseIdentifier,
         string memory copyrightText
     ) internal {
-        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d, CLONE_PER_NETWORK_MECHANISM, "");
+        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d);
         for (uint256 i = 0; i < d.released.length; i++) {
             ChainDeploy[] memory declared = LibRainDeployCloneMechanism.extendedNetworksOf(config, d.released[i].suite);
             LibRainDeployCloneMechanism.appendExtendedNetworks(d.released[i], declared);
@@ -49,7 +49,7 @@ library LibRainDeployCloneBuild {
     /// @param d The declaration, its clone handlers appended.
     /// @return The paths.
     function extendedNetworksPaths(DeployDeclaration memory d) internal pure returns (string[] memory) {
-        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d, CLONE_PER_NETWORK_MECHANISM, "");
+        CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d);
         string[] memory written = new string[](d.released.length);
         uint256 count = 0;
         for (uint256 i = 0; i < d.released.length; i++) {

@@ -891,19 +891,6 @@ contract LibRainDeployCloneMechanismTest is Test {
         this.externalWithUnrecordedNetworks(release, perNetworkSuiteAt(TEST_SALT, perNetworkCloneChainIds()));
     }
 
-    /// `unverifiableSourceNotice` names the address and every network in order, formatting the address once.
-    function testUnverifiableSourceNoticeNamesTheAddressAndEachNetwork() external pure {
-        string[] memory networks = new string[](2);
-        networks[0] = LibRainDeploy.BASE;
-        networks[1] = LibRainDeploy.ARBITRUM_ONE;
-        assertEq(
-            LibRainDeployCloneMechanism.unverifiableSourceNotice(
-                vm, networks, 0x1234567890AbcdEF1234567890aBcdef12345678
-            ),
-            "no verify command: the Zoltu entry carries a factory proxy artifact path; verify the source at 0x1234567890AbcdEF1234567890aBcdef12345678 by hand on base arbitrum"
-        );
-    }
-
     /// A release under another implementation than its candidate's takes an unrecorded network at the candidate's init
     /// data under its own implementation.
     function testUnrecordedNetworkUnderAnotherImplementationTakesTheCandidatesData() external view {

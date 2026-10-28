@@ -66,7 +66,8 @@ abstract contract BeaconVerifyFixture is RainDeployVerifyBase {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, supportedNetworks());
         LibRainDeployZoltuMechanism.extend(d);
-        LibRainDeployCloneMechanism.extend(d, beacons());
+        LibRainDeployCloneMechanism.extend(d);
+        LibRainDeployCloneMechanism.setBeacons(d, beacons());
         LibRainDeployDeclaration.addReleased(d, releasedSuites());
         LibRainDeployDeclaration.addCandidates(d, candidateSuites());
         return d;

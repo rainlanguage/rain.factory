@@ -236,15 +236,6 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         );
     }
 
-    /// Both factory-deployed proxies' artifact paths are proxy paths, and nothing else is.
-    function testIsProxyArtifactPathOfBothProxies(string memory other) external pure {
-        assertTrue(LibRainDeployCloneMechanism.isProxyArtifactPath(CLONE_ARTIFACT_PATH));
-        assertTrue(LibRainDeployCloneMechanism.isProxyArtifactPath(BEACON_PROXY_ARTIFACT_PATH));
-        vm.assume(keccak256(bytes(other)) != keccak256(bytes(CLONE_ARTIFACT_PATH)));
-        vm.assume(keccak256(bytes(other)) != keccak256(bytes(BEACON_PROXY_ARTIFACT_PATH)));
-        assertFalse(LibRainDeployCloneMechanism.isProxyArtifactPath(other));
-    }
-
     /// A beacon proxy is placed locally at its derived address with its frozen runtime code, once for each of its
     /// networks, and its beacon is left as declared.
     function testBeaconProxySuiteDeploysLocallyToItsDerivedAddress() external {
