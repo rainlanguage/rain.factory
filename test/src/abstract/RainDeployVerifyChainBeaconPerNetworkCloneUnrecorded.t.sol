@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {ChainDeploy, LibRainDeployExtendedNetworks} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
-    PerNetworkCloneDeploys,
     onlyFirstRecordedNetwork,
     perNetworkCloneInitData,
-    perNetworkCloneReleaseAddress
+    perNetworkCloneReleaseAddress,
+    perNetworkCloneReleased
 } from "../../abstract/PerNetworkCloneDeploys.sol";
 import {
     RainDeployVerifyChainBeaconPerNetworkCloneTestBase
@@ -37,13 +37,8 @@ contract RainDeployVerifyChainBeaconPerNetworkCloneUnrecordedTest is
 
     /// The release, recording Arbitrum One alone.
     /// @return The released suites.
-    function releasedSuites()
-        internal
-        pure
-        override(PerNetworkCloneDeploys, RainDeploySuitesBase)
-        returns (DeploySuite[] memory)
-    {
-        DeploySuite[] memory suites = PerNetworkCloneDeploys.releasedSuites();
+    function released() internal pure override returns (DeploySuite[] memory) {
+        DeploySuite[] memory suites = perNetworkCloneReleased();
         suites[0] = onlyFirstRecordedNetwork(suites[0]);
         return suites;
     }
@@ -51,7 +46,7 @@ contract RainDeployVerifyChainBeaconPerNetworkCloneUnrecordedTest is
     /// Polygon at the address it derives under its init data.
     /// @param suite The release's suite key.
     /// @return The networks.
-    function extendedNetworks(string memory suite) internal pure override returns (ChainDeploy[] memory) {
+    function extendedNetworks(string memory suite) internal pure returns (ChainDeploy[] memory) {
         if (keccak256(bytes(suite)) != keccak256("per-network-clone@0_0_1")) {
             return new ChainDeploy[](0);
         }
@@ -64,7 +59,6 @@ contract RainDeployVerifyChainBeaconPerNetworkCloneUnrecordedTest is
         return networks;
     }
 
-    /// @inheritdoc RainDeploySuitesBase
     function extendedNetworksRoot() internal view override returns (string memory) {
         return sExtendedRoot;
     }
