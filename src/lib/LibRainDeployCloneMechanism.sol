@@ -115,7 +115,7 @@ library LibRainDeployCloneMechanism {
             deployStep: deployStep,
             deployLocally: deployLocally,
             deployLocallyOnChain: deployLocallyOnChain,
-            addUnrecordedNetworks: stubAddUnrecordedNetworks,
+            addUnrecordedNetworks: addUnrecordedNetworks,
             addRecordedNetworks: stubAddRecordedNetworks,
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
@@ -172,8 +172,11 @@ library LibRainDeployCloneMechanism {
         suite.mechanismData = mechanismData;
     }
 
-    function stubAddUnrecordedNetworks(DeploySuite memory, DeploySuite memory, uint256[] memory) internal pure {
-        revert("stub");
+    function addUnrecordedNetworks(DeploySuite memory suite, DeploySuite memory candidate, uint256[] memory chainIds)
+        internal
+        pure
+    {
+        suite.mechanismData = withUnrecordedNetworks(suite, candidate, chainIds).mechanismData;
     }
 
     function stubAddRecordedNetworks(DeploySuite memory) internal pure {
