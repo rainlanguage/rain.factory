@@ -230,8 +230,6 @@ library LibRainDeployCloneSnapshot {
         return string.concat("abi.encode(bytes32(", vm.toString(tag), "), ", prefix, "_MECHANISM_DATA)");
     }
 
-    /// A clone or beacon proxy names no compiled source to verify, so nothing is logged.
-    function logVerification(Vm, string[] memory, DeploySuite memory, address[] memory) internal pure {}
 
     /// Deploys `suite` locally under a reverted state snapshot and writes its record.
     /// @return The path written.

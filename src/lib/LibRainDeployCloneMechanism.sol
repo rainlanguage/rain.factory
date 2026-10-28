@@ -3,6 +3,7 @@
 pragma solidity ^0.8.25;
 
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
+import {console2} from "forge-std-1.17.0/src/console2.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 
 import {
@@ -120,7 +121,7 @@ library LibRainDeployCloneMechanism {
             addRecordedNetworks: addRecordedNetworks,
             checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
-            logVerification: LibRainDeployCloneSnapshot.logVerification,
+            logVerification: logVerification,
             writeSuiteSnapshot: LibRainDeployCloneSnapshot.writeSuiteSnapshot,
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData
         });
@@ -193,6 +194,18 @@ library LibRainDeployCloneMechanism {
 
     function stubCheck(DeploySuite memory, string memory, uint256, address) internal pure {
         revert("stub");
+    }
+
+    function logVerification(Vm vm, string[] memory networks, DeploySuite memory suite, address[] memory deployed)
+        internal
+    {
+        if (!isProxyArtifactPath(suite.artifactPath)) {
+            LibRainDeploy.logVerifyCommands(vm, networks, deployed[0], suite.artifactPath);
+        } else {
+            // slither-disable-next-line reentrancy-events
+            emit UnverifiableSource(msg.sender, deployed[0], networks);
+            console2.log(unverifiableSourceNotice(vm, networks, deployed[0]));
+        }
     }
 
     /// @param mechanismData A suite's mechanism data.
