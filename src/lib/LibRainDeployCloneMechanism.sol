@@ -192,13 +192,17 @@ library LibRainDeployCloneMechanism {
         suite.mechanismData = withUnrecordedNetworks(suite, candidate, chainIds).mechanismData;
     }
 
-    /// Appends a per-network release's extended networks record, read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
+    /// Appends a per-network release's extended networks record, read under the root in its own handler's config.
     function addRecordedNetworks(DeployDeclaration memory d, DeploySuite memory suite) internal view {
         if (!isPerNetwork(suite)) {
             return;
         }
+        (, string memory root) = abi.decode(
+            LibRainDeployDeclaration.mechanismById(d, mechanismTag(suite.mechanismData), suite.suite).config,
+            (ChainBeacon[], string)
+        );
         ChainDeploy[] memory extended = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
-            Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), LibRainDeploySnapshot.LIB_FS_ROOT, suite.suite
+            Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), root, suite.suite
         );
         suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
     }

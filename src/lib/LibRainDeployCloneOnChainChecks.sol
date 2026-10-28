@@ -182,12 +182,12 @@ library LibRainDeployCloneOnChainChecks {
         revert BeaconProxyBeaconUndeclared(suite.suite, network, proxyBeacon);
     }
 
-    /// Beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's
-    /// config is owned by `deployer`.
     function checkDeclaration(DeployDeclaration memory) internal {}
 
     function checkNetwork(DeployDeclaration memory, string memory, uint256) internal {}
 
+    /// Beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's
+    /// config is owned by `deployer`.
     function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256, address deployer)
         internal
     {
