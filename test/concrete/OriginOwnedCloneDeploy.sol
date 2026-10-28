@@ -6,7 +6,6 @@ import {DeployDeclaration} from "rain-deploy-0.1.27/src/abstract/RainDeploySuite
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
-import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";

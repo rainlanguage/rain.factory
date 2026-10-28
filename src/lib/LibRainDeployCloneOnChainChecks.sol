@@ -77,7 +77,7 @@ library LibRainDeployCloneOnChainChecks {
         return id == BEACON_PROXY_MECHANISM || id == BEACON_PROXY_PER_NETWORK_MECHANISM;
     }
 
-    function beacons(DeployDeclaration memory d, DeploySuite memory suite) internal pure returns (ChainBeacon[] memory) {
+    function beacons(DeployDeclaration memory d) internal pure returns (ChainBeacon[] memory) {
         return LibRainDeployCloneMechanism.layerConfig(d).beacons;
     }
 
@@ -189,7 +189,7 @@ library LibRainDeployCloneOnChainChecks {
             return;
         }
         address proxyBeacon = LibRainDeployCloneMechanism.beacon(suite, chainId);
-        ChainBeacon[] memory chainBeacons = beacons(d, suite);
+        ChainBeacon[] memory chainBeacons = beacons(d);
         for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
             if (chainBeacons[beaconIndex].chainId != chainId) {
                 continue;
@@ -254,7 +254,7 @@ library LibRainDeployCloneOnChainChecks {
         if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
             return;
         }
-        ChainBeacon[] memory chainBeacons = beacons(d, suite);
+        ChainBeacon[] memory chainBeacons = beacons(d);
         for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
             for (uint256 state = 0; state <= chainBeacons[beaconIndex].beacon.transitions.length; state++) {
                 if (LibRainDeployBeacon.stateAt(chainBeacons[beaconIndex].beacon, state).owner == deployer) {

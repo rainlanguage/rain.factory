@@ -16,7 +16,6 @@ import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
 } from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
-import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {CLONE_ARTIFACT_PATH} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_MECHANISM,
@@ -51,7 +50,7 @@ contract LibRainDeploySnapshotRecordedMechanismCloneTest is Test {
 
     string constant RECORD_CONTRACT = "MockCloneable";
 
-    function declaration() internal pure returns (DeployDeclaration memory) {
+    function declaration() internal view returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);

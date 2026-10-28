@@ -268,50 +268,6 @@ library LibRainDeployCloneMechanism {
         return new ChainDeploy[](0);
     }
 
-    /// Appends the four clone mechanism handlers to `d`, extended networks read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
-    /// @param d The declaration, mutated.
-    /// @param beacons The beacons beacon proxy suites resolve through.
-    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal view {
-        extend(d, beacons, LibRainDeploySnapshot.LIB_FS_ROOT);
-    }
-
-    /// Appends the four clone mechanism handlers to `d`, no extended networks declared.
-    /// @param d The declaration, mutated.
-    /// @param beacons The beacons beacon proxy suites resolve through.
-    /// @param root The root extended networks records are read under.
-    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons, string memory root) internal view {
-        extend(
-            d,
-            CloneLayerConfig({
-                beacons: beacons,
-                extendedNetworksRoot: root,
-                extended: new ExtendedNetworksDeclaration[](0),
-                factoryImportRoot: ""
-            })
-        );
-    }
-
-    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(config)` with `factoryImportRoot`
-    /// derived from `foundry.toml` in place of whatever `config` carries.
-    /// @param d The declaration, mutated.
-    /// @param config The layer config every clone handler carries.
-    function extend(DeployDeclaration memory d, CloneLayerConfig memory config) internal view {
-        bytes memory layer = abi.encode(
-            CloneLayerConfig({
-                beacons: config.beacons,
-                extendedNetworksRoot: config.extendedNetworksRoot,
-                extended: config.extended,
-                factoryImportRoot: LibRainDeployCloneSnapshot.factoryImportRootForToml(
-                    StdConstants.VM, StdConstants.VM.readFile("foundry.toml")
-                )
-            })
-        );
-        LibRainDeployDeclaration.addMechanism(d, handler(CLONE_MECHANISM, layer));
-        LibRainDeployDeclaration.addMechanism(d, handler(CLONE_PER_NETWORK_MECHANISM, layer));
-        LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_MECHANISM, layer));
-        LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_PER_NETWORK_MECHANISM, layer));
-    }
-
     /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
     /// per-network suite's own clone there. An address shared by earlier networks is deployed once.
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {

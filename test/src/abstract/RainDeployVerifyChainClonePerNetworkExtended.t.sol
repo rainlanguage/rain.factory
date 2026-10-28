@@ -13,7 +13,6 @@ import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy} from "../../../src/lib/LibRainDeployClone.sol";
-import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     ExtendedNetworkAddressMismatch,

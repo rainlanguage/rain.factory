@@ -3,7 +3,6 @@
 pragma solidity ^0.8.25;
 
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {
     DeployDeclaration,
     DeploySuite,

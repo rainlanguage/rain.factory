@@ -39,7 +39,7 @@ import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 /// @notice The beacon proxy record marker: what the writer emits, how `recordedMechanism` reads it,
 /// and the released lib entries it produces.
 contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase {
-    function declaration() internal pure override returns (DeployDeclaration memory) {
+    function declaration() internal view override returns (DeployDeclaration memory) {
         return perNetworkCloneLayers();
     }
 

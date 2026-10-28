@@ -3,7 +3,6 @@
 pragma solidity ^0.8.25;
 
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
@@ -197,7 +196,7 @@ function perNetworkCloneDeploys() pure returns (CloneDeploy[] memory) {
 
 /// The core, Zoltu and clone layers on the per-network clone's networks, without suites.
 /// @return The declaration.
-function perNetworkCloneLayers() pure returns (DeployDeclaration memory) {
+function perNetworkCloneLayers() view returns (DeployDeclaration memory) {
     DeployDeclaration memory d;
     LibRainDeployDeclaration.extend(d);
     LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
