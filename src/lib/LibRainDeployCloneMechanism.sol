@@ -109,7 +109,7 @@ library LibRainDeployCloneMechanism {
         return DeployMechanismHandler({
             id: id,
             deployedAddress: deployedAddress,
-            recordedAddress: stubAddress,
+            recordedAddress: recordedAddress,
             deployStepData: stubDeployStepData,
             deployStep: stubDeployStep,
             deployLocally: stubDeployLocally,
@@ -149,9 +149,6 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler());
     }
 
-    function stubAddress(DeploySuite memory, uint256) internal pure returns (address) {
-        revert("stub");
-    }
 
     function stubDeployStepData(DeploySuite memory, uint256) internal pure returns (bytes memory) {
         revert("stub");
