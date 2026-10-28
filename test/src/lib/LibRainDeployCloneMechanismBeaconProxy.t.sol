@@ -13,7 +13,7 @@ import {
     CloneTarget,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
-import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     BEACON_PROXY_ARTIFACT_PATH,
     BEACON_PROXY_UNANCHORABLE_REASON,

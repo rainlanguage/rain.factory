@@ -8,7 +8,11 @@ import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeploy
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {DeployDeclaration, DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneDeploy,
@@ -101,12 +105,11 @@ function perNetworkCloneRelease() pure returns (CloneDeploy memory) {
 /// @param release The release.
 /// @return The release, recording its first network alone.
 function onlyFirstRecordedNetwork(DeploySuite memory release) pure returns (DeploySuite memory) {
-    CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+    CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
     ChainDeploy memory first = clones.networks[0];
     clones.networks = new ChainDeploy[](1);
     clones.networks[0] = first;
-    release.mechanismData = abi.encode(clones);
-    return release;
+    return LibRainDeployCloneMechanism.withPayload(release, abi.encode(clones));
 }
 
 /// Where the `per-network-clone` release's factory, implementation and salt put a clone initialized

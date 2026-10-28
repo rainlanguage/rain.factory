@@ -35,6 +35,24 @@ import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
 
+/// The extended networks one per-network release declares beyond its record.
+struct ExtendedNetworksDeclaration {
+    /// The release's suite key.
+    string suite;
+    /// The networks, each with its own data and address.
+    ChainDeploy[] networks;
+}
+
+/// The config every clone handler carries.
+struct CloneLayerConfig {
+    /// The beacons beacon proxy suites resolve through.
+    ChainBeacon[] beacons;
+    /// The root extended networks records are read and written under.
+    string extendedNetworksRoot;
+    /// Each per-network release's extended networks.
+    ExtendedNetworksDeclaration[] extended;
+}
+
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
 bytes32 constant CLONE_MECHANISM = keccak256("rain.factory.deploy.mechanism.clone");
 
@@ -134,7 +152,9 @@ library LibRainDeployCloneMechanism {
             releasedMechanismData: LibRainDeployCloneSnapshot.releasedMechanismData,
             checkDeclaration: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployBeaconDeclarationChecks.checkDeclaration
-                : LibRainDeployCloneOnChainChecks.checkDeclaration,
+                : id == CLONE_PER_NETWORK_MECHANISM
+                    ? LibRainDeployCloneOnChainChecks.checkDeclarationPerNetwork
+                    : LibRainDeployCloneOnChainChecks.checkDeclaration,
             checkNetwork: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployCloneOnChainChecks.checkNetworkBeaconProxy
                 : LibRainDeployCloneOnChainChecks.checkNetwork,
@@ -142,11 +162,34 @@ library LibRainDeployCloneMechanism {
         });
     }
 
-    /// @param beacons The beacons beacon proxy suites resolve through.
-    /// @param root The root extended networks records are read under.
-    /// @return The layer config every clone handler carries.
-    function config(ChainBeacon[] memory beacons, string memory root) internal pure returns (bytes memory) {
-        return abi.encode(beacons, root);
+    /// The layer config handler `id` carries, decoded.
+    /// @param d The declaration.
+    /// @param id The handler's mechanism id.
+    /// @param suite The suite named in the error when `id` has no handler.
+    /// @return The config.
+    function layerConfig(DeployDeclaration memory d, bytes32 id, string memory suite)
+        internal
+        pure
+        returns (CloneLayerConfig memory)
+    {
+        return abi.decode(LibRainDeployDeclaration.mechanismById(d, id, suite).config, (CloneLayerConfig));
+    }
+
+    /// The extended networks `config` declares for `suite`, or none.
+    /// @param config The layer config.
+    /// @param suite The release's suite key.
+    /// @return The networks.
+    function extendedNetworksOf(CloneLayerConfig memory config, string memory suite)
+        internal
+        pure
+        returns (ChainDeploy[] memory)
+    {
+        for (uint256 i = 0; i < config.extended.length; i++) {
+            if (keccak256(bytes(config.extended[i].suite)) == keccak256(bytes(suite))) {
+                return config.extended[i].networks;
+            }
+        }
+        return new ChainDeploy[](0);
     }
 
     /// Appends the four clone mechanism handlers to `d`, extended networks read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
@@ -156,12 +199,24 @@ library LibRainDeployCloneMechanism {
         extend(d, beacons, LibRainDeploySnapshot.LIB_FS_ROOT);
     }
 
-    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(beacons, root)`.
+    /// Appends the four clone mechanism handlers to `d`, no extended networks declared.
     /// @param d The declaration, mutated.
     /// @param beacons The beacons beacon proxy suites resolve through.
     /// @param root The root extended networks records are read under.
     function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons, string memory root) internal pure {
-        bytes memory layer = config(beacons, root);
+        extend(
+            d,
+            CloneLayerConfig({
+                beacons: beacons, extendedNetworksRoot: root, extended: new ExtendedNetworksDeclaration[](0)
+            })
+        );
+    }
+
+    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(config)`.
+    /// @param d The declaration, mutated.
+    /// @param config The layer config every clone handler carries.
+    function extend(DeployDeclaration memory d, CloneLayerConfig memory config) internal pure {
+        bytes memory layer = abi.encode(config);
         LibRainDeployDeclaration.addMechanism(d, handler(CLONE_MECHANISM, layer));
         LibRainDeployDeclaration.addMechanism(d, handler(CLONE_PER_NETWORK_MECHANISM, layer));
         LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_MECHANISM, layer));
@@ -202,10 +257,7 @@ library LibRainDeployCloneMechanism {
         if (!isPerNetwork(suite)) {
             return;
         }
-        (, string memory root) = abi.decode(
-            LibRainDeployDeclaration.mechanismById(d, mechanismTag(suite.mechanismData), suite.suite).config,
-            (ChainBeacon[], string)
-        );
+        string memory root = layerConfig(d, mechanismTag(suite.mechanismData), suite.suite).extendedNetworksRoot;
         ChainDeploy[] memory extended = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
             Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), root, suite.suite
         );
