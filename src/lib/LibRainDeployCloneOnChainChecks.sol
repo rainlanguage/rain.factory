@@ -67,7 +67,9 @@ library LibRainDeployCloneOnChainChecks {
     }
 
     function beacons(DeployDeclaration memory d, DeploySuite memory suite) internal pure returns (ChainBeacon[] memory) {
-        return abi.decode(LibRainDeployDeclaration.mechanismById(d, suiteId(suite), suite.suite).config, (ChainBeacon[]));
+        (ChainBeacon[] memory declared,) =
+            abi.decode(LibRainDeployDeclaration.mechanismById(d, suiteId(suite), suite.suite).config, (ChainBeacon[], string));
+        return declared;
     }
 
     function released(DeployDeclaration memory d, string memory name) internal pure returns (DeploySuite memory) {

@@ -135,34 +135,30 @@ library LibRainDeployCloneMechanism {
         });
     }
 
-    function cloneHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(CLONE_MECHANISM, "");
+    /// @param beacons The beacons beacon proxy suites resolve through.
+    /// @param root The root extended networks records are read under.
+    /// @return The layer config every clone handler carries.
+    function config(ChainBeacon[] memory beacons, string memory root) internal pure returns (bytes memory) {
+        return abi.encode(beacons, root);
     }
 
-    function clonePerNetworkHandler() internal pure returns (DeployMechanismHandler memory) {
-        return handler(CLONE_PER_NETWORK_MECHANISM, "");
-    }
-
-    function beaconProxyHandler(ChainBeacon[] memory beacons) internal pure returns (DeployMechanismHandler memory) {
-        return handler(BEACON_PROXY_MECHANISM, abi.encode(beacons));
-    }
-
-    function beaconProxyPerNetworkHandler(ChainBeacon[] memory beacons)
-        internal
-        pure
-        returns (DeployMechanismHandler memory)
-    {
-        return handler(BEACON_PROXY_PER_NETWORK_MECHANISM, abi.encode(beacons));
-    }
-
-    /// Appends the four clone mechanism handlers to `d`, the beacon handlers' config `abi.encode(beacons)`.
+    /// Appends the four clone mechanism handlers to `d`, extended networks read under `LibRainDeploySnapshot.LIB_FS_ROOT`.
     /// @param d The declaration, mutated.
     /// @param beacons The beacons beacon proxy suites resolve through.
     function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal pure {
-        LibRainDeployDeclaration.addMechanism(d, cloneHandler());
-        LibRainDeployDeclaration.addMechanism(d, clonePerNetworkHandler());
-        LibRainDeployDeclaration.addMechanism(d, beaconProxyHandler(beacons));
-        LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler(beacons));
+        extend(d, beacons, LibRainDeploySnapshot.LIB_FS_ROOT);
+    }
+
+    /// Appends the four clone mechanism handlers to `d`, config `abi.encode(beacons, root)`.
+    /// @param d The declaration, mutated.
+    /// @param beacons The beacons beacon proxy suites resolve through.
+    /// @param root The root extended networks records are read under.
+    function extend(DeployDeclaration memory d, ChainBeacon[] memory beacons, string memory root) internal pure {
+        bytes memory layer = config(beacons, root);
+        LibRainDeployDeclaration.addMechanism(d, handler(CLONE_MECHANISM, layer));
+        LibRainDeployDeclaration.addMechanism(d, handler(CLONE_PER_NETWORK_MECHANISM, layer));
+        LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_MECHANISM, layer));
+        LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_PER_NETWORK_MECHANISM, layer));
     }
 
     function deployLocally(Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
