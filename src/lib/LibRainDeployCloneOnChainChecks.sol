@@ -74,10 +74,13 @@ library LibRainDeployCloneOnChainChecks {
         return LibRainDeployCloneMechanism.layerConfig(d, suiteId(suite), suite.suite).beacons;
     }
 
-    function released(DeployDeclaration memory d, string memory name) internal pure returns (DeploySuite memory) {
+    /// @return A copy of the release `name` keys with its recorded networks; `d.released` is not changed.
+    function released(DeployDeclaration memory d, string memory name) internal view returns (DeploySuite memory) {
         for (uint256 i = 0; i < d.released.length; i++) {
             if (keccak256(bytes(d.released[i].suite)) == keccak256(bytes(name))) {
-                return d.released[i];
+                DeploySuite memory copy = abi.decode(abi.encode(d.released[i]), (DeploySuite));
+                handlerOf(d, copy).addRecordedNetworks(d, copy);
+                return copy;
             }
         }
         revert BeaconSuiteNotReleased(name);
