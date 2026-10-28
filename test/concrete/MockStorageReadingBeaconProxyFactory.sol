@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ICloneableFactoryV5} from "../../src/interface/deprecated/ICloneableFactoryV6.sol";
+import {ICloneableFactoryV5} from "../../src/interface/deprecated/ICloneableFactoryV5.sol";
 import {LibICloneableFactoryV5} from "../../src/lib/LibICloneableFactoryV5.sol";
 import {MockBeaconProxyFactory} from "./MockBeaconProxyFactory.sol";
 

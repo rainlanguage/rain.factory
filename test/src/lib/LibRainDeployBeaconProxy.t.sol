@@ -7,7 +7,7 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {
     ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH
 } from "../../../src/interface/deprecated/ICloneableFactoryV5.sol";
-import {ICloneableFactoryV6} from "../../../src/interface/deprecated/ICloneableFactoryV6.sol";
+import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {DelegatedBeacon} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
@@ -171,7 +171,7 @@ contract LibRainDeployBeaconProxyTest is Test {
         address elsewhere = address(uint160(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target)) + 1);
         vm.mockCall(
             address(factory),
-            abi.encodeWithSelector(ICloneableFactoryV6(address(factory)).beaconProxyDeterministicOpenSalt.selector),
+            abi.encodeWithSelector(ICloneableFactoryV7(address(factory)).beaconProxyDeterministicOpenSalt.selector),
             abi.encode(elsewhere)
         );
         address deployed =
@@ -198,7 +198,7 @@ contract LibRainDeployBeaconProxyTest is Test {
         address predicted = address(uint160(expected) + 1);
         vm.mockCall(
             address(factory),
-            abi.encodeWithSelector(ICloneableFactoryV6(address(factory)).predictBeaconProxyAddressOpenSalt.selector),
+            abi.encodeWithSelector(ICloneableFactoryV7(address(factory)).predictBeaconProxyAddressOpenSalt.selector),
             abi.encode(predicted)
         );
         vm.expectRevert(
