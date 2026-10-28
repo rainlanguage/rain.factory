@@ -1,3 +1,10 @@
+# Release metadata, not foundry config: `LibRainDeploySnapshot.deployTag` reads
+# `version` as the release being built. Newest published release, moved only by
+# the release PR that cuts the next tag.
+[external.package]
+name = "rain-factory"
+version = "0.2.5"
+
 [profile.default]
 src = 'src'
 test = 'test'
@@ -46,3 +53,15 @@ safe-global-safe-smart-account = "1.4.1-3"
 
 [soldeer]
 recursive_deps = false
+# rain-deploy:generated:rpc_endpoints:begin
+[rpc_endpoints]
+arbitrum = "${ARBITRUM_RPC_URL}"
+base = "${BASE_RPC_URL}"
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+bsc = "${BSC_RPC_URL}"
+ethereum = "${ETHEREUM_RPC_URL}"
+flare = "${FLARE_RPC_URL}"
+hyperevm = "${HYPEREVM_RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
+robinhood = "${ROBINHOOD_RPC_URL}"
+# rain-deploy:generated:rpc_endpoints:end

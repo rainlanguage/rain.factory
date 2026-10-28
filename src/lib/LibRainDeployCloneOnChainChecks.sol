@@ -87,12 +87,16 @@ library LibRainDeployCloneOnChainChecks {
         return LibRainDeployCloneMechanism.layerConfig(d, suiteId(suite), suite.suite).beacons;
     }
 
-    /// @return A copy of the release `name` keys with its recorded networks; `d.released` is not changed.
+    /// @return A copy of the release `name` keys with its recorded networks and the networks among `d.networks` its
+    /// candidate takes it to; `d.released` is not changed.
     function released(DeployDeclaration memory d, string memory name) internal view returns (DeploySuite memory) {
         for (uint256 i = 0; i < d.released.length; i++) {
             if (keccak256(bytes(d.released[i].suite)) == keccak256(bytes(name))) {
                 DeploySuite memory copy = abi.decode(abi.encode(d.released[i]), (DeploySuite));
                 handlerOf(d, copy).addRecordedNetworks(d, copy);
+                LibRainDeployDeclaration.addCandidateNetworks(
+                    d, copy, LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(d.networks))
+                );
                 return copy;
             }
         }

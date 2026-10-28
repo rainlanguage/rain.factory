@@ -63,14 +63,13 @@ library LibRainDeployCloneSnapshot {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
-        bytes memory mechanismData;
         if (LibRainDeployCloneMechanism.isPerNetwork(suite)) {
-            (addressConstants, mechanismData) = perNetworkAddressConstants(vm, deployed, suite);
+            addressConstants = perNetworkAddressConstants(vm, deployed, suite);
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
-                "/// `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`."
+                "/// tagged `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`."
                 : "/// @dev The clone factory call this release was cut with: the\n"
-                "/// `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`.";
+                "/// tagged `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`.";
         } else {
             addressConstants = LibCodeGen.addressConstantString(
                 vm,
@@ -82,12 +81,11 @@ library LibRainDeployCloneSnapshot {
                 "DEPLOYED_ADDRESS",
                 deployed[0]
             );
-            mechanismData = LibRainDeployCloneMechanism.payload(suite);
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
-                "/// `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`."
+                "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`."
                 : "/// @dev The clone factory call this release was cut with: the\n"
-                "/// `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
+                "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
         }
         return string.concat(
             beaconProxy ? BEACON_PROXY_MARKER : "",
@@ -107,24 +105,23 @@ library LibRainDeployCloneSnapshot {
                 "DEPENDENCIES",
                 abi.encode(suite.dependencies)
             ),
-            LibCodeGen.bytesConstantString(vm, mechanismDataComment, "MECHANISM_DATA", mechanismData)
+            LibCodeGen.bytesConstantString(vm, mechanismDataComment, "MECHANISM_DATA", suite.mechanismData)
         );
     }
 
     /// @param vm The Vm instance for string operations.
     /// @param deployed Where a per-network suite was deployed, in its address order.
     /// @param suite The suite.
-    /// @return Its `DEPLOYED_ADDRESS_<chainId>` constants, and its `CloneNetworks` at `deployed`, `abi.encode`d.
+    /// @return Its `DEPLOYED_ADDRESS_<chainId>` constants.
     function perNetworkAddressConstants(Vm vm, address[] memory deployed, DeploySuite memory suite)
         internal
         pure
-        returns (string memory, bytes memory)
+        returns (string memory)
     {
         CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
         string memory addressConstants = "";
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
         for (uint256 i = 0; i < clones.networks.length; i++) {
-            clones.networks[i].deployedAddress = deployed[i];
             string memory chainId = vm.toString(clones.networks[i].chainId);
             addressConstants = string.concat(
                 addressConstants,
@@ -144,7 +141,7 @@ library LibRainDeployCloneSnapshot {
                 )
             );
         }
-        return (addressConstants, abi.encode(clones));
+        return addressConstants;
     }
 
     /// Writes the record of a clone or beacon proxy suite deployed locally at `deployed` into `snapshotDir`.
@@ -175,13 +172,16 @@ library LibRainDeployCloneSnapshot {
         );
     }
 
-    /// The tag a frozen record's release carries, read from its declarations; zero for a record with no
-    /// `MECHANISM_DATA`.
-    /// @param vm The Vm instance for file and string operations.
-    /// @param path A record file.
+    /// The tag a frozen record's markers say its release carries; zero for a record with no `MECHANISM_DATA`.
+    /// @param vm The Vm instance for string operations.
+    /// @param path The record file the lines were read from.
+    /// @param lines Its `recordLines`.
     /// @return The tag.
-    function recordedMechanismTag(Vm vm, string memory path) internal view returns (bytes32) {
-        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
+    function recordedMechanismTag(Vm vm, string memory path, string[] memory lines)
+        internal
+        pure
+        returns (bytes32)
+    {
         (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
         uint256 mechanismData = 0;
         uint256 markers = 0;
@@ -230,6 +230,67 @@ library LibRainDeployCloneSnapshot {
         return string.concat("abi.encode(bytes32(", vm.toString(tag), "), ", prefix, "_MECHANISM_DATA)");
     }
 
+    /// Whether a record's `MECHANISM_DATA` is untagged: its leading word is `abi.encode(bytes)`'s offset.
+    /// @param vm The Vm instance for string operations.
+    /// @param path The record file the lines were read from.
+    /// @param lines Its `recordLines`, declaring `MECHANISM_DATA`.
+    /// @return Whether it is a legacy record.
+    function isLegacyRecord(Vm vm, string memory path, string[] memory lines) internal pure returns (bool) {
+        return LibRainDeploySnapshot.leadingMechanismDataWord(vm, path, lines) == bytes32(uint256(0x20));
+    }
+
+    /// The tag a legacy clone or beacon proxy record's markers say its release carries; zero for a record with no
+    /// `MECHANISM_DATA` or a tagged one.
+    /// @param vm The Vm instance for file and string operations.
+    /// @param path A record file.
+    /// @return The tag.
+    function legacyRecordTag(Vm vm, string memory path) internal view returns (bytes32) {
+        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
+        (bool mechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path, lines);
+        if (!mechanismData || !isLegacyRecord(vm, path, lines)) {
+            return bytes32(0);
+        }
+        return recordedMechanismTag(vm, path, lines);
+    }
+
+    /// @return `CLONE_MECHANISM` for a legacy clone record, else zero.
+    function legacyCloneRecordId(DeployDeclaration memory, Vm vm, string memory path)
+        internal
+        view
+        returns (bytes32)
+    {
+        return legacyRecordTag(vm, path) == CLONE_MECHANISM ? CLONE_MECHANISM : bytes32(0);
+    }
+
+    /// @return `CLONE_PER_NETWORK_MECHANISM` for a legacy per-network clone record, else zero.
+    function legacyClonePerNetworkRecordId(DeployDeclaration memory, Vm vm, string memory path)
+        internal
+        view
+        returns (bytes32)
+    {
+        return legacyRecordTag(vm, path) == CLONE_PER_NETWORK_MECHANISM ? CLONE_PER_NETWORK_MECHANISM : bytes32(0);
+    }
+
+    /// @return `BEACON_PROXY_MECHANISM` for a legacy beacon proxy record, else zero.
+    function legacyBeaconProxyRecordId(DeployDeclaration memory, Vm vm, string memory path)
+        internal
+        view
+        returns (bytes32)
+    {
+        return legacyRecordTag(vm, path) == BEACON_PROXY_MECHANISM ? BEACON_PROXY_MECHANISM : bytes32(0);
+    }
+
+    /// @return `BEACON_PROXY_PER_NETWORK_MECHANISM` for a legacy per-network beacon proxy record, else zero.
+    function legacyBeaconProxyPerNetworkRecordId(DeployDeclaration memory, Vm vm, string memory path)
+        internal
+        view
+        returns (bytes32)
+    {
+        return legacyRecordTag(vm, path) == BEACON_PROXY_PER_NETWORK_MECHANISM
+            ? BEACON_PROXY_PER_NETWORK_MECHANISM
+            : bytes32(0);
+    }
+
 
     /// Deploys `suite` locally under a reverted state snapshot and writes its record.
     /// @return The path written.
@@ -254,19 +315,23 @@ library LibRainDeployCloneSnapshot {
         return LibRainDeploySnapshot.pathForSnapshot(file.root, file.dir, file.contractName);
     }
 
-    /// Maps the record at `path` to its mechanism id and refuses `FrozenSnapshotMechanismDataMissing` for one with no
-    /// `MECHANISM_DATA`.
-    /// @return The expression of the released suite's `mechanismData`.
+    /// Refuses `FrozenSnapshotMechanismDataMissing` for a record with no `MECHANISM_DATA`.
+    /// @return The expression of the released suite's `mechanismData`: the record's `MECHANISM_DATA` tagged by its
+    /// markers for a legacy record, verbatim for a tagged one.
     function releasedMechanismData(DeployDeclaration memory, Vm vm, string memory path, string memory prefix)
         internal
         view
         returns (string memory)
     {
-        bytes32 tag = recordedMechanismTag(vm, path);
-        if (tag == bytes32(0)) {
+        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
+        (bool mechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path, lines);
+        if (!mechanismData) {
             revert FrozenSnapshotMechanismDataMissing(path);
         }
-        return releasedMechanismDataExpression(vm, tag, prefix);
+        if (isLegacyRecord(vm, path, lines)) {
+            return releasedMechanismDataExpression(vm, recordedMechanismTag(vm, path, lines), prefix);
+        }
+        return string.concat(prefix, "_MECHANISM_DATA");
     }
 
     /// @return The empty string: `releasedMechanismData`'s expression names only the record's own constants.
