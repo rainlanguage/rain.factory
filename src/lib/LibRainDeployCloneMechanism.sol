@@ -3,7 +3,6 @@
 pragma solidity ^0.8.25;
 
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
-import {console2} from "forge-std-1.17.0/src/console2.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 
 import {
@@ -236,30 +235,25 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, handler(BEACON_PROXY_PER_NETWORK_MECHANISM, layer));
     }
 
-    /// @return One address per network: a one-data suite's one address once per each of its `networks`, a per-network
-    /// suite's address on each network it lists, in its address order.
+    /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
+    /// per-network suite's own clone there. An address shared by earlier networks is deployed once.
     function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal returns (address[] memory) {
-        uint256[] memory chainIds = isPerNetwork(suite)
-            ? addressChainIds(suite)
-            : LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
+        uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
+        LibRainDeploy.etchDependencies(vm, suite.dependencies);
         for (uint256 i = 0; i < chainIds.length; i++) {
             deployed[i] = deployedAddress(d, suite, chainIds[i]);
+            if (!deployedEarlier(deployed, i)) {
+                deployTarget(vm, suite, chainIds[i], deployed[i]);
+            }
         }
-        LibRainDeploy.etchDependencies(vm, suite.dependencies);
-        deployTargets(vm, suite, deployed);
         return deployed;
     }
 
+    /// Deploys the suite's target on `block.chainid` alone.
     function deployLocallyOnChain(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal {
-        if (!isPerNetwork(suite)) {
-            deployLocally(d, vm, suite);
-            return;
-        }
-        bytes memory mechanismData = suite.mechanismData;
-        suite.mechanismData = onChainMechanismData(suite, block.chainid);
-        deployLocally(d, vm, suite);
-        suite.mechanismData = mechanismData;
+        LibRainDeploy.etchDependencies(vm, suite.dependencies);
+        deployTarget(vm, suite, block.chainid, deployedAddress(d, suite, block.chainid));
     }
 
     function addUnrecordedNetworks(DeployDeclaration memory, DeploySuite memory suite, DeploySuite memory candidate, uint256[] memory chainIds)
@@ -281,17 +275,11 @@ library LibRainDeployCloneMechanism {
         suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
     }
 
-    function logVerification(DeployDeclaration memory, Vm vm, string[] memory networks, DeploySuite memory suite, address[] memory deployed)
+    /// A clone or beacon proxy has no source of its own to verify: nothing is logged, whatever its artifact path.
+    function logVerification(DeployDeclaration memory, Vm, string[] memory, DeploySuite memory, address[] memory)
         internal
-    {
-        if (!isProxyArtifactPath(suite.artifactPath)) {
-            LibRainDeploy.logVerifyCommands(vm, networks, deployed[0], suite.artifactPath);
-        } else {
-            // slither-disable-next-line reentrancy-events
-            emit UnverifiableSource(msg.sender, deployed[0], networks);
-            console2.log(unverifiableSourceNotice(vm, networks, deployed[0]));
-        }
-    }
+        pure
+    {}
 
     /// @param mechanismData A suite's mechanism data.
     /// @return Its leading word, or zero when it is shorter than one.
@@ -567,55 +555,23 @@ library LibRainDeployCloneMechanism {
         return copy;
     }
 
-    /// @param suite A per-network clone or beacon proxy suite.
-    /// @param chainId The network's chain id.
-    /// @return `suite`'s mechanism data cut down to its one network on `chainId`.
-    function onChainMechanismData(DeploySuite memory suite, uint256 chainId) internal pure returns (bytes memory) {
-        CloneNetworks memory clones = cloneNetworks(suite);
-        ChainDeploy[] memory own = new ChainDeploy[](1);
-        own[0] = clones.networks[LibRainDeployClone.cloneNetworkIndex(clones, chainId)];
-        clones.networks = own;
-        return abi.encode(mechanismTag(suite.mechanismData), abi.encode(clones));
-    }
-
-    /// Places each of a clone or beacon proxy suite's targets at its derived address: a clone through its factory, a
-    /// beacon proxy by etching its frozen runtime code.
+    /// Places a clone or beacon proxy suite's target on `chainId` at `expected`: a clone through its factory, a beacon
+    /// proxy by etching its frozen runtime code, the suite's creation code checked against the target first.
     /// @param vm The Vm instance to etch with.
     /// @param suite The suite.
-    /// @param deployed Its derived addresses, in its address order.
-    function deployTargets(Vm vm, DeploySuite memory suite, address[] memory deployed) internal {
-        CloneTarget[] memory targets = cloneTargets(suite);
+    /// @param chainId The network's chain id.
+    /// @param expected The address its target derives there.
+    function deployTarget(Vm vm, DeploySuite memory suite, uint256 chainId, address expected) internal {
+        CloneTarget memory target = cloneTargetOn(suite, chainId);
         bool beaconProxy = isBeaconProxy(suite);
-        checkCloneCreationCode(suite, beaconProxy, targets[0].implementation);
-        for (uint256 i = 0; i < targets.length; i++) {
-            if (deployedEarlier(deployed, i)) {
-                continue;
-            }
-            if (beaconProxy) {
-                // The frozen runtime code is generated by the repo's Build script and checked by the `Git is
-                // clean` job, so it is placed rather than derived here.
-                vm.etch(deployed[i], suite.storedRuntimeCode);
-            } else {
-                deployCloneTarget(vm, suite.suite, beaconProxy, targets[i], deployed[i]);
-            }
-        }
-    }
-
-    /// @param suite A clone or beacon proxy suite.
-    /// @return Its factory calls, in its address order.
-    function cloneTargets(DeploySuite memory suite) internal pure returns (CloneTarget[] memory) {
-        CloneTarget[] memory targets;
-        if (isPerNetwork(suite)) {
-            CloneNetworks memory clones = cloneNetworks(suite);
-            targets = new CloneTarget[](clones.networks.length);
-            for (uint256 i = 0; i < targets.length; i++) {
-                targets[i] = LibRainDeployClone.cloneNetworkTarget(clones, i);
-            }
+        checkCloneCreationCode(suite, beaconProxy, target.implementation);
+        if (beaconProxy) {
+            // The frozen runtime code is generated by the repo's Build script and checked by the `Git is
+            // clean` job, so it is placed rather than derived here.
+            vm.etch(expected, suite.storedRuntimeCode);
         } else {
-            targets = new CloneTarget[](1);
-            targets[0] = cloneTarget(suite);
+            deployCloneTarget(vm, suite.suite, beaconProxy, target, expected);
         }
-        return targets;
     }
 
     /// Refuses `CloneCreationCodeMismatch` unless `suite`'s creation code is its mechanism's over `implementation`.
