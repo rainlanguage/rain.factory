@@ -115,9 +115,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     /// the address declarations, wherever it sits among the lines.
     function testTheMarkerReadsAsABeaconProxy() external {
         checkRead(
-            "one",
-            string.concat(MECHANISM_DATA_LINE, MARKER_LINE, everyNetworkLine(address(1))),
-            BEACON_PROXY_MECHANISM
+            "one", string.concat(MECHANISM_DATA_LINE, MARKER_LINE, everyNetworkLine(address(1))), BEACON_PROXY_MECHANISM
         );
         checkRead(
             "one-marker-first",

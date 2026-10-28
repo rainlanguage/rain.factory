@@ -73,8 +73,14 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         DeploySuite memory declared =
         LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
         assertEq(release.mechanismData, declared.mechanismData);
-        assertEq(addresses[0], LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
-        assertEq(addresses[1], LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
+        assertEq(
+            addresses[0],
+            LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID)
+        );
+        assertEq(
+            addresses[1],
+            LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID)
+        );
     }
 
     /// A recorded address that is not the one its network's init data derives is refused, naming

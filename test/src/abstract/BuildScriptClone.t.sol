@@ -108,7 +108,9 @@ contract BuildScriptCloneTest is Test {
             vm.contains(lib, string.concat("suite: \"example-clone@", LibRainDeploySnapshot.deployTag(vm), "\"")),
             "the release is keyed by the template suite and the tag"
         );
-        assertTrue(vm.contains(lib, mechanismDataExpression(CLONE_MECHANISM, prefix)), "the release is declared a clone");
+        assertTrue(
+            vm.contains(lib, mechanismDataExpression(CLONE_MECHANISM, prefix)), "the release is declared a clone"
+        );
         assertTrue(
             vm.contains(lib, string.concat("storedDeployedAddress: ", prefix, "_DEPLOYED_ADDRESS")),
             "at one address on every network"
