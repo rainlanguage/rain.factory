@@ -158,7 +158,14 @@ library LibRainDeployCloneMechanism {
             checkNetwork: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployCloneOnChainChecks.checkNetworkBeaconProxy
                 : LibRainDeployCloneOnChainChecks.checkNetwork,
-            releasedImport: LibRainDeployCloneSnapshot.releasedImport
+            releasedImport: LibRainDeployCloneSnapshot.releasedImport,
+            legacyRecordId: id == CLONE_MECHANISM
+                ? LibRainDeployCloneSnapshot.legacyCloneRecordId
+                : id == CLONE_PER_NETWORK_MECHANISM
+                    ? LibRainDeployCloneSnapshot.legacyClonePerNetworkRecordId
+                    : id == BEACON_PROXY_MECHANISM
+                        ? LibRainDeployCloneSnapshot.legacyBeaconProxyRecordId
+                        : LibRainDeployCloneSnapshot.legacyBeaconProxyPerNetworkRecordId
         });
     }
 
