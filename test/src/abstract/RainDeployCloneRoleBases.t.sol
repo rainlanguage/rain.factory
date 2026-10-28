@@ -15,7 +15,7 @@ import {RainDeployCloneVerifySnapshot} from "../../../src/abstract/RainDeployClo
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {exampleCloneRelease} from "../../abstract/ExampleCloneDeploys.sol";
 
-function exampleCloneSuite() pure returns (DeploySuite memory) {
+function exampleCloneSuite() view returns (DeploySuite memory) {
     return LibRainDeployCloneMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot;
 }
 
