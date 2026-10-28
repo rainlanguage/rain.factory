@@ -91,7 +91,7 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     function regenerateSnapshots() internal override {
         DeployDeclaration memory d = declaration();
         DeploySuite memory snapshot =
-            LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
+        LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
         snapshot.networks = d.networks;
         writeSuiteSnapshot(
             d,
