@@ -20,7 +20,7 @@ contract RegistryBeaconProxy is Proxy {
     /// The beacon, as `BeaconProxy` keeps it.
     address private immutable iBeacon;
 
-    /// @param registry A config registry answering `getV4`.
+    /// @param registry An `IConfigRegistryV5`.
     /// @param authority The authority the beacon's name is bound under.
     /// @param beaconName The name the beacon is bound to.
     // A zero registry or authority resolves no binding, so `resolveBeacon` reverts.

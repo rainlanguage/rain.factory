@@ -15,7 +15,7 @@ bytes32 constant ICLONEABLE_FACTORY_V7_REGISTRY_BEACON_PROXY_DOMAIN = keccak256(
 /// no beacon, only the registry, the authority and the beacon's name: the
 /// address commits to those, the salt and the init data, and whatever that
 /// binding resolves to on the chain is the beacon. The binding is read with
-/// `getV4` and must be typed `address`.
+/// `IConfigRegistryV5.getV5` and must be typed `address`.
 interface ICloneableFactoryV7 is ICloneableFactoryV5 {
     /// A registry beacon proxy was deployed and initialized.
     /// @param sender The caller.
@@ -41,7 +41,7 @@ interface ICloneableFactoryV7 is ICloneableFactoryV5 {
     /// deploys a proxy of it at an address that commits to the registry, the
     /// authority, the name, `salt` and `data`, and initializes it with `data`.
     /// The binding's value type is `address` and its value `abi.encode(beacon)`.
-    /// @param registry A config registry answering `getV4`.
+    /// @param registry An `IConfigRegistryV5`.
     /// @param authority The authority the name is bound under.
     /// @param beaconName The name the beacon is bound to.
     /// @param data The init data.

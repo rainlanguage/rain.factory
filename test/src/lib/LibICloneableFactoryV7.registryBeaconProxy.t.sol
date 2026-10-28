@@ -14,6 +14,7 @@ import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
 import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 import {RegistryBeaconProxy} from "../../../script/RegistryBeaconProxy.sol";
 import {TestRegistryBeaconSource, TestNameNotRegistered} from "../../concrete/TestRegistryBeaconSource.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV5.sol";
 
 /// @title LibICloneableFactoryV7RegistryBeaconProxyTest
 /// `registryBeaconProxy` through `TestCloneFactory`: the beacon comes from the
@@ -105,6 +106,11 @@ contract LibICloneableFactoryV7RegistryBeaconProxyTest is Test {
         assertTrue(
             base != iFactory.predictRegistryBeaconProxyAddress(address(iRegistry), AUTHORITY, otherName, data, salt)
         );
+    }
+
+    /// The stand-in answers the selector the library calls on a real registry.
+    function testStandInAnswersGetV5() external pure {
+        assertEq(TestRegistryBeaconSource.getV5.selector, IConfigRegistryV5.getV5.selector);
     }
 
     /// An unbound name refuses with the registry's own error.

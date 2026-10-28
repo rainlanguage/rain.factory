@@ -8,12 +8,7 @@ import {
 } from "../interface/ICloneableFactoryV7.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 import {REGISTRY_BEACON_PROXY_CREATION_CODE} from "../generated/RegistryBeaconProxy.sol";
-
-/// The read a registry beacon proxy resolves its beacon through: rain-deploy's
-/// `IConfigRegistryV4.getV4`.
-interface IRegistryBeaconSourceV2 {
-    function getV4(address authority, bytes32 name) external view returns (bytes memory, uint256, bytes32);
-}
+import {IConfigRegistryV5} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV5.sol";
 
 /// @dev The value type hash a beacon binding must carry.
 bytes32 constant BEACON_BINDING_VALUE_TYPE_HASH = keccak256("address");
@@ -65,7 +60,7 @@ library LibICloneableFactoryV7 {
     function resolveBeacon(address registry, address authority, bytes32 beaconName) internal view returns (address) {
         // When the binding was written does not matter here.
         //slither-disable-next-line unused-return
-        (bytes memory value,, bytes32 valueTypeHash) = IRegistryBeaconSourceV2(registry).getV4(authority, beaconName);
+        (bytes memory value,, bytes32 valueTypeHash) = IConfigRegistryV5(registry).getV5(authority, beaconName);
         if (valueTypeHash != BEACON_BINDING_VALUE_TYPE_HASH) {
             revert BeaconBindingTypeMismatch(registry, authority, beaconName, valueTypeHash);
         }
