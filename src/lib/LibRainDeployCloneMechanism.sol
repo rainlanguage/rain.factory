@@ -10,8 +10,7 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeployMechanismHandler,
-    DeploySuite,
-    ExtendedNetworksUnexpected
+    DeploySuite
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
@@ -58,6 +57,10 @@ bytes32 constant BEACON_PROXY_PER_NETWORK_MECHANISM =
 /// `LibRainDeployBeaconProxy.beaconProxyDeployedAddress` for a beacon proxy.
 /// @param factoryAddress The address the declared factory actually deployed to.
 error CloneDerivationMismatch(string suite, address formulaAddress, address factoryAddress);
+
+/// Thrown when extended networks are declared for a suite that is not per network.
+/// @param suite The suite.
+error ExtendedNetworksUnexpected(string suite);
 
 /// Thrown when a clone suite's `creationCode` is not the EIP-1167 creation code for the implementation its
 /// `mechanismData` names, or a beacon proxy suite's is not the `BeaconProxy` creation code over its beacon.
@@ -491,7 +494,8 @@ library LibRainDeployCloneMechanism {
             storedRuntimeCode: suite.storedRuntimeCode,
             artifactPath: suite.artifactPath,
             dependencies: suite.dependencies,
-            mechanismData: abi.encode(mechanismTag(suite.mechanismData), data)
+            mechanismData: abi.encode(mechanismTag(suite.mechanismData), data),
+            networks: suite.networks
         });
     }
 
@@ -780,7 +784,8 @@ library LibRainDeployCloneMechanism {
             storedRuntimeCode: "",
             artifactPath: "",
             dependencies: clone.dependencies,
-            mechanismData: mechanismData
+            mechanismData: mechanismData,
+            networks: new string[](0)
         });
         if (beaconProxy) {
             snapshot.creationCode = LibRainDeployBeaconProxy.beaconProxyCreationCode(clone.implementation);
