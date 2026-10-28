@@ -64,5 +64,6 @@ makes this half a standalone publish.
 - The OZ pin and the `foundry.toml` compiler settings are frozen: they fix the
   `BeaconProxy` and `RegistryBeaconProxy` creation code in the V5 and V7 address
   derivations, so changing either needs a new interface version.
-- `rain-deploy` belongs to the deploy half and must not be added as a dependency
-  here: needing it means deploy-pin code has landed in a library repo.
+- `rain-deploy` is a dependency for the clone and beacon-proxy deploy mechanisms
+  (`RainDeployCloneSuitesBase` and its per-role `RainDeployClone*` bases);
+  deploy pins and deploy scripts still live in `rain.factory.deploy`.
