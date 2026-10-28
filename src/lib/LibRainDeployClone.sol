@@ -8,7 +8,7 @@ import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.s
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 
 import {DeployDependency} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
+import {ChainDeploy} from "./LibRainDeployExtendedNetworks.sol";
 
 uint256 constant EIP1167_CREATION_CODE_PREFIX_LENGTH = 10;
 
