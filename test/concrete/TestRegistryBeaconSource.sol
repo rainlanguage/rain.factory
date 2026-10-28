@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-
 /// Thrown for a name nothing is bound to, as the config registry does.
 error TestNameNotRegistered(address authority, bytes32 name);
 
