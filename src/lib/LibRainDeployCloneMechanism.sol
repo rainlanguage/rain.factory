@@ -116,7 +116,7 @@ library LibRainDeployCloneMechanism {
             deployLocallyOnChain: stubDeployLocallyOnChain,
             addUnrecordedNetworks: stubAddUnrecordedNetworks,
             addRecordedNetworks: stubAddRecordedNetworks,
-            checkNetworkFrozen: stubCheck,
+            checkNetworkFrozen: checkNetworkFrozen,
             checkOnChain: stubCheck,
             logVerification: stubLogVerification,
             writeSuiteSnapshot: stubWriteSuiteSnapshot,
