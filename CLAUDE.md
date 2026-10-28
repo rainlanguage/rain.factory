@@ -33,17 +33,17 @@ EIP1167 oracle.
 
 ## Architecture
 
-- `src/interface/ICloneableFactoryV6.sol` is the current factory interface: V5
+- `src/interface/ICloneableFactoryV7.sol` is the current factory interface: V5
   plus beacon proxies resolved from a config registry. Every derivation is
   pinned to exact bytes behind a distinct string-derived domain tag, so the
   images are disjoint by construction.
 - `src/interface/ICloneableV2.sol` is the cloneable interface:
   `initialize(bytes)` must return `ICLONEABLE_V2_SUCCESS`.
-- `src/lib/LibICloneableFactoryV5.sol` and `LibICloneableFactoryV6.sol` are the
+- `src/lib/LibICloneableFactoryV5.sol` and `LibICloneableFactoryV7.sol` are the
   whole factory as internal library logic (no external cloning dependency);
   `msg.sender` and `address(this)` are read inside the library.
 - `src/interface/deprecated/` — Every interface that is not the newest version
-  of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V5`). Still
+  of itself (`ICloneableV1`, `IFactory`, `ICloneableFactoryV1`–`V6`). Still
   published for consumers pinned to them, so FROZEN: never edit one. Do not use
   for new work. When a new version lands, the one it supersedes moves here.
 - `src/test/` — the fixtures rain.factory.deploy's suite imports
@@ -62,7 +62,7 @@ makes this half a standalone publish.
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
   cut prose to fit, never exempt.
 - The OZ pin and the `foundry.toml` compiler settings are frozen: they fix the
-  `BeaconProxy` and `RegistryBeaconProxy` creation code in the V5 and V6 address
+  `BeaconProxy` and `RegistryBeaconProxy` creation code in the V5 and V7 address
   derivations, so changing either needs a new interface version.
 - `rain-deploy` belongs to the deploy half and must not be added as a dependency
   here: needing it means deploy-pin code has landed in a library repo.

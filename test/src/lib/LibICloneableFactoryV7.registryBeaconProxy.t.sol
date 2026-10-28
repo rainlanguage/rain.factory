@@ -7,18 +7,18 @@ import {Create2} from "@openzeppelin-contracts-5.6.1/utils/Create2.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.6.1/proxy/beacon/UpgradeableBeacon.sol";
 import {ERC1967Utils} from "@openzeppelin-contracts-5.6.1/proxy/ERC1967/ERC1967Utils.sol";
 
-import {ICloneableFactoryV6} from "../../../src/interface/ICloneableFactoryV6.sol";
-import {NonCanonicalBeaconBinding} from "../../../src/lib/LibICloneableFactoryV6.sol";
+import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.sol";
+import {NonCanonicalBeaconBinding, BeaconBindingTypeMismatch} from "../../../src/lib/LibICloneableFactoryV7.sol";
 import {ZeroBeaconCodeSize} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
 import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 import {RegistryBeaconProxy} from "../../../script/RegistryBeaconProxy.sol";
 import {TestRegistryBeaconSource, TestNameNotRegistered} from "../../concrete/TestRegistryBeaconSource.sol";
 
-/// @title LibICloneableFactoryV6RegistryBeaconProxyTest
+/// @title LibICloneableFactoryV7RegistryBeaconProxyTest
 /// `registryBeaconProxy` through `TestCloneFactory`: the beacon comes from the
 /// registry binding, and the address does not depend on the beacon.
-contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
+contract LibICloneableFactoryV7RegistryBeaconProxyTest is Test {
     address internal constant AUTHORITY = address(uint160(uint256(keccak256("authority"))));
     bytes32 internal constant BEACON_NAME = keccak256("st0x.vault-beacon.v1");
 
@@ -49,14 +49,14 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
     /// implementation and is initialized with `data`.
     function testRegistryBeaconProxyDeploys(bytes memory data, bytes32 salt) external {
         address beacon = newBeacon();
-        iRegistry.bind(AUTHORITY, BEACON_NAME, abi.encode(beacon));
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", abi.encode(beacon));
 
         address predicted =
             iFactory.predictRegistryBeaconProxyAddress(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
         assertEq(predicted, expected(data, salt));
 
         vm.expectEmit(address(iFactory));
-        emit ICloneableFactoryV6.NewRegistryBeaconProxy(
+        emit ICloneableFactoryV7.NewRegistryBeaconProxy(
             address(this), address(iRegistry), AUTHORITY, BEACON_NAME, beacon, predicted, salt, data
         );
         address proxy = iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
@@ -72,7 +72,7 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
     function testSameAddressWhateverTheBeacon(bytes memory data, bytes32 salt) external {
         uint256 start = vm.snapshotState();
         address beaconA = newBeacon();
-        iRegistry.bind(AUTHORITY, BEACON_NAME, abi.encode(beaconA));
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", abi.encode(beaconA));
         address proxyA = iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
         assertEq(address(uint160(uint256(vm.load(proxyA, ERC1967Utils.BEACON_SLOT)))), beaconA);
 
@@ -80,7 +80,7 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
         newBeacon();
         address beaconB = newBeacon();
         assertTrue(beaconA != beaconB);
-        iRegistry.bind(AUTHORITY, BEACON_NAME, abi.encode(beaconB));
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", abi.encode(beaconB));
         address proxyB = iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
 
         assertEq(proxyA, proxyB);
@@ -118,7 +118,7 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
         vm.assume(value.length != 0);
         //forge-lint: disable-next-line(unsafe-typecast)
         vm.assume(value.length != 0x20 || uint256(bytes32(value)) >> 160 != 0);
-        iRegistry.bind(AUTHORITY, BEACON_NAME, value);
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", value);
         vm.expectRevert(
             abi.encodeWithSelector(NonCanonicalBeaconBinding.selector, address(iRegistry), AUTHORITY, BEACON_NAME)
         );
@@ -128,8 +128,26 @@ contract LibICloneableFactoryV6RegistryBeaconProxyTest is Test {
     /// A bound address with no code is refused as a beacon.
     function testBeaconWithoutCode(address beacon, bytes memory data, bytes32 salt) external {
         vm.assume(beacon.code.length == 0);
-        iRegistry.bind(AUTHORITY, BEACON_NAME, abi.encode(beacon));
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", abi.encode(beacon));
         vm.expectRevert(abi.encodeWithSelector(ZeroBeaconCodeSize.selector));
+        iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
+    }
+
+    /// A binding typed anything but `address` is refused, even when its value
+    /// is a clean address word.
+    function testBindingTypeMismatch(string memory valueType, bytes memory data, bytes32 salt) external {
+        vm.assume(keccak256(bytes(valueType)) != keccak256("address"));
+        address beacon = newBeacon();
+        iRegistry.bind(AUTHORITY, BEACON_NAME, valueType, abi.encode(beacon));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                BeaconBindingTypeMismatch.selector,
+                address(iRegistry),
+                AUTHORITY,
+                BEACON_NAME,
+                keccak256(bytes(valueType))
+            )
+        );
         iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
     }
 }
