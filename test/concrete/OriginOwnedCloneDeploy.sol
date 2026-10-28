@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {DeployDeclaration} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
 import {MockCloneFactory} from "./MockCloneFactory.sol";
 import {MockOriginOwnedCloneable} from "./MockOriginOwnedCloneable.sol";
@@ -36,15 +36,7 @@ function originOwnedCloneInitData(uint256 chainId) pure returns (bytes memory) {
     return abi.encode(chainId == 8453 ? address(0) : address(0xB0B));
 }
 
-/// @return Arbitrum One then Base, the networks the origin-owned clone is declared on.
-function originOwnedCloneNetworks() pure returns (string[] memory) {
-    string[] memory networks = new string[](2);
-    networks[0] = LibRainDeploy.ARBITRUM_ONE;
-    networks[1] = LibRainDeploy.BASE;
-    return networks;
-}
-
-/// @return The origin-owned clone a candidate is derived from.
+/// @return The `origin-owned-clone` declaration a candidate is derived from.
 function originOwnedCloneDeploys() pure returns (CloneDeploy[] memory) {
     (address factory, address implementation, DeployDependency[] memory dependencies) = originOwnedCloneSetup();
     CloneDeploy[] memory clones = new CloneDeploy[](1);
@@ -63,12 +55,15 @@ function originOwnedCloneDeploys() pure returns (CloneDeploy[] memory) {
 
 /// @title OriginOwnedCloneDeploy
 /// @notice A per-network clone repo on Arbitrum One and Base whose candidate's Base clone seats the deploy key,
-/// with its broadcast exposed.
+/// with `broadcastSuite` exposed.
 contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
     function declaration() internal view override returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
-        LibRainDeployDeclaration.setNetworks(d, originOwnedCloneNetworks());
+        string[] memory networks = new string[](2);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        networks[1] = LibRainDeploy.BASE;
+        LibRainDeployDeclaration.setNetworks(d, networks);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d, new ChainBeacon[](0));
         LibCloneCandidates.addClones(d, originOwnedCloneDeploys());
