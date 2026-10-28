@@ -35,11 +35,26 @@ error FrozenSnapshotBeaconProxyMarkerAmbiguous(string path);
 /// @param path The record file.
 error FrozenSnapshotBeaconProxyMechanismDataMissing(string path);
 
+/// `Vm`'s `foundry.toml` reads, declared pure: a handler's `releasedImport` is pure and derives this package's import
+/// root from the manifest the way core's view `importPathForToml` derives rain-deploy's.
+interface VmPureToml {
+    function readFile(string calldata path) external pure returns (string memory);
+    function keyExistsToml(string calldata toml, string calldata key) external pure returns (bool);
+}
+
 /// @title LibRainDeployCloneSnapshot
 /// @notice The record a clone or beacon proxy release is frozen as, and how a released-suites lib reads it back.
 /// The record carries the untagged payload as `MECHANISM_DATA`, the `BEACON_PROXY` marker for a beacon proxy and
 /// `DEPLOYED_ADDRESS_<chainId>` for one per network; those three say which tag the released suite carries.
 library LibRainDeployCloneSnapshot {
+    /// This package's soldeer name: the remapping prefix a consumer reaches it by.
+    string constant PACKAGE_NAME = "rain-factory";
+
+    string constant SOURCE_ROOT = "src";
+
+    /// Where the mechanism constants are declared, below `SOURCE_ROOT`.
+    string constant CLONE_MECHANISM_SOURCE_SUBPATH = "lib/LibRainDeployCloneMechanism.sol";
+
     /// The name of the beacon proxy marker. A line holding it anywhere but as the writer's declaration of it is not
     /// the writer's.
     string constant BEACON_PROXY_NAME = "BEACON_PROXY";
@@ -218,16 +233,53 @@ library LibRainDeployCloneSnapshot {
         return chainIds.length == 0 ? CLONE_MECHANISM : CLONE_PER_NETWORK_MECHANISM;
     }
 
-    /// @param vm The Vm instance for string operations.
     /// @param tag A record's tag, nonzero.
     /// @param prefix The prefix the record's constants are aliased under.
-    /// @return The Solidity expression a released-suites lib gives the release's `mechanismData`.
-    function releasedMechanismDataExpression(Vm vm, bytes32 tag, string memory prefix)
+    /// @return The Solidity expression a released-suites lib gives the release's `mechanismData`, its tag named.
+    function releasedMechanismDataExpression(Vm, bytes32 tag, string memory prefix)
         internal
         pure
         returns (string memory)
     {
-        return string.concat("abi.encode(bytes32(", vm.toString(tag), "), ", prefix, "_MECHANISM_DATA)");
+        return string.concat("abi.encode(", mechanismConstantName(tag), ", ", prefix, "_MECHANISM_DATA)");
+    }
+
+    /// @param tag A mechanism tag.
+    /// @return The name `LibRainDeployCloneMechanism.sol` declares it under.
+    function mechanismConstantName(bytes32 tag) internal pure returns (string memory) {
+        return tag == CLONE_MECHANISM
+            ? "CLONE_MECHANISM"
+            : tag == CLONE_PER_NETWORK_MECHANISM
+                ? "CLONE_PER_NETWORK_MECHANISM"
+                : tag == BEACON_PROXY_MECHANISM ? "BEACON_PROXY_MECHANISM" : "BEACON_PROXY_PER_NETWORK_MECHANISM";
+    }
+
+    /// The root a lib in THIS repo's lib dir reaches `SOURCE_ROOT` by.
+    function factoryImportRootInThisRepo() internal pure returns (string memory) {
+        return "../";
+    }
+
+    /// `factoryImportRootForToml` against the `foundry.toml` on disk.
+    function derivedFactoryImportRoot() internal pure returns (string memory) {
+        Vm vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+        return factoryImportRootForToml(vm, VmPureToml(address(vm)).readFile("foundry.toml"));
+    }
+
+    /// The root a generated lib reaches this package's `SOURCE_ROOT` by: `rain-factory-<version>/src/` when `toml`
+    /// pins a rain-factory dependency, else `factoryImportRootInThisRepo`, the tree being this repo.
+    /// @param vm The Vm instance for TOML operations.
+    /// @param toml The manifest contents to read the pin from.
+    /// @return The root.
+    function factoryImportRootForToml(Vm vm, string memory toml) internal pure returns (string memory) {
+        string memory key = string.concat(".dependencies.", PACKAGE_NAME);
+        if (!VmPureToml(address(vm)).keyExistsToml(toml, key)) {
+            return factoryImportRootInThisRepo();
+        }
+        string memory versionKey = string.concat(key, ".version");
+        string memory version = VmPureToml(address(vm)).keyExistsToml(toml, versionKey)
+            ? vm.parseTomlString(toml, versionKey)
+            : vm.parseTomlString(toml, key);
+        return string.concat(PACKAGE_NAME, "-", version, "/", SOURCE_ROOT, "/");
     }
 
     /// Whether a record's `MECHANISM_DATA` is untagged: its leading word is `abi.encode(bytes)`'s offset.
@@ -334,8 +386,46 @@ library LibRainDeployCloneSnapshot {
         return string.concat(prefix, "_MECHANISM_DATA");
     }
 
-    /// @return The empty string: `releasedMechanismData`'s expression names only the record's own constants.
-    function releasedImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
-        return "";
+    /// The import `releasedMechanismDataExpression` needs for `tag`. The root core passes reaches rain-deploy, not
+    /// this package, so this package's root is derived from `foundry.toml` instead.
+    /// @param tag A mechanism tag.
+    /// @return The import line.
+    function releasedImportForTag(bytes32 tag) internal pure returns (string memory) {
+        return string.concat(
+            "import {",
+            mechanismConstantName(tag),
+            "} from \"",
+            derivedFactoryImportRoot(),
+            CLONE_MECHANISM_SOURCE_SUBPATH,
+            "\";\n"
+        );
+    }
+
+    /// @return `releasedImportForTag` of `CLONE_MECHANISM`.
+    function releasedCloneImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
+        return releasedImportForTag(CLONE_MECHANISM);
+    }
+
+    /// @return `releasedImportForTag` of `CLONE_PER_NETWORK_MECHANISM`.
+    function releasedClonePerNetworkImport(DeployDeclaration memory, string memory)
+        internal
+        pure
+        returns (string memory)
+    {
+        return releasedImportForTag(CLONE_PER_NETWORK_MECHANISM);
+    }
+
+    /// @return `releasedImportForTag` of `BEACON_PROXY_MECHANISM`.
+    function releasedBeaconProxyImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
+        return releasedImportForTag(BEACON_PROXY_MECHANISM);
+    }
+
+    /// @return `releasedImportForTag` of `BEACON_PROXY_PER_NETWORK_MECHANISM`.
+    function releasedBeaconProxyPerNetworkImport(DeployDeclaration memory, string memory)
+        internal
+        pure
+        returns (string memory)
+    {
+        return releasedImportForTag(BEACON_PROXY_PER_NETWORK_MECHANISM);
     }
 }

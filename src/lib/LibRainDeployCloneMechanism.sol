@@ -3,7 +3,6 @@
 pragma solidity ^0.8.25;
 
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
-import {console2} from "forge-std-1.17.0/src/console2.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 
 import {
@@ -158,7 +157,13 @@ library LibRainDeployCloneMechanism {
             checkNetwork: id == BEACON_PROXY_MECHANISM
                 ? LibRainDeployCloneOnChainChecks.checkNetworkBeaconProxy
                 : LibRainDeployCloneOnChainChecks.checkNetwork,
-            releasedImport: LibRainDeployCloneSnapshot.releasedImport,
+            releasedImport: id == CLONE_MECHANISM
+                ? LibRainDeployCloneSnapshot.releasedCloneImport
+                : id == CLONE_PER_NETWORK_MECHANISM
+                    ? LibRainDeployCloneSnapshot.releasedClonePerNetworkImport
+                    : id == BEACON_PROXY_MECHANISM
+                        ? LibRainDeployCloneSnapshot.releasedBeaconProxyImport
+                        : LibRainDeployCloneSnapshot.releasedBeaconProxyPerNetworkImport,
             legacyRecordId: id == CLONE_MECHANISM
                 ? LibRainDeployCloneSnapshot.legacyCloneRecordId
                 : id == CLONE_PER_NETWORK_MECHANISM
@@ -270,17 +275,11 @@ library LibRainDeployCloneMechanism {
         suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
     }
 
-    function logVerification(DeployDeclaration memory, Vm vm, string[] memory networks, DeploySuite memory suite, address[] memory deployed)
+    /// A clone or beacon proxy has no source of its own to verify: nothing is logged, whatever its artifact path.
+    function logVerification(DeployDeclaration memory, Vm, string[] memory, DeploySuite memory, address[] memory)
         internal
-    {
-        if (!isProxyArtifactPath(suite.artifactPath)) {
-            LibRainDeploy.logVerifyCommands(vm, networks, deployed[0], suite.artifactPath);
-        } else {
-            // slither-disable-next-line reentrancy-events
-            emit UnverifiableSource(msg.sender, deployed[0], networks);
-            console2.log(unverifiableSourceNotice(vm, networks, deployed[0]));
-        }
-    }
+        pure
+    {}
 
     /// @param mechanismData A suite's mechanism data.
     /// @return Its leading word, or zero when it is shorter than one.
