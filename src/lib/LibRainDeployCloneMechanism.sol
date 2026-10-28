@@ -285,16 +285,13 @@ library LibRainDeployCloneMechanism {
         pure
         returns (DeploySuite memory)
     {
-        if (!isPerNetwork(suite)) {
-            if (extended.length != 0) {
-                revert ExtendedNetworksUnexpected(suite.suite);
-            }
-            return suite;
-        }
-        CloneNetworks memory clones = cloneNetworks(suite);
         if (extended.length == 0) {
             return suite;
         }
+        if (!isPerNetwork(suite)) {
+            revert ExtendedNetworksUnexpected(suite.suite);
+        }
+        CloneNetworks memory clones = cloneNetworks(suite);
         uint256 recorded = clones.networks.length;
         ChainDeploy[] memory networks = new ChainDeploy[](recorded + extended.length);
         for (uint256 i = 0; i < recorded; i++) {
