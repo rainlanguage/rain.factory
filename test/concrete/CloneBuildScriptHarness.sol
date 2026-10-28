@@ -3,7 +3,8 @@
 pragma solidity =0.8.25;
 
 import {BuildScript} from "rain-deploy-0.1.27/src/abstract/BuildScript.sol";
-import {DeployDeclaration, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
@@ -39,6 +40,9 @@ contract CloneBuildScriptHarness is BuildScript {
     function declaration() internal view override returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
+        string[] memory networks = new string[](1);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        LibRainDeployDeclaration.setNetworks(d, networks);
         LibRainDeployZoltuMechanism.extend(d);
         ExtendedNetworksDeclaration[] memory extended = new ExtendedNetworksDeclaration[](1);
         extended[0] = ExtendedNetworksDeclaration({suite: "example-clone@0_0_1", networks: sExtendedNetworks});
@@ -68,8 +72,12 @@ contract CloneBuildScriptHarness is BuildScript {
 
     /// @inheritdoc BuildScript
     function regenerateSnapshots() internal override {
+        DeployDeclaration memory d = declaration();
+        DeploySuite memory snapshot =
+        LibRainDeployCloneMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot;
+        snapshot.networks = d.networks;
         writeSuiteSnapshot(
-            declaration(),
+            d,
             vm,
             SnapshotFile(
                 recordRoot(),
@@ -78,7 +86,7 @@ contract CloneBuildScriptHarness is BuildScript {
                 RAIN_SPDX_LICENSE_IDENTIFIER,
                 RAIN_COPYRIGHT_TEXT
             ),
-            LibRainDeployCloneMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot
+            snapshot
         );
     }
 
