@@ -59,8 +59,7 @@ contract RainDeployBroadcastCloneTest is Test {
         CloneNetworks memory clones = CloneNetworks({
             factory: factory, implementation: implementation, salt: bytes32(uint256(7)), networks: new ChainDeploy[](2)
         });
-        clones.networks[0] =
-            ChainDeploy({chainId: 42161, data: abi.encode(arbitrumOwner), deployedAddress: address(0)});
+        clones.networks[0] = ChainDeploy({chainId: 42161, data: abi.encode(arbitrumOwner), deployedAddress: address(0)});
         clones.networks[1] = ChainDeploy({chainId: 8453, data: abi.encode(baseOwner), deployedAddress: address(0)});
         for (uint256 i = 0; i < clones.networks.length; i++) {
             clones.networks[i].deployedAddress =
