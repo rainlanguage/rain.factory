@@ -169,7 +169,7 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
     /// A per-network proxy over the beacon declared on Polygon passes on Polygon, where it is required.
     function testPerNetworkProxyOverTheDeclaredBeaconPasses() external {
         DeploySuite memory suite = liveProxySuite(sBeacon, true);
-        assertEq(uint256(suite.mechanism), uint256(DeployMechanism.BeaconProxyPerNetwork));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(suite.mechanismData), BEACON_PROXY_PER_NETWORK_MECHANISM);
         this.externalCheckOnLocalForks(suite);
         assertEq(UpgradeableBeacon(sBeacon).owner(), OWNER);
     }

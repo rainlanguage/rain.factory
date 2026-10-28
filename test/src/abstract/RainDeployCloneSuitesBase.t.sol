@@ -47,7 +47,6 @@ contract RainDeployCloneSuitesBaseTest is Test {
             assertEq(candidates[i].snapshot.storedBytecodeHash, derived.snapshot.storedBytecodeHash);
             assertEq(candidates[i].snapshot.storedRuntimeCode, derived.snapshot.storedRuntimeCode);
             assertEq(candidates[i].snapshot.artifactPath, CLONE_ARTIFACT_PATH);
-            assertEq(uint256(candidates[i].snapshot.mechanism), uint256(derived.snapshot.mechanism));
             assertEq(candidates[i].snapshot.mechanismData, derived.snapshot.mechanismData);
             assertEq(candidates[i].snapshot.dependencies.length, derived.snapshot.dependencies.length);
             assertEq(candidates[i].unanchorableReason, derived.unanchorableReason);
@@ -164,7 +163,6 @@ contract RainDeployCloneSuitesBaseTest is Test {
         assertEq(actual.snapshot.storedBytecodeHash, expected.snapshot.storedBytecodeHash);
         assertEq(actual.snapshot.storedRuntimeCode, expected.snapshot.storedRuntimeCode);
         assertEq(actual.snapshot.artifactPath, expected.snapshot.artifactPath);
-        assertEq(uint256(actual.snapshot.mechanism), uint256(expected.snapshot.mechanism));
         assertEq(actual.snapshot.mechanismData, expected.snapshot.mechanismData);
         assertEq(abi.encode(actual.snapshot.dependencies), abi.encode(expected.snapshot.dependencies));
         assertEq(actual.unanchorableReason, expected.unanchorableReason);
@@ -180,7 +178,7 @@ contract RainDeployCloneSuitesBaseTest is Test {
         DeployCandidate[] memory candidates = deploy.externalCheckedCandidateSuites();
         assertEq(candidates.length, 1);
         assertSameCandidate(candidates[0], deploy.externalBeaconProxyDeployCandidate(0));
-        assertEq(uint256(candidates[0].snapshot.mechanism), uint256(DeployMechanism.BeaconProxy));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(candidates[0].snapshot.mechanismData), BEACON_PROXY_MECHANISM);
         assertEq(candidates[0].snapshot.artifactPath, BEACON_PROXY_ARTIFACT_PATH);
 
         deploy.externalCheckCandidatesAnchoredToSource();
@@ -205,7 +203,7 @@ contract RainDeployCloneSuitesBaseTest is Test {
         }
         for (uint256 i = 0; i < proxies; i++) {
             assertSameCandidate(candidates[clones + i], deploy.externalBeaconProxyDeployCandidate(i));
-            assertEq(uint256(candidates[clones + i].snapshot.mechanism), uint256(DeployMechanism.BeaconProxy));
+            assertEq(LibRainDeployCloneMechanism.mechanismTag(candidates[clones + i].snapshot.mechanismData), BEACON_PROXY_MECHANISM);
         }
         assertNotEq(candidates[2].snapshot.storedDeployedAddress, candidates[3].snapshot.storedDeployedAddress);
         deploy.externalCheckCandidatesAnchoredToSource();
@@ -218,7 +216,7 @@ contract RainDeployCloneSuitesBaseTest is Test {
         PerNetworkBeaconProxyOnlyDeploySuites deploy = new PerNetworkBeaconProxyOnlyDeploySuites();
         DeployCandidate[] memory candidates = deploy.externalCheckedCandidateSuites();
         assertEq(candidates.length, 1);
-        assertEq(uint256(candidates[0].snapshot.mechanism), uint256(DeployMechanism.BeaconProxyPerNetwork));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(candidates[0].snapshot.mechanismData), BEACON_PROXY_PER_NETWORK_MECHANISM);
         CloneNetworks memory clones = abi.decode(candidates[0].snapshot.mechanismData, (CloneNetworks));
         uint256[] memory chainIds = new uint256[](2);
         chainIds[0] = 42161;

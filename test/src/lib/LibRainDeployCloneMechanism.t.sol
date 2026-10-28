@@ -140,7 +140,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(candidate.snapshot.storedBytecodeHash, LibRainDeployClone.cloneDeployedCodehash(clone.implementation));
         assertEq(candidate.snapshot.storedRuntimeCode, LibRainDeployClone.cloneRuntimeCode(clone.implementation));
         assertEq(candidate.snapshot.artifactPath, CLONE_ARTIFACT_PATH);
-        assertEq(uint256(candidate.snapshot.mechanism), uint256(DeployMechanism.Clone));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
         assertEq(candidate.snapshot.mechanismData, abi.encode(target));
         assertEq(candidate.snapshot.dependencies.length, clone.dependencies.length);
         for (uint256 i = 0; i < clone.dependencies.length; i++) {
@@ -231,7 +231,6 @@ contract LibRainDeployCloneMechanismTest is Test {
             storedRuntimeCode: type(MockDeployable).runtimeCode,
             artifactPath: "test/concrete/MockDeployable.sol:MockDeployable",
             dependencies: new DeployDependency[](0),
-            mechanism: DeployMechanism.Zoltu,
             mechanismData: ""
         });
     }
@@ -470,7 +469,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         expected.networks[1] = ChainDeploy({chainId: 137, data: polygonData, deployedAddress: polygonAddress});
 
         assertEq(suite.suite, clone.suite);
-        assertEq(uint256(suite.mechanism), uint256(DeployMechanism.ClonePerNetwork));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(suite.mechanismData), CLONE_PER_NETWORK_MECHANISM);
         assertEq(suite.mechanismData, abi.encode(expected));
         assertEq(suite.storedDeployedAddress, address(0));
         assertEq(suite.creationCode, LibRainDeployClone.cloneCreationCode(clone.implementation));
@@ -690,12 +689,12 @@ contract LibRainDeployCloneMechanismTest is Test {
         uint256[] memory chainIds = new uint256[](1);
         chainIds[0] = 8453;
         DeployCandidate memory candidate = LibRainDeployCloneMechanism.cloneCandidate(clone, chainIds);
-        assertEq(uint256(candidate.snapshot.mechanism), uint256(DeployMechanism.Clone));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
         assertEq(candidate.snapshot.mechanismData, abi.encode(targetOf(clone)));
 
         clone.initData = perNetworkCloneInitData;
         candidate = LibRainDeployCloneMechanism.cloneCandidate(clone, chainIds);
-        assertEq(uint256(candidate.snapshot.mechanism), uint256(DeployMechanism.Clone));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
         assertEq(candidate.snapshot.mechanismData, abi.encode(targetOf(clone)));
     }
 
@@ -794,7 +793,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(extended.storedRuntimeCode, release.storedRuntimeCode);
         assertEq(extended.artifactPath, release.artifactPath);
         assertEq(abi.encode(extended.dependencies), abi.encode(release.dependencies));
-        assertEq(uint256(extended.mechanism), uint256(DeployMechanism.ClonePerNetwork));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(extended.mechanismData), CLONE_PER_NETWORK_MECHANISM);
         assertEq(this.externalDeployedAddressOn(extended, 42161), recorded.networks[0].deployedAddress);
         assertEq(this.externalDeployedAddressOn(extended, 137), expected.networks[1].deployedAddress);
     }
@@ -848,7 +847,8 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(this.externalWithUnrecordedNetworks(release, oneData).mechanismData, release.mechanismData);
         assertEq(this.externalWithUnrecordedNetworks(oneData, perNetwork).mechanismData, oneData.mechanismData);
         assertEq(
-            uint256(this.externalWithUnrecordedNetworks(oneData, perNetwork).mechanism), uint256(DeployMechanism.Clone)
+            LibRainDeployCloneMechanism.mechanismTag(this.externalWithUnrecordedNetworks(oneData, perNetwork).mechanismData),
+            CLONE_MECHANISM
         );
     }
 
@@ -985,7 +985,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(extended.storedRuntimeCode, release.storedRuntimeCode);
         assertEq(extended.artifactPath, release.artifactPath);
         assertEq(abi.encode(extended.dependencies), abi.encode(release.dependencies));
-        assertEq(uint256(extended.mechanism), uint256(DeployMechanism.ClonePerNetwork));
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(extended.mechanismData), CLONE_PER_NETWORK_MECHANISM);
     }
 
     /// No extended network leaves any suite as it is.
