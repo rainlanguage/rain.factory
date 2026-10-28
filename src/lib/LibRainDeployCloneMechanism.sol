@@ -39,7 +39,8 @@ bytes32 constant BEACON_PROXY_MECHANISM = keccak256("rain.factory.deploy.mechani
 
 /// @dev Tags a per-network beacon proxy suite's `mechanismData`: `abi.encode(BEACON_PROXY_PER_NETWORK_MECHANISM,
 /// abi.encode(CloneNetworks))`.
-bytes32 constant BEACON_PROXY_PER_NETWORK_MECHANISM = keccak256("rain.factory.deploy.mechanism.beacon-proxy-per-network");
+bytes32 constant BEACON_PROXY_PER_NETWORK_MECHANISM =
+    keccak256("rain.factory.deploy.mechanism.beacon-proxy-per-network");
 
 /// Thrown when a clone suite's declared factory, run locally, puts the clone somewhere other than
 /// the address the factory formula derives.
@@ -231,7 +232,8 @@ library LibRainDeployCloneMechanism {
         pure
         returns (function(Vm, string memory, address, bytes memory) internal returns (address))
     {
-        return isBeaconProxy(suite) ? LibRainDeployBeaconProxy.beaconProxyDeployStep : LibRainDeployClone.cloneDeployStep;
+        return
+            isBeaconProxy(suite) ? LibRainDeployBeaconProxy.beaconProxyDeployStep : LibRainDeployClone.cloneDeployStep;
     }
 
     /// A per-network suite with an entry for every network in `chainIds` its candidate has and it lacks, each at the

@@ -69,7 +69,13 @@ abstract contract RainDeployCloneSuitesBase is RainDeploySuitesBase {
     }
 
     /// @inheritdoc RainDeploySuitesBase
-    function deployedAddress(DeploySuite memory suite, uint256 chainId) internal view virtual override returns (address) {
+    function deployedAddress(DeploySuite memory suite, uint256 chainId)
+        internal
+        view
+        virtual
+        override
+        returns (address)
+    {
         if (LibRainDeployCloneMechanism.isFactoryMechanism(suite)) {
             return LibRainDeployCloneMechanism.deployedAddress(suite, chainId);
         }
@@ -77,7 +83,13 @@ abstract contract RainDeployCloneSuitesBase is RainDeploySuitesBase {
     }
 
     /// @inheritdoc RainDeploySuitesBase
-    function recordedAddress(DeploySuite memory suite, uint256 chainId) internal view virtual override returns (address) {
+    function recordedAddress(DeploySuite memory suite, uint256 chainId)
+        internal
+        view
+        virtual
+        override
+        returns (address)
+    {
         if (LibRainDeployCloneMechanism.isFactoryMechanism(suite)) {
             return LibRainDeployCloneMechanism.recordedAddress(suite, chainId);
         }
