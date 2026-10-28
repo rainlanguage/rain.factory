@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {ChainBeacon, DeployBeacon} from "rain-deploy-0.1.27/src/lib/LibRainDeployBeacon.sol";
+import {ChainBeacon, DeployBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 
 /// @title LibBeaconDeclarations
 /// @notice Builds a test's `beacons()` declaration in storage.
