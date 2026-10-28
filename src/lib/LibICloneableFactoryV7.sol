@@ -15,7 +15,7 @@ interface IRegistryBeaconSourceV2 {
     function getV4(address authority, bytes32 name) external view returns (bytes memory, uint256, bytes32);
 }
 
-/// The value type hash a beacon binding must carry.
+/// @dev The value type hash a beacon binding must carry.
 bytes32 constant BEACON_BINDING_VALUE_TYPE_HASH = keccak256("address");
 
 /// Thrown when a beacon binding is not typed `address`.
