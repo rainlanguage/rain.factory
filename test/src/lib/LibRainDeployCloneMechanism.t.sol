@@ -605,6 +605,19 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(MockCloneable(deployed[1]).sInitData(), abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));
     }
 
+    /// A per-network suite derives zero, and deploys nothing, on a network it records no clone on.
+    function testPerNetworkSuiteDeploysNothingLocallyOnAnUnrecordedNetwork() external {
+        DeploySuite memory suite = perNetworkSuiteAt(TEST_SALT, onlyChainId(137));
+        address arbitrumAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN));
+        address polygonAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));
+        address[] memory deployed = sDeploy.externalDeployLocally(vm, suite);
+        assertEq(deployed.length, 2);
+        assertEq(deployed[0], address(0));
+        assertEq(deployed[1], polygonAddress);
+        assertEq(polygonAddress.code, suite.storedRuntimeCode);
+        assertEq(arbitrumAddress.code.length, 0);
+    }
+
     /// A per-network suite deployed locally under `block.chainid` deploys only that network's clone, and keeps its
     /// mechanism data.
     function testPerNetworkSuiteDeploysLocallyOnChainOnlyThatNetworksClone() external {

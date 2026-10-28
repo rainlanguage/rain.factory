@@ -134,6 +134,26 @@ contract RainDeployBroadcastCloneTest is Test {
     /// Each network's clone is initialized under that network's chain id alone: an implementation refusing any
     /// other chain id passes the check under both.
     function testSeatCheckInitializesEachPerNetworkCloneOnlyUnderItsOwnChainId() external {
+        sDeploy.externalCheckSeatsNoDeployKey(chainGatedCloneSuite(), arbitrumAndBaseIds(), vm.addr(1));
+    }
+
+    /// The local derivation initializes each network's clone under that network's chain id, leaves both, and
+    /// restores the caller's chain id.
+    function testDeployLocallyInitializesEachPerNetworkCloneUnderItsOwnChainId() external {
+        DeploySuite memory suite = chainGatedCloneSuite();
+        vm.chainId(1);
+        address[] memory deployed = sDeploy.externalDeployLocally(vm, suite);
+        assertEq(block.chainid, 1);
+        assertEq(deployed.length, 2);
+        assertEq(deployed[0], sDeploy.externalDeployedAddress(suite, 42161));
+        assertEq(deployed[1], sDeploy.externalDeployedAddress(suite, 8453));
+        assertEq(deployed[0].code, suite.storedRuntimeCode);
+        assertEq(deployed[1].code, suite.storedRuntimeCode);
+    }
+
+    /// The origin-owned per-network suite over `MockChainGatedCloneable`, each network's init data naming its own
+    /// chain id.
+    function chainGatedCloneSuite() internal pure returns (DeploySuite memory) {
         DeploySuite memory suite = originOwnedCloneSuite(address(0xB0B), address(0xB0B));
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         address implementation = LibRainDeploy.zoltuAddress(type(MockChainGatedCloneable).creationCode);
@@ -150,7 +170,7 @@ contract RainDeployBroadcastCloneTest is Test {
         suite.storedBytecodeHash = keccak256(suite.storedRuntimeCode);
         suite.dependencies[1] =
             DeployDependency({deployedAddress: implementation, runtimeCode: type(MockChainGatedCloneable).runtimeCode});
-        sDeploy.externalCheckSeatsNoDeployKey(suite, arbitrumAndBaseIds(), vm.addr(1));
+        return suite;
     }
 
     /// The origin-owned clone at one address on every network, seating `named`, or the initialization's origin
