@@ -59,7 +59,6 @@ contract RainDeployVerifyChainBeaconPerNetworkCloneUnrecordedTest is
         return networks;
     }
 
-    /// @inheritdoc PerNetworkCloneBeaconVerifyChain
     function extendedNetworksRoot() internal view override returns (string memory) {
         return sExtendedRoot;
     }
