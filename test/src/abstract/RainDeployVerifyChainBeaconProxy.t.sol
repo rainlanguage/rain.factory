@@ -2,20 +2,20 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BEACON_PROXY_PER_NETWORK_MECHANISM} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {
+    BEACON_PROXY_PER_NETWORK_MECHANISM,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {BeaconProxyBeaconUndeclared} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
-import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {BeaconProxyBeaconUndeclared} from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
     perNetworkCloneChainIds,
-    perNetworkCloneInitData,
+    perNetworkCloneNetworks,
     perNetworkCloneReleaseAddress
 } from "../../abstract/PerNetworkCloneDeploys.sol";
 import {PerNetworkCloneBeaconVerifyChain} from "../../abstract/PerNetworkCloneBeaconVerifyChain.sol";
@@ -32,13 +32,13 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
     /// The factory the proxy is deployed through.
     address internal sFactory;
 
-    /// Whether `requiresSuiteOn` requires the proxy on every network rather than Polygon alone.
+    /// Whether the proxy is required on every network rather than Polygon alone.
     bool internal sRequiredEverywhere;
 
     /// Puts the per-network clone release and the beacon at its Polygon clone on every fork, as
     /// `RainDeployVerifyChainBeaconPerNetworkCloneTestBase` does, plus the factory.
     function setUp() external {
-        DeploySuite memory release = releasedSuites()[0];
+        DeploySuite memory release = released()[0];
         for (uint256 i = 0; i < release.dependencies.length; i++) {
             vm.etch(release.dependencies[i].deployedAddress, release.dependencies[i].runtimeCode);
             vm.makePersistent(release.dependencies[i].deployedAddress);
@@ -54,13 +54,6 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
         vm.makePersistent(sBeacon);
         sFactory = address(new MockBeaconProxyFactory());
         vm.makePersistent(sFactory);
-    }
-
-    /// The proxy on Polygon alone, unless `sRequiredEverywhere` is set.
-    /// @inheritdoc RainDeploySuitesBase
-    function requiresSuiteOn(DeploySuite memory suite, string memory network) internal view override returns (bool) {
-        (suite);
-        return sRequiredEverywhere || keccak256(bytes(network)) == keccak256(bytes(LibRainDeploy.POLYGON));
     }
 
     /// The one-data proxy suite over `beacon`, live at its derived address on every fork.
@@ -89,7 +82,8 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
             perNetworkCloneChainIds()
         )
         .snapshot;
-        address[] memory deployed = deployedAddresses(suite);
+        suite.networks = perNetworkCloneNetworks();
+        address[] memory deployed = deployedAddresses(declaration(), suite);
         for (uint256 i = 0; i < deployed.length; i++) {
             vm.etch(deployed[i], suite.storedRuntimeCode);
             vm.makePersistent(deployed[i]);
@@ -97,13 +91,21 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
         return suite;
     }
 
-    /// The matrix on local forks over `suite` alone.
+    /// The matrix on local forks over `suite` alone, required on Polygon alone unless `sRequiredEverywhere` is set.
     /// @param suite The suite.
     function externalCheckOnLocalForks(DeploySuite memory suite) external {
         DeploySuite[] memory suites = new DeploySuite[](1);
         suites[0] = suite;
+        if (sRequiredEverywhere) {
+            suites[0].networks = perNetworkCloneNetworks();
+        } else {
+            string[] memory polygon = new string[](1);
+            polygon[0] = LibRainDeploy.POLYGON;
+            suites[0].networks = polygon;
+        }
+        DeployDeclaration memory d = declaration();
         checkDeployedOnNetworks(
-            Vm(address(new LocalForkVm())), LibRainDeploy.declaredNetworkConfigs(supportedNetworks()), suites
+            d, Vm(address(new LocalForkVm())), LibRainDeploy.declaredNetworkConfigs(d.networks), suites
         );
     }
 
