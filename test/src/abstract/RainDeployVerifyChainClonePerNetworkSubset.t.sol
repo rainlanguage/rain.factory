@@ -4,14 +4,14 @@ pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {ICloneableFactoryV4} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
-    PerNetworkCloneDeploys,
     etchPerNetworkCloneRelease,
     onlyFirstRecordedNetwork,
     onlyFirstRecordedNetworkSuites,
@@ -30,35 +30,28 @@ contract RainDeployVerifyChainClonePerNetworkSubsetTest is UpgradedPerNetworkClo
     /// The fork cheatcodes the matrix runs against.
     LocalForkVm internal sForkVm;
 
-    /// @inheritdoc PerNetworkCloneDeploys
-    function supportedNetworks()
-        internal
-        view
-        override(PerNetworkCloneDeploys, RainDeploySuitesBase)
-        returns (string[] memory)
-    {
-        return PerNetworkCloneDeploys.supportedNetworks();
-    }
-
     /// Puts the release's dependencies, and its clone at every recorded address, on every fork.
     function setUp() external {
-        DeploySuite memory release = releasedSuites()[0];
-        etchPerNetworkCloneRelease(vm, release, deployedAddresses(release));
+        DeployDeclaration memory d = declaration();
+        DeploySuite memory release = d.released[0];
+        etchPerNetworkCloneRelease(vm, release, deployedAddresses(d, release));
         sForkVm = new LocalForkVm();
     }
 
     /// The matrix on local forks over the given networks, over the release recording Arbitrum One alone.
     /// @param networks The networks to check on.
     function externalCheckOnLocalForks(string[] memory networks) external {
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(releasedSuites()[0]);
-        checkDeployedOnNetworks(Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), suites);
+        DeployDeclaration memory d = declaration();
+        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(d.released[0]);
+        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), suites);
     }
 
     /// On Arbitrum One alone the candidate's Polygon is out of play, so the release passes and Polygon is never deployed
     /// locally or forked.
     function testSubsetTakesNoOutOfPlayCandidateNetwork() external {
-        CloneNetworks memory release =
-            abi.decode(onlyFirstRecordedNetwork(releasedSuites()[0]).mechanismData, (CloneNetworks));
+        CloneNetworks memory release = abi.decode(
+            LibRainDeployCloneMechanism.payload(onlyFirstRecordedNetwork(declaration().released[0])), (CloneNetworks)
+        );
         assertNotEq(release.implementation, upgradedPerNetworkClone().implementation);
 
         string[] memory arbitrum = new string[](1);
