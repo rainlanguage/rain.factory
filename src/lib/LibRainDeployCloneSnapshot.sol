@@ -5,7 +5,7 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {DeploySuite, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
@@ -233,12 +233,12 @@ library LibRainDeployCloneSnapshot {
 
     /// Deploys `suite` locally under a reverted state snapshot and writes its record.
     /// @return The path written.
-    function writeSuiteSnapshot(Vm vm, SnapshotFile memory file, DeploySuite memory suite)
+    function writeSuiteSnapshot(DeployDeclaration memory d, Vm vm, SnapshotFile memory file, DeploySuite memory suite)
         internal
         returns (string memory)
     {
         uint256 snapshotId = vm.snapshotState();
-        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(vm, suite);
+        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(d, vm, suite);
         writeCloneSnapshotFile(
             vm,
             LibRainDeploySnapshot.dirForSnapshot(file.root, file.dir),
@@ -257,7 +257,7 @@ library LibRainDeployCloneSnapshot {
     /// Maps the record at `path` to its mechanism id and refuses `FrozenSnapshotMechanismDataMissing` for one with no
     /// `MECHANISM_DATA`.
     /// @return The expression of the released suite's `mechanismData`.
-    function releasedMechanismData(Vm vm, string memory path, string memory prefix)
+    function releasedMechanismData(DeployDeclaration memory, Vm vm, string memory path, string memory prefix)
         internal
         view
         returns (string memory)
@@ -270,7 +270,7 @@ library LibRainDeployCloneSnapshot {
     }
 
     /// @return The empty string: `releasedMechanismData`'s expression names only the record's own constants.
-    function releasedImport(string memory) internal pure returns (string memory) {
+    function releasedImport(DeployDeclaration memory, string memory) internal pure returns (string memory) {
         return "";
     }
 }

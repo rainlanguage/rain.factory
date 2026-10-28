@@ -95,7 +95,7 @@ library LibRainDeployCloneOnChainChecks {
         returns (address)
     {
         DeploySuite memory implementation = released(d, LibRainDeployBeacon.stateAt(beacon, state).implementation);
-        return handlerOf(d, implementation).deployedAddress(implementation, chainId);
+        return handlerOf(d, implementation).deployedAddress(d, implementation, chainId);
     }
 
     function seatsOther(bool answered, bytes memory answer, address expected) internal pure returns (bool) {
@@ -121,11 +121,11 @@ library LibRainDeployCloneOnChainChecks {
             }
             DeploySuite memory suite = released(d, beacon.beaconSuite);
             DeployMechanismHandler memory h = handlerOf(d, suite);
-            beacon.beacon = h.deployedAddress(suite, chainId);
+            beacon.beacon = h.deployedAddress(d, suite, chainId);
             Vm vm = StdConstants.VM;
             uint256 snapshotId = vm.snapshotState();
             vm.chainId(chainId);
-            h.deployLocallyOnChain(vm, suite);
+            h.deployLocallyOnChain(d, vm, suite);
             beacon.beaconCodeHash = beacon.beacon.codehash;
             // slither-disable-next-line low-level-calls
             (bool ownerAnswered, bytes memory owner) = beacon.beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
@@ -184,6 +184,10 @@ library LibRainDeployCloneOnChainChecks {
 
     /// Beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's
     /// config is owned by `deployer`.
+    function checkDeclaration(DeployDeclaration memory) internal {}
+
+    function checkNetwork(DeployDeclaration memory, string memory, uint256) internal {}
+
     function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256, address deployer)
         internal
     {
