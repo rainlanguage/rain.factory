@@ -41,6 +41,8 @@ line_length = 120
 # implements it, and the clone and beacon-proxy deploy mechanisms that extend
 # rain-deploy's suites. The concrete CloneFactory, its deploy-pin snapshots and
 # deploy scripts live in rain.factory.deploy (rainlanguage/rain.factory#46).
+# Registry beacon proxies resolve through rain-deploy's `IConfigRegistryV5`,
+# imported, which imports rain-metadata.
 [dependencies]
 forge-std = "1.17.0"
 # With the [profile.default] compiler settings this fixes the generated

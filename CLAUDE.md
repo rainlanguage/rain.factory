@@ -68,4 +68,5 @@ makes this half a standalone publish.
   mechanisms: `LibRainDeployCloneMechanism.extend(d)` appends the clone,
   clone-per-network, beacon-proxy and beacon-proxy-per-network handlers to a
   consumer's `declaration()`; deploy pins and deploy scripts still live in
-  `rain.factory.deploy`.
+  `rain.factory.deploy`. Registry beacon proxies import its `IConfigRegistryV5`,
+  never a copy.

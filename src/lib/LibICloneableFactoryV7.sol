@@ -8,7 +8,7 @@ import {
 } from "../interface/ICloneableFactoryV7.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 import {REGISTRY_BEACON_PROXY_CREATION_CODE} from "../generated/RegistryBeaconProxy.sol";
-import {IConfigRegistryV4} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV4.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV5.sol";
 
 /// @dev The value type hash a beacon binding must carry.
 bytes32 constant BEACON_BINDING_VALUE_TYPE_HASH = keccak256("address");
@@ -60,7 +60,7 @@ library LibICloneableFactoryV7 {
     function resolveBeacon(address registry, address authority, bytes32 beaconName) internal view returns (address) {
         // When the binding was written does not matter here.
         //slither-disable-next-line unused-return
-        (bytes memory value,, bytes32 valueTypeHash) = IConfigRegistryV4(registry).getV4(authority, beaconName);
+        (bytes memory value,, bytes32 valueTypeHash) = IConfigRegistryV5(registry).getV5(authority, beaconName);
         if (valueTypeHash != BEACON_BINDING_VALUE_TYPE_HASH) {
             revert BeaconBindingTypeMismatch(registry, authority, beaconName, valueTypeHash);
         }
