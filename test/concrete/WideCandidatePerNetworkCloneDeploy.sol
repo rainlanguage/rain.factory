@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {RainDeployBroadcast} from "rain-deploy-0.1.27/src/abstract/RainDeployBroadcast.sol";
 import {DeployCandidate, DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {perNetworkCloneChainIds} from "../abstract/PerNetworkCloneDeploys.sol";
 import {upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
 
@@ -28,7 +28,7 @@ contract WideCandidatePerNetworkCloneDeploy is RainDeployBroadcast {
     /// @inheritdoc RainDeploySuitesBase
     function candidateSuites() internal view override returns (DeployCandidate[] memory) {
         DeployCandidate[] memory candidates = new DeployCandidate[](1);
-        candidates[0] = LibRainDeployMechanism.cloneCandidate(upgradedPerNetworkClone(), perNetworkCloneChainIds());
+        candidates[0] = LibRainDeployCloneMechanism.cloneCandidate(upgradedPerNetworkClone(), perNetworkCloneChainIds());
         return candidates;
     }
 

@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {BuildScript} from "rain-deploy-0.1.27/src/abstract/BuildScript.sol";
 import {RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
-import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
@@ -49,7 +49,7 @@ contract CloneBuildScriptHarness is ExampleCloneDeploys, BuildScript {
             recordRoot(),
             LibRainDeploySnapshot.CANDIDATE,
             EXAMPLE_CLONE_RECORD_CONTRACT,
-            LibRainDeployMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot
+            LibRainDeployCloneMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot
         );
     }
 

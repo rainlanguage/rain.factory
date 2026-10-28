@@ -12,7 +12,7 @@ import {
 import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     ExtendedNetworkUnfrozen,
-    LibRainDeployMechanism,
+    LibRainDeployCloneMechanism,
     UnverifiableSource
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {DeployMechanism, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
@@ -33,7 +33,7 @@ import {MockCloneable} from "../../concrete/MockCloneable.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
-contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
+contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     bytes32 constant TEST_SALT = 0x1122334455667788990011223344556677889900112233445566778899001122;
 
     bytes constant TEST_DATA = hex"deadbeefcafe0102030405060708090a0b0c0d0e0f";
@@ -115,10 +115,10 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         extended[0] = clones.networks[1];
         clones.networks = new ChainDeploy[](1);
         clones.networks[0] = exampleCloneNetworks().networks[0];
-        return LibRainDeployMechanism.withExtendedNetworks(perNetworkSuite(clones), extended);
+        return appendExtendedNetworks(perNetworkSuite(clones), extended);
     }
 
-    /// External wrapper for `LibRainDeployMechanism.deployAndBroadcast` with `suite` as its own frozen suite, for a
+    /// External wrapper for `deployAndBroadcast` with `suite` as its own frozen suite, for a
     /// suite that is not per network.
     /// @param networks The networks to broadcast to.
     /// @param deployerPrivateKey The key to broadcast as.
@@ -129,10 +129,10 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         external
         returns (address[] memory, uint256[] memory)
     {
-        return LibRainDeployMechanism.deployAndBroadcast(vm, networks, deployerPrivateKey, suite, suite);
+        return deployAndBroadcast(vm, networks, deployerPrivateKey, suite, suite);
     }
 
-    /// External wrapper for `LibRainDeployMechanism.deployAndBroadcast` on a given fork Vm, as key 1, with `suite` as its
+    /// External wrapper for `deployAndBroadcast` on a given fork Vm, as key 1, with `suite` as its
     /// own frozen suite, for a suite that is not per network.
     /// @param forkVm The Vm to fork and broadcast with.
     /// @param networks The networks to broadcast to.
@@ -142,11 +142,11 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         external
         returns (address[] memory)
     {
-        (address[] memory deployed,) = LibRainDeployMechanism.deployAndBroadcast(forkVm, networks, 1, suite, suite);
+        (address[] memory deployed,) = deployAndBroadcast(forkVm, networks, 1, suite, suite);
         return deployed;
     }
 
-    /// External wrapper for `LibRainDeployMechanism.deployAndBroadcast` on a given fork Vm against a separate frozen
+    /// External wrapper for `deployAndBroadcast` on a given fork Vm against a separate frozen
     /// suite, as key 1.
     /// @param forkVm The Vm to fork and broadcast with.
     /// @param networks The networks to broadcast to.
@@ -159,7 +159,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         DeploySuite memory frozen,
         DeploySuite memory candidate
     ) external returns (address[] memory) {
-        (address[] memory deployed,) = LibRainDeployMechanism.deployAndBroadcast(forkVm, networks, 1, frozen, candidate);
+        (address[] memory deployed,) = deployAndBroadcast(forkVm, networks, 1, frozen, candidate);
         return deployed;
     }
 
@@ -274,7 +274,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// @return The suite.
     function ownedBeaconProxySuite(address owner) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
-        return LibRainDeployMechanism.beaconProxyCandidate(
+        return LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "owned-beacon-proxy",
                 address(new MockBeaconProxyFactory()),
@@ -293,7 +293,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// and the proxy's derived address.
     function testBeaconProxyBroadcastRefusesTheDeployKeySeated() external {
         DeploySuite memory suite = ownedBeaconProxySuite(vm.addr(1));
-        address derived = LibRainDeployMechanism.deployedAddresses(suite)[0];
+        address derived = deployedAddresses(suite)[0];
         string[] memory networks = new string[](1);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         Vm forkVm = Vm(address(new LocalForkVm()));
@@ -309,7 +309,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
     function testBeaconProxyBroadcastSeatsAnotherOwner(address owner) external {
         vm.assume(owner != vm.addr(1) && owner != address(0));
         DeploySuite memory suite = ownedBeaconProxySuite(owner);
-        address derived = LibRainDeployMechanism.deployedAddresses(suite)[0];
+        address derived = deployedAddresses(suite)[0];
         string[] memory networks = new string[](1);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         address[] memory deployed = this.externalDeployAndBroadcastOn(Vm(address(new LocalForkVm())), networks, suite);
@@ -352,7 +352,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         extended[0].deployedAddress =
             LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(declaredClones, 1));
         assertNotEq(extended[0].deployedAddress, candidate.networks[1].deployedAddress);
-        DeploySuite memory frozen = LibRainDeployMechanism.withExtendedNetworks(perNetworkSuite(recorded), extended);
+        DeploySuite memory frozen = appendExtendedNetworks(perNetworkSuite(recorded), extended);
         frozen.storedBytecodeHash = LibRainDeployClone.cloneDeployedCodehash(implementation);
 
         address[] memory deployed = this.externalDeployAndBroadcastFrozenOn(
@@ -437,7 +437,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         this.externalDeployAndBroadcast(new string[](0), 0, zoltuSuite(address(1)));
     }
 
-    /// External wrapper for `LibRainDeployMechanism.deployAndBroadcast` against a separate frozen suite.
+    /// External wrapper for `deployAndBroadcast` against a separate frozen suite.
     /// @param networks The networks to broadcast to.
     /// @param deployerPrivateKey The key to broadcast as.
     /// @param frozen The suite with its extended networks.
@@ -448,7 +448,7 @@ contract LibRainDeployMechanismBroadcastTest is ZoltuDeployOrAdopt {
         DeploySuite memory frozen,
         DeploySuite memory candidate
     ) external {
-        LibRainDeployMechanism.deployAndBroadcast(vm, networks, deployerPrivateKey, frozen, candidate);
+        deployAndBroadcast(vm, networks, deployerPrivateKey, frozen, candidate);
     }
 
     /// The library entry point refuses a per-network suite on a network its frozen suite neither records nor

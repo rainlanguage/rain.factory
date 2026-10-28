@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {PerNetworkCloneDeploys, etchPerNetworkCloneRelease} from "../../abstract/PerNetworkCloneDeploys.sol";
 
 /// @title RainDeployVerifyChainClonePerNetworkTest
@@ -26,14 +26,14 @@ contract RainDeployVerifyChainClonePerNetworkTest is PerNetworkCloneDeploys, Rai
     /// fork.
     function setUp() external {
         DeploySuite memory release = releasedSuites()[0];
-        etchPerNetworkCloneRelease(vm, release, LibRainDeployMechanism.deployedAddresses(release));
+        etchPerNetworkCloneRelease(vm, release, deployedAddresses(release));
     }
 
     /// Without Polygon's clone, the matrix refuses on Polygon at Polygon's address, having passed
     /// Arbitrum One at Arbitrum One's.
     function testPerNetworkCloneMissingOnPolygonIsRefusedAtPolygonsAddress() external {
         DeploySuite memory release = releasedSuites()[0];
-        address polygonAddress = LibRainDeployMechanism.deployedAddress(release, 137);
+        address polygonAddress = LibRainDeployCloneMechanism.deployedAddress(release, 137);
         vm.etch(polygonAddress, hex"");
 
         vm.expectRevert(
@@ -46,7 +46,7 @@ contract RainDeployVerifyChainClonePerNetworkTest is PerNetworkCloneDeploys, Rai
     /// though Polygon's address holds the clone.
     function testPerNetworkCloneMissingOnArbitrumIsRefusedAtArbitrumsAddress() external {
         DeploySuite memory release = releasedSuites()[0];
-        address arbitrumAddress = LibRainDeployMechanism.deployedAddress(release, 42161);
+        address arbitrumAddress = LibRainDeployCloneMechanism.deployedAddress(release, 42161);
         vm.etch(arbitrumAddress, hex"");
 
         vm.expectRevert(

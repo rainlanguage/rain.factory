@@ -10,7 +10,7 @@ import {
     StoredAddressMismatch
 } from "rain-deploy-0.1.27/src/abstract/RainDeployVerifySnapshotBase.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
-import {LibRainDeployMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     FrozenSnapshotAmbiguous,
     FrozenSnapshotUnreadable,
@@ -74,23 +74,23 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
     /// declaration derives for that network.
     function testFrozenPerNetworkReleaseIsAtADifferentAddressPerNetwork() external view {
         DeploySuite memory release = releasedSuites()[0];
-        address[] memory addresses = LibRainDeployMechanism.deployedAddresses(release);
+        address[] memory addresses = deployedAddresses(release);
         assertEq(addresses.length, 2);
         assertNotEq(addresses[0], addresses[1]);
         assertEq(release.storedDeployedAddress, address(0));
 
         DeploySuite memory declared =
-        LibRainDeployMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
+        LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
         assertEq(release.mechanismData, declared.mechanismData);
-        assertEq(addresses[0], LibRainDeployMechanism.deployedAddress(release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
-        assertEq(addresses[1], LibRainDeployMechanism.deployedAddress(release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
+        assertEq(addresses[0], LibRainDeployCloneMechanism.deployedAddress(release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
+        assertEq(addresses[1], LibRainDeployCloneMechanism.deployedAddress(release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
     }
 
     /// A recorded address that is not the one its network's init data derives is refused, naming
     /// that network's recorded and derived addresses.
     function testPerNetworkRecordedAddressMismatchIsRefusedPerNetwork() external {
         DeploySuite memory release = releasedSuites()[0];
-        address[] memory derived = LibRainDeployMechanism.deployedAddresses(release);
+        address[] memory derived = deployedAddresses(release);
         CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
         address staled = address(uint160(derived[1]) + 1);
         clones.networks[1].deployedAddress = staled;
@@ -131,8 +131,8 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         swapped.mechanismData = abi.encode(clones);
 
         assertEq(
-            abi.encode(LibRainDeployMechanism.deployedAddresses(swapped)),
-            abi.encode(LibRainDeployMechanism.deployedAddresses(releasedSuites()[0])),
+            abi.encode(deployedAddresses(swapped)),
+            abi.encode(deployedAddresses(releasedSuites()[0])),
             "the swapped release derives the same address list"
         );
         this.externalCheckInternallyConsistent(swapped);
@@ -155,7 +155,7 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
             abi.encodeWithSelector(
                 FrozenSnapshotsOutnumberReleases.selector,
                 paths[1],
-                LibRainDeployMechanism.deployedAddresses(releasedSuites()[0]),
+                deployedAddresses(releasedSuites()[0]),
                 uint256(2),
                 uint256(1)
             )

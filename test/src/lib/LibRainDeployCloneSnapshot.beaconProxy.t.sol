@@ -14,7 +14,7 @@ import {
 } from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {LibRainDeployMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneChainIds, perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
@@ -209,11 +209,11 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
             LibRainDeploySnapshot.mechanismName(DeployMechanism.BeaconProxyPerNetwork),
             "DeployMechanism.BeaconProxyPerNetwork"
         );
-        assertFalse(LibRainDeployMechanism.isPerNetworkMechanism(DeployMechanism.Zoltu));
-        assertFalse(LibRainDeployMechanism.isPerNetworkMechanism(DeployMechanism.Clone));
-        assertTrue(LibRainDeployMechanism.isPerNetworkMechanism(DeployMechanism.ClonePerNetwork));
-        assertFalse(LibRainDeployMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxy));
-        assertTrue(LibRainDeployMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxyPerNetwork));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.Zoltu));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.Clone));
+        assertTrue(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.ClonePerNetwork));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxy));
+        assertTrue(LibRainDeployCloneMechanism.isPerNetworkMechanism(DeployMechanism.BeaconProxyPerNetwork));
     }
 
     /// A beacon proxy candidate over a fresh factory and beacon, both declared as its dependencies.
@@ -221,7 +221,7 @@ contract LibRainDeploySnapshotBeaconProxyTest is Test {
     /// @return The candidate's suite.
     function beaconProxySuite(bool initDataPerNetwork) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
-        return LibRainDeployMechanism.beaconProxyCandidate(
+        return LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "beacon-proxy",
                 address(new MockBeaconProxyFactory()),

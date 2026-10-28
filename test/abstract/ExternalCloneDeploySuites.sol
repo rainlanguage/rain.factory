@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 
 import {RainDeployCloneSuitesBase} from "../../src/abstract/RainDeployCloneSuitesBase.sol";
 import {DeployCandidate} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 
 /// @title ExternalCloneDeploySuites
 /// @notice The clone declaration's own readers, exposed externally so a plain `Test` contract can
@@ -19,7 +19,7 @@ abstract contract ExternalCloneDeploySuites is RainDeployCloneSuitesBase {
     /// @return The candidate `cloneCandidate` derives from that clone for the supported networks'
     /// chain ids.
     function externalCloneDeployCandidate(uint256 index) external view returns (DeployCandidate memory) {
-        return LibRainDeployMechanism.cloneCandidate(cloneDeploys()[index], supportedChainIds());
+        return LibRainDeployCloneMechanism.cloneCandidate(cloneDeploys()[index], supportedChainIds());
     }
 
     /// @return The chain id of every supported network, in order.
@@ -33,9 +33,9 @@ abstract contract ExternalCloneDeploySuites is RainDeployCloneSuitesBase {
     }
 
     /// @param index The beacon proxy's index in `beaconProxyDeploys()`.
-    /// @return Its candidate, as `LibRainDeployMechanism.beaconProxyCandidate` builds it for the supported chain
+    /// @return Its candidate, as `LibRainDeployCloneMechanism.beaconProxyCandidate` builds it for the supported chain
     /// ids.
     function externalBeaconProxyDeployCandidate(uint256 index) external view returns (DeployCandidate memory) {
-        return LibRainDeployMechanism.beaconProxyCandidate(beaconProxyDeploys()[index], supportedChainIds());
+        return LibRainDeployCloneMechanism.beaconProxyCandidate(beaconProxyDeploys()[index], supportedChainIds());
     }
 }

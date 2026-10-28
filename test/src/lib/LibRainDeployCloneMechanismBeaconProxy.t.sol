@@ -25,7 +25,7 @@ import {
     CloneDataAmbiguous,
     ExtendedNetworksUnexpected,
     ExtendedNetworkUnfrozen,
-    LibRainDeployMechanism
+    LibRainDeployCloneMechanism
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
@@ -34,10 +34,10 @@ import {MockStorageReadingBeaconProxyFactory} from "../../concrete/MockStorageRe
 import {perNetworkCloneChainIds, perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 
-/// @title LibRainDeployMechanismBeaconProxyTest
-/// @notice The BEACON_PROXY mechanisms as `LibRainDeployMechanism` reads them: the candidate, the
+/// @title LibRainDeployCloneMechanismBeaconProxyTest
+/// @notice The BEACON_PROXY mechanisms as `LibRainDeployCloneMechanism` reads them: the candidate, the
 /// address and step dispatch, and the local deploy.
-contract LibRainDeployMechanismBeaconProxyTest is Test {
+contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
     bytes32 constant TEST_SALT = 0x1122334455667788990011223344556677889900112233445566778899001122;
 
     bytes constant TEST_DATA = hex"deadbeefcafe0102030405060708090a0b0c0d0e0f";
@@ -66,13 +66,13 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         view
         returns (DeployCandidate memory)
     {
-        return LibRainDeployMechanism.beaconProxyCandidate(proxy, chainIds);
+        return LibRainDeployCloneMechanism.beaconProxyCandidate(proxy, chainIds);
     }
 
     /// @param suite The suite to deploy locally.
     /// @return Every address the suite was deployed to.
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
-        return LibRainDeployMechanism.deployLocally(vm, suite);
+        return deployLocally(vm, suite);
     }
 
     /// @param data The one init data for every network, set beside per-network init data.
@@ -86,19 +86,19 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     /// @param suite The suite whose addresses are wanted.
     /// @return Every address the suite's mechanism derives.
     function externalDeployedAddresses(DeploySuite memory suite) external pure returns (address[] memory) {
-        return LibRainDeployMechanism.deployedAddresses(suite);
+        return deployedAddresses(suite);
     }
 
     /// @param suite The suite whose step is run, on a local Arbitrum One fork.
     /// @return The address the step reports.
     function externalDeployStep(DeploySuite memory suite) external returns (address) {
-        return LibRainDeployMechanism.deployStep(
+        return LibRainDeployCloneMechanism.deployStep(
             suite
         )(
             Vm(address(new LocalForkVm())),
             LibRainDeploy.ARBITRUM_ONE,
             address(this),
-            LibRainDeployMechanism.deployStepData(suite, 42161)
+            LibRainDeployCloneMechanism.deployStepData(suite, 42161)
         );
     }
 
@@ -158,20 +158,20 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     function testIsPerNetworkAndIsBeaconProxyOfEveryMechanism() external pure {
         DeploySuite memory suite;
         suite.mechanism = DeployMechanism.Zoltu;
-        assertFalse(LibRainDeployMechanism.isPerNetwork(suite));
-        assertFalse(LibRainDeployMechanism.isBeaconProxy(suite));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetwork(suite));
+        assertFalse(LibRainDeployCloneMechanism.isBeaconProxy(suite));
         suite.mechanism = DeployMechanism.Clone;
-        assertFalse(LibRainDeployMechanism.isPerNetwork(suite));
-        assertFalse(LibRainDeployMechanism.isBeaconProxy(suite));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetwork(suite));
+        assertFalse(LibRainDeployCloneMechanism.isBeaconProxy(suite));
         suite.mechanism = DeployMechanism.ClonePerNetwork;
-        assertTrue(LibRainDeployMechanism.isPerNetwork(suite));
-        assertFalse(LibRainDeployMechanism.isBeaconProxy(suite));
+        assertTrue(LibRainDeployCloneMechanism.isPerNetwork(suite));
+        assertFalse(LibRainDeployCloneMechanism.isBeaconProxy(suite));
         suite.mechanism = DeployMechanism.BeaconProxy;
-        assertFalse(LibRainDeployMechanism.isPerNetwork(suite));
-        assertTrue(LibRainDeployMechanism.isBeaconProxy(suite));
+        assertFalse(LibRainDeployCloneMechanism.isPerNetwork(suite));
+        assertTrue(LibRainDeployCloneMechanism.isBeaconProxy(suite));
         suite.mechanism = DeployMechanism.BeaconProxyPerNetwork;
-        assertTrue(LibRainDeployMechanism.isPerNetwork(suite));
-        assertTrue(LibRainDeployMechanism.isBeaconProxy(suite));
+        assertTrue(LibRainDeployCloneMechanism.isPerNetwork(suite));
+        assertTrue(LibRainDeployCloneMechanism.isBeaconProxy(suite));
     }
 
     /// The target address follows the suite's mechanism: the beacon proxy derivation for a beacon
@@ -180,27 +180,27 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         DeploySuite memory suite;
         suite.mechanism = DeployMechanism.BeaconProxy;
         assertEq(
-            LibRainDeployMechanism.targetAddress(suite, target),
+            LibRainDeployCloneMechanism.targetAddress(suite, target),
             LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target)
         );
         suite.mechanism = DeployMechanism.BeaconProxyPerNetwork;
         assertEq(
-            LibRainDeployMechanism.targetAddress(suite, target),
+            LibRainDeployCloneMechanism.targetAddress(suite, target),
             LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target)
         );
         suite.mechanism = DeployMechanism.Clone;
-        assertEq(LibRainDeployMechanism.targetAddress(suite, target), LibRainDeployClone.cloneDeployedAddress(target));
+        assertEq(LibRainDeployCloneMechanism.targetAddress(suite, target), LibRainDeployClone.cloneDeployedAddress(target));
         suite.mechanism = DeployMechanism.ClonePerNetwork;
-        assertEq(LibRainDeployMechanism.targetAddress(suite, target), LibRainDeployClone.cloneDeployedAddress(target));
+        assertEq(LibRainDeployCloneMechanism.targetAddress(suite, target), LibRainDeployClone.cloneDeployedAddress(target));
     }
 
     /// Both factory-deployed proxies' artifact paths are proxy paths, and nothing else is.
     function testIsProxyArtifactPathOfBothProxies(string memory other) external pure {
-        assertTrue(LibRainDeployMechanism.isProxyArtifactPath(CLONE_ARTIFACT_PATH));
-        assertTrue(LibRainDeployMechanism.isProxyArtifactPath(BEACON_PROXY_ARTIFACT_PATH));
+        assertTrue(LibRainDeployCloneMechanism.isProxyArtifactPath(CLONE_ARTIFACT_PATH));
+        assertTrue(LibRainDeployCloneMechanism.isProxyArtifactPath(BEACON_PROXY_ARTIFACT_PATH));
         vm.assume(keccak256(bytes(other)) != keccak256(bytes(CLONE_ARTIFACT_PATH)));
         vm.assume(keccak256(bytes(other)) != keccak256(bytes(BEACON_PROXY_ARTIFACT_PATH)));
-        assertFalse(LibRainDeployMechanism.isProxyArtifactPath(other));
+        assertFalse(LibRainDeployCloneMechanism.isProxyArtifactPath(other));
     }
 
     /// A beacon proxy is placed locally at its derived address with its frozen runtime code, and its beacon is left
@@ -297,7 +297,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
     function testPerNetworkBeaconProxyDeployStepDeploysThatNetworksProxy() external {
         DeploySuite memory suite = candidateOf(declaredBeaconProxy(true), perNetworkCloneChainIds()).snapshot;
         address deployed = this.externalDeployStep(suite);
-        assertEq(deployed, LibRainDeployMechanism.deployedAddress(suite, 42161));
+        assertEq(deployed, LibRainDeployCloneMechanism.deployedAddress(suite, 42161));
         assertEq(deployed.codehash, suite.storedBytecodeHash);
     }
 
@@ -324,7 +324,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         ChainDeploy[] memory first = new ChainDeploy[](1);
         first[0] = clones.networks[0];
         clones.networks = first;
-        return LibRainDeployMechanism.withMechanismData(suite, abi.encode(clones));
+        return LibRainDeployCloneMechanism.withPayload(suite, abi.encode(clones));
     }
 
     /// @param suite The release.
@@ -335,14 +335,14 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         pure
         returns (DeploySuite memory)
     {
-        return LibRainDeployMechanism.withExtendedNetworks(suite, extended);
+        return appendExtendedNetworks(suite, extended);
     }
 
     /// @param frozen The release with its extended networks.
     /// @param chainId The network's chain id.
     /// @param where The address checked on it.
     function externalCheckNetworkFrozen(DeploySuite memory frozen, uint256 chainId, address where) external pure {
-        LibRainDeployMechanism.checkNetworkFrozen(frozen, "net", chainId, where);
+        LibRainDeployCloneMechanism.checkNetworkFrozen(frozen, "net", chainId, where);
     }
 
     /// @param frozen The release with its extended networks.
@@ -353,7 +353,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         DeploySuite memory onNetworks,
         string[] memory networks
     ) external pure {
-        LibRainDeployMechanism.checkNetworksFrozen(frozen, onNetworks, networks);
+        checkNetworksFrozen(frozen, onNetworks, networks);
     }
 
     /// A per-network beacon proxy records, and is addressed by, each network's own beacon proxy.
@@ -362,13 +362,13 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         uint256[] memory chainIds = perNetworkCloneChainIds();
         DeploySuite memory suite = candidateOf(proxy, chainIds).snapshot;
 
-        address[] memory recorded = LibRainDeployMechanism.recordedAddresses(suite);
+        address[] memory recorded = recordedAddresses(suite);
         assertEq(recorded.length, 2);
-        assertEq(LibRainDeployMechanism.addressChainIds(suite), chainIds);
+        assertEq(LibRainDeployCloneMechanism.addressChainIds(suite), chainIds);
         for (uint256 i = 0; i < chainIds.length; i++) {
             assertEq(recorded[i], beaconProxyAddressOn(proxy, chainIds[i]));
             assertEq(
-                LibRainDeployMechanism.recordedAddress(suite, chainIds[i]), beaconProxyAddressOn(proxy, chainIds[i])
+                LibRainDeployCloneMechanism.recordedAddress(suite, chainIds[i]), beaconProxyAddressOn(proxy, chainIds[i])
             );
         }
     }
@@ -381,7 +381,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         DeploySuite memory candidate = candidateOf(proxy, chainIds).snapshot;
         DeploySuite memory release = firstNetworkOnly(candidate);
 
-        DeploySuite memory onNetworks = LibRainDeployMechanism.withUnrecordedNetworks(release, candidate, chainIds);
+        DeploySuite memory onNetworks = LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
         ChainDeploy[] memory networks = abi.decode(onNetworks.mechanismData, (CloneNetworks)).networks;
         assertEq(networks.length, 2);
         assertEq(networks[0].chainId, chainIds[0]);
@@ -393,7 +393,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         DeploySuite memory cloneCandidate = candidateOf(proxy, chainIds).snapshot;
         cloneCandidate.mechanism = DeployMechanism.ClonePerNetwork;
         assertEq(
-            LibRainDeployMechanism.withUnrecordedNetworks(release, cloneCandidate, chainIds).mechanismData,
+            LibRainDeployCloneMechanism.withUnrecordedNetworks(release, cloneCandidate, chainIds).mechanismData,
             release.mechanismData
         );
     }
@@ -411,8 +411,8 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         });
 
         DeploySuite memory frozen = this.externalWithExtendedNetworks(release, extended);
-        assertEq(LibRainDeployMechanism.recordedAddresses(frozen).length, 2);
-        assertEq(LibRainDeployMechanism.recordedAddress(frozen, chainIds[1]), beaconProxyAddressOn(proxy, chainIds[1]));
+        assertEq(recordedAddresses(frozen).length, 2);
+        assertEq(LibRainDeployCloneMechanism.recordedAddress(frozen, chainIds[1]), beaconProxyAddressOn(proxy, chainIds[1]));
     }
 
     /// Extended networks on a one-data beacon proxy suite are refused.
@@ -439,7 +439,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         string[] memory networks = new string[](2);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         networks[1] = LibRainDeploy.POLYGON;
-        DeploySuite memory onNetworks = LibRainDeployMechanism.withUnrecordedNetworks(release, candidate, chainIds);
+        DeploySuite memory onNetworks = LibRainDeployCloneMechanism.withUnrecordedNetworks(release, candidate, chainIds);
         vm.expectRevert(
             abi.encodeWithSelector(
                 ExtendedNetworkUnfrozen.selector, release.suite, LibRainDeploy.POLYGON, polygonAddress
@@ -457,7 +457,7 @@ contract LibRainDeployMechanismBeaconProxyTest is Test {
         bytes memory mechanismData = suite.mechanismData;
 
         vm.chainId(chainIds[1]);
-        LibRainDeployMechanism.deployLocallyOnChain(vm, suite);
+        deployLocallyOnChain(vm, suite);
         assertEq(suite.mechanismData, mechanismData);
         assertEq(beaconProxyAddressOn(proxy, chainIds[1]).code, suite.storedRuntimeCode);
         assertEq(beaconProxyAddressOn(proxy, chainIds[0]).code.length, 0);

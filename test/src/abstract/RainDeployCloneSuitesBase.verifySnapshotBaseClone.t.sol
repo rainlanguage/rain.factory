@@ -8,7 +8,7 @@ import {
     RainDeployVerifySnapshotBase
 } from "rain-deploy-0.1.27/src/abstract/RainDeployVerifySnapshotBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -29,11 +29,11 @@ contract RainDeployVerifySnapshotBaseCloneTest is ExampleCloneDeploys, RainDeplo
     /// code, so a consistency check that derived it as Zoltu would fail it rather than pass it.
     function testFrozenCloneReleaseIsNotAtItsZoltuAddress() external view {
         DeploySuite memory release = releasedSuites()[0];
-        assertEq(release.storedDeployedAddress, LibRainDeployMechanism.deployedAddresses(release)[0]);
+        assertEq(release.storedDeployedAddress, deployedAddresses(release)[0]);
         assertNotEq(release.storedDeployedAddress, LibRainDeploy.zoltuAddress(release.creationCode));
         assertEq(
             release.storedDeployedAddress,
-            LibRainDeployMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot
+            LibRainDeployCloneMechanism.cloneCandidate(exampleCloneRelease(), new uint256[](0)).snapshot
                 .storedDeployedAddress
         );
     }

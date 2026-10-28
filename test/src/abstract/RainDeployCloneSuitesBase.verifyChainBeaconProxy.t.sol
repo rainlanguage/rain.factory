@@ -9,7 +9,7 @@ import {BeaconProxyBeaconUndeclared} from "rain-deploy-0.1.27/src/abstract/RainD
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {LibRainDeployMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
@@ -75,7 +75,7 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
     /// @return The suite.
     function liveProxySuite(address beacon, bool initDataPerNetwork) internal returns (DeploySuite memory) {
         DeploySuite memory suite =
-        LibRainDeployMechanism.beaconProxyCandidate(
+        LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 PROXY_SUITE,
                 sFactory,
@@ -88,7 +88,7 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
             perNetworkCloneChainIds()
         )
         .snapshot;
-        address[] memory deployed = LibRainDeployMechanism.deployedAddresses(suite);
+        address[] memory deployed = deployedAddresses(suite);
         for (uint256 i = 0; i < deployed.length; i++) {
             vm.etch(deployed[i], suite.storedRuntimeCode);
             vm.makePersistent(deployed[i]);

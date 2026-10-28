@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {BuildScript} from "rain-deploy-0.1.27/src/abstract/BuildScript.sol";
 import {RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {ChainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeployExtendedNetworks.sol";
-import {LibRainDeployMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     PER_NETWORK_CLONE_RECORD_CONTRACT,
@@ -72,7 +72,7 @@ contract PerNetworkCloneBuildScriptHarness is PerNetworkCloneDeploys, BuildScrip
             recordRoot(),
             LibRainDeploySnapshot.CANDIDATE,
             PER_NETWORK_CLONE_RECORD_CONTRACT,
-            LibRainDeployMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot
+            LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot
         );
     }
 
