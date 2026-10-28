@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeploySuite, RainDeploySuitesBase} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotNotReleased,
     FrozenSnapshotsOutnumberReleases,
@@ -11,6 +11,7 @@ import {
 } from "rain-deploy-0.1.27/src/abstract/RainDeployVerifySnapshotBase.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneSnapshot} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
 import {
     FrozenSnapshotAmbiguous,
     FrozenSnapshotUnreadable,
@@ -29,25 +30,15 @@ import {LibForeignLineBreaks} from "../../lib/LibForeignLineBreaks.sol";
 /// @title RainDeployVerifySnapshotBaseClonePerNetworkTest
 /// @notice The snapshot group over a per-network clone deploy repo.
 contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeploys, RainDeployVerifySnapshotBase {
-    /// @inheritdoc PerNetworkCloneDeploys
-    function supportedNetworks()
-        internal
-        view
-        override(PerNetworkCloneDeploys, RainDeploySuitesBase)
-        returns (string[] memory)
-    {
-        return PerNetworkCloneDeploys.supportedNetworks();
-    }
-
     /// @param paths The frozen record paths.
     /// @param released The released suites.
     function externalCheckFrozenSnapshotsReleased(string[] memory paths, DeploySuite[] memory released) external view {
-        checkFrozenSnapshotsReleased(paths, released);
+        checkFrozenSnapshotsReleased(declaration(), paths, released);
     }
 
     /// @param suite The suite to check.
     function externalCheckInternallyConsistent(DeploySuite memory suite) external {
-        checkInternallyConsistent(suite);
+        checkInternallyConsistent(declaration(), suite);
     }
 
     /// @param path The record file, for the error only.
@@ -73,8 +64,8 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
     /// The release really is at a different address on each network, and each is the address its
     /// declaration derives for that network.
     function testFrozenPerNetworkReleaseIsAtADifferentAddressPerNetwork() external view {
-        DeploySuite memory release = releasedSuites()[0];
-        address[] memory addresses = deployedAddresses(release);
+        DeploySuite memory release = declaration().released[0];
+        address[] memory addresses = deployedAddresses(declaration(), release);
         assertEq(addresses.length, 2);
         assertNotEq(addresses[0], addresses[1]);
         assertEq(release.storedDeployedAddress, address(0));
@@ -82,19 +73,19 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         DeploySuite memory declared =
         LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
         assertEq(release.mechanismData, declared.mechanismData);
-        assertEq(addresses[0], LibRainDeployCloneMechanism.deployedAddress(release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
-        assertEq(addresses[1], LibRainDeployCloneMechanism.deployedAddress(release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
+        assertEq(addresses[0], LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
+        assertEq(addresses[1], LibRainDeployCloneMechanism.deployedAddress(declaration(), release, PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
     }
 
     /// A recorded address that is not the one its network's init data derives is refused, naming
     /// that network's recorded and derived addresses.
     function testPerNetworkRecordedAddressMismatchIsRefusedPerNetwork() external {
-        DeploySuite memory release = releasedSuites()[0];
-        address[] memory derived = deployedAddresses(release);
-        CloneNetworks memory clones = abi.decode(release.mechanismData, (CloneNetworks));
+        DeploySuite memory release = declaration().released[0];
+        address[] memory derived = deployedAddresses(declaration(), release);
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         address staled = address(uint160(derived[1]) + 1);
         clones.networks[1].deployedAddress = staled;
-        release.mechanismData = abi.encode(clones);
+        release = LibRainDeployCloneMechanism.withPayload(release, abi.encode(clones));
 
         vm.expectRevert(abi.encodeWithSelector(StoredAddressMismatch.selector, release.suite, staled, derived[1]));
         this.externalCheckInternallyConsistent(release);
@@ -102,7 +93,7 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
 
     /// The committed per-network record is accounted for by the release declared from it.
     function testFrozenPerNetworkRecordIsReleased() external view {
-        checkFrozenSnapshotsReleased(recordPaths(), releasedSuites());
+        checkFrozenSnapshotsReleased(declaration(), recordPaths(), declaration().released);
     }
 
     /// The record without its release is refused.
@@ -113,7 +104,7 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         this.externalCheckFrozenSnapshotsReleased(paths, new DeploySuite[](0));
 
         DeploySuite[] memory candidates = new DeploySuite[](1);
-        candidates[0] = candidateSuites()[0].snapshot;
+        candidates[0] = declaration().candidates[0].snapshot;
         vm.expectRevert(abi.encodeWithSelector(FrozenSnapshotNotReleased.selector, paths[0]));
         this.externalCheckFrozenSnapshotsReleased(paths, candidates);
     }
@@ -121,18 +112,18 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
     /// A release that derives the record's addresses but labels them with each other's chain ids is
     /// NOT that record's release.
     function testFrozenPerNetworkRecordRefusesSwappedChainIds() external {
-        DeploySuite[] memory released = releasedSuites();
-        CloneNetworks memory clones = abi.decode(released[0].mechanismData, (CloneNetworks));
+        DeploySuite[] memory released = declaration().released;
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(released[0]), (CloneNetworks));
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
         assertEq(clones.networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         clones.networks[0].chainId = PER_NETWORK_CLONE_POLYGON_CHAIN_ID;
         clones.networks[1].chainId = PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID;
         DeploySuite memory swapped = released[0];
-        swapped.mechanismData = abi.encode(clones);
+        swapped = LibRainDeployCloneMechanism.withPayload(swapped, abi.encode(clones));
 
         assertEq(
-            abi.encode(deployedAddresses(swapped)),
-            abi.encode(deployedAddresses(releasedSuites()[0])),
+            abi.encode(deployedAddresses(declaration(), swapped)),
+            abi.encode(deployedAddresses(declaration(), declaration().released[0])),
             "the swapped release derives the same address list"
         );
         this.externalCheckInternallyConsistent(swapped);
@@ -155,12 +146,12 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
             abi.encodeWithSelector(
                 FrozenSnapshotsOutnumberReleases.selector,
                 paths[1],
-                deployedAddresses(releasedSuites()[0]),
+                deployedAddresses(declaration(), declaration().released[0]),
                 uint256(2),
                 uint256(1)
             )
         );
-        this.externalCheckFrozenSnapshotsReleased(paths, releasedSuites());
+        this.externalCheckFrozenSnapshotsReleased(paths, declaration().released);
     }
 
     /// One per-network declaration line.
@@ -304,15 +295,15 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
 
     /// The largest chain id a `uint256` holds, in the declaration the writer emits for it, reads as itself.
     function testPerNetworkDeclarationWithTheLargestChainIdReads() external view {
-        DeploySuite memory suite = releasedSuites()[0];
-        CloneNetworks memory clones = abi.decode(suite.mechanismData, (CloneNetworks));
+        DeploySuite memory suite = declaration().released[0];
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         uint256 secondChainId = clones.networks[1].chainId;
         clones.networks[0].chainId = type(uint256).max;
-        suite.mechanismData = abi.encode(clones);
+        suite = LibRainDeployCloneMechanism.withPayload(suite, abi.encode(clones));
         address[] memory deployed = new address[](clones.networks.length);
         deployed[0] = address(0xcafe);
         deployed[1] = address(0xbeef);
-        (string memory constants,) = LibRainDeploySnapshot.perNetworkAddressConstants(vm, deployed, suite);
+        (string memory constants,) = LibRainDeployCloneSnapshot.perNetworkAddressConstants(vm, deployed, suite);
         assertTrue(vm.contains(constants, " =\n    address("));
 
         (uint256[] memory chainIds, address[] memory addresses) =

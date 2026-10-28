@@ -8,6 +8,7 @@ import {RainDeployVerifyChain} from "rain-deploy-0.1.27/src/abstract/RainDeployV
 import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {ExampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
 import {CloneTarget} from "../../../src/lib/LibRainDeployClone.sol";
+import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 
 /// @title RainDeployVerifyChainCloneTest
@@ -15,7 +16,7 @@ import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerifyChain {
     /// Puts the release's dependencies, and its clone at its address, on every fork.
     function setUp() external {
-        DeploySuite memory release = releasedSuites()[0];
+        DeploySuite memory release = declaration().released[0];
         for (uint256 i = 0; i < release.dependencies.length; i++) {
             vm.etch(release.dependencies[i].deployedAddress, release.dependencies[i].runtimeCode);
             vm.makePersistent(release.dependencies[i].deployedAddress);
@@ -27,13 +28,13 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
     /// Without the clone at its address the matrix refuses on the first network, naming the release
     /// and the CLONE address — not the Zoltu address of its creation code, and not a candidate's.
     function testCloneReleaseMissingFromANetworkIsRefusedAtTheCloneAddress() external {
-        DeploySuite memory release = releasedSuites()[0];
+        DeploySuite memory release = declaration().released[0];
         assertNotEq(release.storedDeployedAddress, LibRainDeploy.zoltuAddress(release.creationCode));
         vm.etch(release.storedDeployedAddress, hex"");
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibRainDeploy.NotDeployedOnNetwork.selector, supportedNetworks()[0], release.storedDeployedAddress
+                LibRainDeploy.NotDeployedOnNetwork.selector, declaration().networks[0], release.storedDeployedAddress
             )
         );
         this.testSuitesLiveOnEverySupportedNetwork();
@@ -43,17 +44,21 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
     /// @param forkVm The local fork Vm.
     function externalCheckOnLocalForks(LocalForkVm forkVm) external {
         checkDeployedOnNetworks(
-            Vm(address(forkVm)), LibRainDeploy.declaredNetworkConfigs(supportedNetworks()), releasedSuites()
+            declaration(),
+            Vm(address(forkVm)),
+            LibRainDeploy.declaredNetworkConfigs(declaration().networks),
+            declaration().released
         );
     }
 
     /// A clone whose proxy code is right MUST still be refused when its implementation is missing.
     function testMatrixRefusesCloneWithMissingImplementation() external {
-        address implementation = abi.decode(releasedSuites()[0].mechanismData, (CloneTarget)).implementation;
+        address implementation =
+            abi.decode(LibRainDeployCloneMechanism.payload(declaration().released[0]), (CloneTarget)).implementation;
         LocalForkVm forkVm = new LocalForkVm();
         vm.etch(implementation, hex"");
         vm.expectRevert(
-            abi.encodeWithSelector(LibRainDeploy.MissingDependency.selector, supportedNetworks()[0], implementation)
+            abi.encodeWithSelector(LibRainDeploy.MissingDependency.selector, declaration().networks[0], implementation)
         );
         this.externalCheckOnLocalForks(forkVm);
     }
@@ -61,7 +66,7 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
     /// A fork reporting another chain than its catalogue entry MUST be refused, even when every suite is live on it.
     function testMatrixRefusesForkReportingAnotherChain() external {
         LocalForkVm forkVm = new LocalForkVm();
-        SupportedNetwork memory network = LibRainDeploy.declaredNetworkConfigs(supportedNetworks())[0];
+        SupportedNetwork memory network = LibRainDeploy.declaredNetworkConfigs(declaration().networks)[0];
         forkVm.setReportedChainId(network.chainId + 1);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -78,13 +83,13 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
 
     /// A clone address holding other code MUST be refused on a local fork.
     function testMatrixRefusesCloneWithOtherCode() external {
-        DeploySuite memory suite = releasedSuites()[0];
+        DeploySuite memory suite = declaration().released[0];
         LocalForkVm forkVm = new LocalForkVm();
         vm.etch(suite.storedDeployedAddress, hex"00");
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeploy.CodeHashMismatchOnNetwork.selector,
-                supportedNetworks()[0],
+                declaration().networks[0],
                 suite.storedDeployedAddress,
                 suite.storedBytecodeHash,
                 keccak256(hex"00")
@@ -95,12 +100,12 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
 
     /// A clone address with no code MUST be refused on a local fork.
     function testMatrixRefusesMissingClone() external {
-        DeploySuite memory suite = releasedSuites()[0];
+        DeploySuite memory suite = declaration().released[0];
         LocalForkVm forkVm = new LocalForkVm();
         vm.etch(suite.storedDeployedAddress, hex"");
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibRainDeploy.NotDeployedOnNetwork.selector, supportedNetworks()[0], suite.storedDeployedAddress
+                LibRainDeploy.NotDeployedOnNetwork.selector, declaration().networks[0], suite.storedDeployedAddress
             )
         );
         this.externalCheckOnLocalForks(forkVm);
@@ -111,8 +116,8 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
         address missing = address(0xdEaD);
         assertEq(missing.code.length, 0);
         DeploySuite[] memory suites = new DeploySuite[](2);
-        suites[0] = releasedSuites()[0];
-        suites[1] = releasedSuites()[0];
+        suites[0] = declaration().released[0];
+        suites[1] = declaration().released[0];
         DeployDependency[] memory dependencies = new DeployDependency[](suites[1].dependencies.length + 1);
         for (uint256 i = 0; i < suites[1].dependencies.length; i++) {
             dependencies[i] = suites[1].dependencies[i];
@@ -121,7 +126,7 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
         suites[1].dependencies = dependencies;
         LocalForkVm forkVm = new LocalForkVm();
         vm.expectRevert(
-            abi.encodeWithSelector(LibRainDeploy.MissingDependency.selector, supportedNetworks()[0], missing)
+            abi.encodeWithSelector(LibRainDeploy.MissingDependency.selector, declaration().networks[0], missing)
         );
         this.externalCheckSuitesOnLocalForks(forkVm, suites);
     }
@@ -130,6 +135,8 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
     /// @param forkVm The local fork Vm.
     /// @param suites The suites to check.
     function externalCheckSuitesOnLocalForks(LocalForkVm forkVm, DeploySuite[] memory suites) external {
-        checkDeployedOnNetworks(Vm(address(forkVm)), LibRainDeploy.declaredNetworkConfigs(supportedNetworks()), suites);
+        checkDeployedOnNetworks(
+            declaration(), Vm(address(forkVm)), LibRainDeploy.declaredNetworkConfigs(declaration().networks), suites
+        );
     }
 }
