@@ -108,7 +108,7 @@ library LibRainDeployCloneOnChainChecks {
         pure
         returns (DeployMechanismHandler memory)
     {
-        return LibRainDeployDeclaration.mechanismById(d, suiteId(suite), suite.suite);
+        return LibRainDeployDeclaration.mechanismOf(d, suite);
     }
 
     function implementationAt(DeployDeclaration memory d, DeployBeacon memory beacon, uint256 state, uint256 chainId)
