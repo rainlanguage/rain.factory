@@ -108,7 +108,7 @@ library LibRainDeployCloneMechanism {
     function handler(bytes32 id) internal pure returns (DeployMechanismHandler memory) {
         return DeployMechanismHandler({
             id: id,
-            deployedAddress: stubAddress,
+            deployedAddress: deployedAddress,
             recordedAddress: stubAddress,
             deployStepData: stubDeployStepData,
             deployStep: stubDeployStep,
