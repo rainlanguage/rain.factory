@@ -303,7 +303,7 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
         address[] memory deployed = new address[](clones.networks.length);
         deployed[0] = address(0xcafe);
         deployed[1] = address(0xbeef);
-        (string memory constants,) = LibRainDeployCloneSnapshot.perNetworkAddressConstants(vm, deployed, suite);
+        string memory constants = LibRainDeployCloneSnapshot.perNetworkAddressConstants(vm, deployed, suite);
         assertTrue(vm.contains(constants, " =\n    address("));
 
         (uint256[] memory chainIds, address[] memory addresses) =
