@@ -149,9 +149,6 @@ library LibRainDeployCloneMechanism {
         LibRainDeployDeclaration.addMechanism(d, beaconProxyPerNetworkHandler());
     }
 
-
-
-
     function stubDeployLocally(Vm, DeploySuite memory) internal pure returns (address[] memory) {
         revert("stub");
     }
