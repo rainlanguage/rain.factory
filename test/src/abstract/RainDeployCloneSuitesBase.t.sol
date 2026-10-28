@@ -2,8 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
+import {BEACON_PROXY_MECHANISM, BEACON_PROXY_PER_NETWORK_MECHANISM} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {DeployCandidate, DeployMechanism, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployCandidate, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {PerNetworkBeaconProxyOnlyDeploySuites} from "../../concrete/PerNetworkBeaconProxyOnlyDeploySuites.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
