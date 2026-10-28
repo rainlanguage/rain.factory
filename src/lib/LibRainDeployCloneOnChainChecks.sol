@@ -58,6 +58,19 @@ error BeaconSnapshotRevertFailed(string suite, uint256 snapshotId);
 /// @param state The state index, as `LibRainDeployBeacon.stateAt` takes it.
 error BeaconOwnedByDeployKey(uint256 chainId, uint256 beaconIndex, uint256 state);
 
+/// @param codeHash The beacon's code hash with its suite deployed locally.
+/// @param ownerAnswered Whether `owner()` returned.
+/// @param owner The `owner()` answer, raw.
+/// @param implementationAnswered Whether `implementation()` returned.
+/// @param implementation The `implementation()` answer, raw.
+struct BeaconProbe {
+    bytes32 codeHash;
+    bool ownerAnswered;
+    bytes owner;
+    bool implementationAnswered;
+    bytes implementation;
+}
+
 /// @title LibRainDeployCloneOnChainChecks
 /// @notice The clone and beacon proxy handlers' `checkOnChain` and `checkBroadcastSeat`.
 library LibRainDeployCloneOnChainChecks {
@@ -107,6 +120,29 @@ library LibRainDeployCloneOnChainChecks {
         return answered && answer.length != 0 && keccak256(answer) != keccak256(abi.encode(expected));
     }
 
+    /// `suite` deployed locally under `chainId` in a reverted snapshot: `beacon`'s code hash and its raw `owner()` and
+    /// `implementation()` answers.
+    function probeBeacon(DeployDeclaration memory d, DeploySuite memory suite, address beacon, uint256 chainId)
+        internal
+        returns (BeaconProbe memory)
+    {
+        Vm vm = StdConstants.VM;
+        uint256 snapshotId = vm.snapshotState();
+        vm.chainId(chainId);
+        handlerOf(d, suite).deployLocallyOnChain(d, vm, suite);
+        BeaconProbe memory probe;
+        probe.codeHash = beacon.codehash;
+        // slither-disable-next-line low-level-calls
+        (probe.ownerAnswered, probe.owner) = beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
+        // slither-disable-next-line low-level-calls
+        (probe.implementationAnswered, probe.implementation) =
+            beacon.staticcall(abi.encodeCall(IBeacon.implementation, ()));
+        if (!vm.revertToState(snapshotId)) {
+            revert BeaconSnapshotRevertFailed(suite.suite, snapshotId);
+        }
+        return probe;
+    }
+
     /// The beacon at `beaconIndex`, with `beacon` and `beaconCodeHash` resolved from its `beaconSuite` deployed
     /// locally under `chainId`, refusing a seated owner or implementation other than its initial state's.
     function resolveBeacon(DeployDeclaration memory d, DeployBeacon memory declaration, uint256 chainId, uint256 beaconIndex)
@@ -125,26 +161,15 @@ library LibRainDeployCloneOnChainChecks {
                 revert BeaconNamedTwice(chainId, beaconIndex);
             }
             DeploySuite memory suite = released(d, beacon.beaconSuite);
-            DeployMechanismHandler memory h = handlerOf(d, suite);
-            beacon.beacon = h.deployedAddress(d, suite, chainId);
-            Vm vm = StdConstants.VM;
-            uint256 snapshotId = vm.snapshotState();
-            vm.chainId(chainId);
-            h.deployLocallyOnChain(d, vm, suite);
-            beacon.beaconCodeHash = beacon.beacon.codehash;
-            // slither-disable-next-line low-level-calls
-            (bool ownerAnswered, bytes memory owner) = beacon.beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
-            // slither-disable-next-line low-level-calls
-            (bool implementationAnswered, bytes memory implementation) =
-                beacon.beacon.staticcall(abi.encodeCall(IBeacon.implementation, ()));
-            if (!vm.revertToState(snapshotId)) {
-                revert BeaconSnapshotRevertFailed(suite.suite, snapshotId);
+            beacon.beacon = handlerOf(d, suite).deployedAddress(d, suite, chainId);
+            BeaconProbe memory probe = probeBeacon(d, suite, beacon.beacon, chainId);
+            beacon.beaconCodeHash = probe.codeHash;
+            if (seatsOther(probe.ownerAnswered, probe.owner, beacon.initial.owner)) {
+                revert BeaconSeatedOwner(chainId, beaconIndex, probe.owner);
             }
-            if (seatsOther(ownerAnswered, owner, beacon.initial.owner)) {
-                revert BeaconSeatedOwner(chainId, beaconIndex, owner);
-            }
-            if (seatsOther(implementationAnswered, implementation, implementationAt(d, beacon, 0, chainId))) {
-                revert BeaconSeatedImplementation(chainId, beaconIndex, implementation);
+            if (seatsOther(probe.implementationAnswered, probe.implementation, implementationAt(d, beacon, 0, chainId)))
+            {
+                revert BeaconSeatedImplementation(chainId, beaconIndex, probe.implementation);
             }
         } else if (beacon.beacon == address(0) || beacon.beaconCodeHash == bytes32(0)) {
             revert BeaconUnnamed(chainId, beaconIndex);
