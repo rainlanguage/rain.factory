@@ -31,10 +31,7 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
         LibRainDeployBeaconDeclarationChecks.checkDeclaration(declaration());
     }
 
-    function externalResolveBeaconLeavesDeclaration(DeployBeacon memory beacon)
-        external
-        returns (DeployBeacon memory)
-    {
+    function externalResolveBeaconLeavesDeclaration(DeployBeacon memory beacon) external returns (DeployBeacon memory) {
         LibRainDeployBeaconDeclarationChecks.resolveBeacon(declaration(), beacon, 42161, 0);
         return beacon;
     }
