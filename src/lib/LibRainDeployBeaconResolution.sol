@@ -220,22 +220,37 @@ library LibRainDeployBeaconResolution {
         LibRainDeployBeacon.checkTransitionMigrations(chainId, beacon);
         resolved.chainId = chainId;
         resolved.beacon = beacon;
-        uint256 states = beacon.transitions.length + 1;
-        resolved.implementations = new DeploySuite[](states);
-        resolved.implementationAddresses = new address[](states);
-        resolved.implementationDerived = new DerivedDeploy[](states);
-        for (uint256 state = 0; state < states; state++) {
-            uint256 releasedIndex =
-                resolveReleased(d, LibRainDeployBeacon.stateAt(beacon, state).implementation, released, derived);
-            resolved.implementations[state] = released[releasedIndex];
-            resolved.implementationAddresses[state] = LibRainDeployDeclaration.mechanismOf(d, released[releasedIndex])
-                .deployedAddress(d, released[releasedIndex], chainId);
-            resolved.implementationDerived[state] = derived[releasedIndex];
-        }
+        resolveImplementations(d, resolved, released, derived);
         if (bytes(beacon.beaconSuite).length != 0) {
             checkSeatedState(d, resolved, beaconIndex);
         }
         return resolved;
+    }
+
+    /// Resolves each state's implementation suite, address and derivation on `resolved.chainId`.
+    /// @param d The declaration, extended.
+    /// @param resolved The beacon, its `chainId` and `beacon` set, its implementations written.
+    /// @param released Each released suite once resolved, as `resolveReleased` takes it.
+    /// @param derived Each released suite's derivation, as `resolveReleased` takes it.
+    function resolveImplementations(
+        DeployDeclaration memory d,
+        ResolvedBeacon memory resolved,
+        DeploySuite[] memory released,
+        DerivedDeploy[] memory derived
+    ) internal {
+        uint256 states = resolved.beacon.transitions.length + 1;
+        resolved.implementations = new DeploySuite[](states);
+        resolved.implementationAddresses = new address[](states);
+        resolved.implementationDerived = new DerivedDeploy[](states);
+        for (uint256 state = 0; state < states; state++) {
+            uint256 releasedIndex = resolveReleased(
+                d, LibRainDeployBeacon.stateAt(resolved.beacon, state).implementation, released, derived
+            );
+            resolved.implementations[state] = released[releasedIndex];
+            resolved.implementationAddresses[state] = LibRainDeployDeclaration.mechanismOf(d, released[releasedIndex])
+                .deployedAddress(d, released[releasedIndex], resolved.chainId);
+            resolved.implementationDerived[state] = derived[releasedIndex];
+        }
     }
 
     /// Refuses `BeaconSuiteNotReleased` when `key` is not in `d.released`; derives a released suite the first time it
