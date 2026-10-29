@@ -24,10 +24,7 @@ import {
     BeaconUnnamed,
     LibRainDeployCloneOnChainChecks
 } from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
-import {
-    BeaconDeclaredTwice,
-    BeaconOnUncheckedNetwork
-} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
+import {BeaconDeclaredTwice, BeaconOnUncheckedNetwork} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
