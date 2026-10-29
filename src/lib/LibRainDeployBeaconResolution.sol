@@ -300,8 +300,9 @@ library LibRainDeployBeaconResolution {
     function checkSeatedState(DeployDeclaration memory d, ResolvedBeacon memory resolved, uint256 beaconIndex)
         internal
     {
-        BeaconProbe memory probe =
-            LibRainDeployCloneOnChainChecks.probeBeacon(d, resolved.suite, resolved.beacon.beacon, resolved.chainId);
+        BeaconProbe memory probe = LibRainDeployCloneOnChainChecks.probeBeacon(
+            d, resolved.suite, resolved.beacon.beacon, resolved.chainId
+        );
         if (LibRainDeployCloneOnChainChecks.seatsOther(probe.ownerAnswered, probe.owner, resolved.beacon.initial.owner))
         {
             revert BeaconSeatedOwner(resolved.chainId, beaconIndex, probe.owner);
