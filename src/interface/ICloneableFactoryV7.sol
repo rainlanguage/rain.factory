@@ -57,7 +57,7 @@ interface ICloneableFactoryV7 is ICloneableFactoryV5 {
 
     /// The address `registryBeaconProxy` deploys to for the same arguments,
     /// on every chain.
-    /// @param registry A config registry.
+    /// @param registry An `IConfigRegistryV5`.
     /// @param authority The authority the name is bound under.
     /// @param beaconName The name the beacon is bound to.
     /// @param data The init data.
