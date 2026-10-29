@@ -13,6 +13,7 @@ import {
     UnexpectedMechanismData
 } from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
@@ -1008,6 +1009,14 @@ contract LibRainDeployCloneMechanismTest is Test {
         assertEq(abi.encode(extended.dependencies), abi.encode(release.dependencies));
         assertEq(abi.encode(extended.networks), abi.encode(release.networks));
         assertEq(LibRainDeployCloneMechanism.mechanismTag(extended.mechanismData), CLONE_PER_NETWORK_MECHANISM);
+    }
+
+    /// A declaration that does not set `extendedNetworksRoot` reads and writes its extended networks records under its
+    /// own record, the one its frozen snapshots are under.
+    function testExtendedNetworksRootDefaultsToTheRepoRecord() external view {
+        DeployDeclaration memory d;
+        LibRainDeployCloneMechanism.extend(d);
+        assertEq(LibRainDeployCloneMechanism.layerConfig(d).extendedNetworksRoot, LibRainDeploySnapshot.LIB_FS_ROOT);
     }
 
     /// No extended network leaves any suite as it is.
