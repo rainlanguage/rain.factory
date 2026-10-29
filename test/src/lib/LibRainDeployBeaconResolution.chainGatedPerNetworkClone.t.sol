@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {DeployDependency, DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
+import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
@@ -125,6 +125,34 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
     function testPerNetworkCloneSuiteRefusedByALaterNetworksInitIsRefused() external {
         DeploySuite memory suite = chainGatedSuite(chainGatedClones(abi.encode(uint256(42161), uint256(8453))));
         vm.expectRevert(abi.encodeWithSelector(MockChainGatedCloneableWrongChain.selector, 42161, 8453));
+        this.externalDeriveDeployment(suite);
+    }
+
+    function baseOnlyClones() internal pure returns (CloneNetworks memory) {
+        CloneNetworks memory clones = chainGatedClones("");
+        clones.networks = new ChainDeploy[](1);
+        clones.networks[0] = ChainDeploy({chainId: 8453, data: abi.encode(uint256(8453)), deployedAddress: address(0)});
+        return clones;
+    }
+
+    function testDerivationSkipsALeadingNetworkTheSuiteRecordsNoCloneOn() external {
+        CloneNetworks memory clones = baseOnlyClones();
+        DeploySuite memory suite = chainGatedSuite(clones);
+        address baseClone = LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 0));
+
+        DerivedDeploy memory derived = this.externalDeriveDeployment(suite);
+
+        assertEq(derived.deployedAddresses.length, 2);
+        assertEq(derived.deployedAddresses[0], address(0));
+        assertEq(derived.deployedAddresses[1], baseClone);
+        assertEq(derived.bytecodeHash, keccak256(suite.storedRuntimeCode));
+    }
+
+    function testDerivationRecordingNoCloneOnAnyOfItsNetworksIsRefused() external {
+        DeploySuite memory suite = chainGatedSuite(baseOnlyClones());
+        suite.networks = new string[](1);
+        suite.networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        vm.expectRevert(abi.encodeWithSelector(NoDerivedDeployment.selector, suite.suite));
         this.externalDeriveDeployment(suite);
     }
 }
