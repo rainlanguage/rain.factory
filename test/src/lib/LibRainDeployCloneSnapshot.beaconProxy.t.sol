@@ -30,14 +30,22 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
-import {perNetworkCloneChainIds, perNetworkCloneLayers} from "../../abstract/PerNetworkCloneDeploys.sol";
+import {exampleCloneImplementation} from "../../abstract/ExampleCloneDeploys.sol";
+import {
+    PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
+    PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
+    perNetworkClone,
+    perNetworkCloneChainIds,
+    perNetworkCloneLayers
+} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 
 /// @title LibRainDeployCloneSnapshotBeaconProxyTest
 /// @notice The beacon proxy record marker: what the writer emits, how `recordedMechanism` reads it,
-/// and the released lib entries it produces.
+/// and the released lib entries it produces; and the chain id each per-network address is written under.
 contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase {
     function declaration() internal view override returns (DeployDeclaration memory) {
         return perNetworkCloneLayers();
@@ -346,5 +354,105 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertTrue(vm.contains(entry, "mechanismData: BeaconProxyRecord_0_0_2_MECHANISM_DATA,\n"));
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.removeDir(string.concat(ROOT, "/0_0_2"), true);
+    }
+
+    /// @param chainIds The payload's networks.
+    /// @param networks The suite's `networks`.
+    /// @return A per-network clone suite.
+    function perNetworkCloneSuite(uint256[] memory chainIds, string[] memory networks)
+        internal
+        view
+        returns (DeploySuite memory)
+    {
+        DeploySuite memory suite =
+        LibRainDeployCloneMechanism.cloneCandidate(perNetworkClone("per-network-clone", bytes32(uint256(4))), chainIds)
+        .snapshot;
+        suite.networks = networks;
+        return suite;
+    }
+
+    /// @param path The record file.
+    /// @param record Its contents.
+    /// @param name A `bytes` constant it declares.
+    /// @return The constant's value.
+    function recordedBytes(string memory path, string memory record, string memory name)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, record);
+        string memory prefix = string.concat("bytes constant ", name, " =");
+        for (uint256 i = 0; i < lines.length; i++) {
+            if (vm.indexOf(lines[i], prefix) == 0) {
+                (bool readable, string memory value) =
+                    LibRainDeploySnapshot.declarationValue(vm, lines, i, "    hex\"");
+                assertTrue(readable, name);
+                return vm.parseBytes(vm.replace(vm.replace(value, "hex\"", "0x"), "\";", ""));
+            }
+        }
+        revert(string.concat(name, " undeclared"));
+    }
+
+    /// Writes `suite`'s record under `ROOT/<tag>` and checks each payload network's address and the runtime code.
+    /// @param tag The record's tag directory.
+    /// @param chainIds The payload's networks, in payload order.
+    /// @param suite The suite.
+    function checkPerNetworkRecord(string memory tag, uint256[] memory chainIds, DeploySuite memory suite) internal {
+        string memory path = LibRainDeployCloneSnapshot.writeSuiteSnapshot(
+            declaration(),
+            vm,
+            SnapshotFile(ROOT, tag, "PerNetworkCloneRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+            suite
+        );
+        string memory record = vm.readFile(path);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(string.concat(ROOT, "/", tag), true);
+        (uint256[] memory recordedChainIds, address[] memory addresses) =
+            LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, record);
+        assertEq(recordedChainIds, chainIds);
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            assertEq(addresses[i], LibRainDeployCloneMechanism.deployedAddress(declaration(), suite, chainIds[i]));
+        }
+        assertNotEq(addresses[0], addresses[1]);
+        assertEq(
+            recordedBytes(path, record, "RUNTIME_CODE"),
+            LibRainDeployClone.cloneRuntimeCode(exampleCloneImplementation())
+        );
+    }
+
+    /// @return Polygon's chain id, then Arbitrum One's.
+    function polygonThenArbitrum() internal pure returns (uint256[] memory) {
+        uint256[] memory chainIds = new uint256[](2);
+        chainIds[0] = PER_NETWORK_CLONE_POLYGON_CHAIN_ID;
+        chainIds[1] = PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID;
+        return chainIds;
+    }
+
+    /// A payload ordered unlike the suite's networks still records each network's own address.
+    function testPerNetworkRecordPairsAddressesByChainIdNotPosition() external {
+        string[] memory networks = new string[](2);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        networks[1] = LibRainDeploy.POLYGON;
+        checkPerNetworkRecord("0_0_3", polygonThenArbitrum(), perNetworkCloneSuite(polygonThenArbitrum(), networks));
+    }
+
+    /// A first suite network the payload lacks deploys nothing, so the code is read from a network that deployed.
+    function testPerNetworkRecordWhoseFirstNetworkIsUnrecordedReadsCodeFromADeployedAddress() external {
+        string[] memory networks = new string[](3);
+        networks[0] = LibRainDeploy.BASE;
+        networks[1] = LibRainDeploy.ARBITRUM_ONE;
+        networks[2] = LibRainDeploy.POLYGON;
+        checkPerNetworkRecord(
+            "0_0_4", perNetworkCloneChainIds(), perNetworkCloneSuite(perNetworkCloneChainIds(), networks)
+        );
+    }
+
+    /// A payload network the suite does not deploy to records the address derived for it.
+    function testPerNetworkRecordDerivesTheAddressOfAPayloadNetworkTheSuiteDoesNotDeployTo() external {
+        string[] memory networks = new string[](1);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        checkPerNetworkRecord(
+            "0_0_5", perNetworkCloneChainIds(), perNetworkCloneSuite(perNetworkCloneChainIds(), networks)
+        );
     }
 }
