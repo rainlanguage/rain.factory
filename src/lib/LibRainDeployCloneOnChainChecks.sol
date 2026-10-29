@@ -108,7 +108,7 @@ library LibRainDeployCloneOnChainChecks {
         return answered && answer.length != 0 && keccak256(answer) != keccak256(abi.encode(expected));
     }
 
-    /// `suite` deployed locally under `chainId` in a reverted snapshot: `beacon`'s code hash and its raw `owner()` and
+    /// `suite` deployed locally under `chainId` in a reverted snapshot: `beacon`'s raw `owner()` and
     /// `implementation()` answers.
     function probeBeacon(DeployDeclaration memory d, DeploySuite memory suite, address beacon, uint256 chainId)
         internal
