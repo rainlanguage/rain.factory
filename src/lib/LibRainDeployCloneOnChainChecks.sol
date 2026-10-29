@@ -13,7 +13,7 @@ import {
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
+import {ChainBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {
     BEACON_PROXY_MECHANISM,
     BEACON_PROXY_PER_NETWORK_MECHANISM,
@@ -106,15 +106,6 @@ library LibRainDeployCloneOnChainChecks {
         return LibRainDeployDeclaration.mechanismOf(d, suite);
     }
 
-    function implementationAt(DeployDeclaration memory d, DeployBeacon memory beacon, uint256 state, uint256 chainId)
-        internal
-        view
-        returns (address)
-    {
-        DeploySuite memory implementation = released(d, LibRainDeployBeacon.stateAt(beacon, state).implementation);
-        return handlerOf(d, implementation).deployedAddress(d, implementation, chainId);
-    }
-
     function seatsOther(bool answered, bytes memory answer, address expected) internal pure returns (bool) {
         return answered && answer.length != 0 && keccak256(answer) != keccak256(abi.encode(expected));
     }
@@ -145,43 +136,6 @@ library LibRainDeployCloneOnChainChecks {
             revert BeaconSnapshotRevertFailed(suite.suite, snapshotId);
         }
         return probe;
-    }
-
-    /// The beacon at `beaconIndex`, with `beacon` and `beaconCodeHash` resolved from its `beaconSuite` deployed
-    /// locally under `chainId`, refusing a seated owner or implementation other than its initial state's.
-    function resolveBeacon(
-        DeployDeclaration memory d,
-        DeployBeacon memory declaration,
-        uint256 chainId,
-        uint256 beaconIndex
-    ) internal returns (DeployBeacon memory) {
-        DeployBeacon memory beacon = DeployBeacon({
-            beaconSuite: declaration.beaconSuite,
-            beacon: declaration.beacon,
-            beaconCodeHash: declaration.beaconCodeHash,
-            initial: declaration.initial,
-            transitions: declaration.transitions
-        });
-        if (bytes(beacon.beaconSuite).length != 0) {
-            if (beacon.beacon != address(0) || beacon.beaconCodeHash != bytes32(0)) {
-                revert BeaconNamedTwice(chainId, beaconIndex);
-            }
-            DeploySuite memory suite = released(d, beacon.beaconSuite);
-            beacon.beacon = handlerOf(d, suite).deployedAddress(d, suite, chainId);
-            BeaconProbe memory probe = probeBeacon(d, suite, beacon.beacon, chainId);
-            beacon.beaconCodeHash = probe.codeHash;
-            if (seatsOther(probe.ownerAnswered, probe.owner, beacon.initial.owner)) {
-                revert BeaconSeatedOwner(chainId, beaconIndex, probe.owner);
-            }
-            if (seatsOther(probe.implementationAnswered, probe.implementation, implementationAt(d, beacon, 0, chainId)))
-            {
-                revert BeaconSeatedImplementation(chainId, beaconIndex, probe.implementation);
-            }
-        } else if (beacon.beacon == address(0) || beacon.beaconCodeHash == bytes32(0)) {
-            revert BeaconUnnamed(chainId, beaconIndex);
-        }
-        LibRainDeployBeacon.checkTransitionMigrations(chainId, beacon);
-        return beacon;
     }
 
     /// Beacon proxy suites only: refuses `BeaconProxyBeaconUndeclared` when no beacon `checkNetworks` resolved on
