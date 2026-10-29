@@ -2,7 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployCandidate,
+    DeployDeclaration,
+    DeploySuite
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
 import {ChainBeacon, DeployBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
@@ -16,8 +20,8 @@ import {MockDeployable} from "./MockDeployable.sol";
 string constant BEACON_OWNER_DEPLOY_RELEASE = "deployable@0_0_1";
 
 /// @title BeaconOwnerDeploy
-/// @notice A broadcast script releasing one Zoltu suite on every supported network, beside the beacons a test
-/// declares on it.
+/// @notice A broadcast script releasing and proposing one Zoltu suite on every supported network, beside the beacons
+/// a test declares on it.
 contract BeaconOwnerDeploy is ExternalDeployBroadcast {
     using LibBeaconDeclarations for ChainBeacon[];
 
@@ -37,6 +41,17 @@ contract BeaconOwnerDeploy is ExternalDeployBroadcast {
             "test/concrete/MockDeployable.sol:MockDeployable"
         );
         LibRainDeployDeclaration.addReleased(d, released);
+        DeployCandidate[] memory candidates = new DeployCandidate[](1);
+        candidates[0] = DeployCandidate({
+            snapshot: LibBeaconTest.zoltuSuite(
+                "deployable",
+                type(MockDeployable).creationCode,
+                type(MockDeployable).runtimeCode,
+                "test/concrete/MockDeployable.sol:MockDeployable"
+            ),
+            unanchorableReason: ""
+        });
+        LibRainDeployDeclaration.addCandidates(d, candidates);
         return d;
     }
 
