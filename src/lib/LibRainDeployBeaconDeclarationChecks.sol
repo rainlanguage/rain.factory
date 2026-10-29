@@ -105,11 +105,9 @@ library LibRainDeployBeaconDeclarationChecks {
         if (LibRainDeployCloneOnChainChecks.seatsOther(probe.ownerAnswered, probe.owner, beacon.initial.owner)) {
             revert BeaconSeatedOwner(chainId, beaconIndex, probe.owner);
         }
-        if (
-            LibRainDeployCloneOnChainChecks.seatsOther(
+        if (LibRainDeployCloneOnChainChecks.seatsOther(
                 probe.implementationAnswered, probe.implementation, initialImplementation
-            )
-        ) {
+            )) {
             revert BeaconSeatedImplementation(chainId, beaconIndex, probe.implementation);
         }
     }
