@@ -58,15 +58,13 @@ abstract contract RainDeployVerifyChainBeaconPerNetworkCloneTestBase is PerNetwo
     function externalResolveBeacon(uint256 chainId) external returns (address) {
         DeployDeclaration memory d = declaration();
         return LibRainDeployBeaconResolution.resolveBeacon(
-            d,
-            beacons()[0].beacon,
-            chainId,
-            0,
-            new DeploySuite[](d.released.length),
-            new DerivedDeploy[](d.released.length)
-        )
-        .beacon
-        .beacon;
+                d,
+                beacons()[0].beacon,
+                chainId,
+                0,
+                new DeploySuite[](d.released.length),
+                new DerivedDeploy[](d.released.length)
+            ).beacon.beacon;
     }
 
     function testBeaconNamedBySuiteIsAtItsNetworksClone() external {
