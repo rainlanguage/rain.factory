@@ -25,6 +25,7 @@ library LibBeaconProxyTest {
     /// @param data The one init data for every network, dropped when the init data is per network.
     /// @param initDataPerNetwork Whether the init data is per network, as `perNetworkCloneInitData`.
     /// @param salt The salt.
+    /// @param runtimeCode The proxy's declared runtime code.
     /// @return The declaration.
     function declared(
         string memory suite,
