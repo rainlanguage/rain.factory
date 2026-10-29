@@ -16,6 +16,7 @@ import {
     CLONE_PER_NETWORK_MECHANISM,
     LibRainDeployCloneMechanism
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployCloneSnapshot} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -210,6 +211,24 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
                 vm, 0, perNetworkRecordPaths()[0], perNetworkTemplate(), declaration()
             ),
             EXPECTED_PER_NETWORK_ENTRY
+        );
+    }
+
+    /// A generated lib reaches this package's source through the rain-factory version the manifest pins, as a bare
+    /// version or a table's `version`, and through this repo's lib dir when nothing pins it.
+    function testFactoryImportRootIsThePinnedRainFactoryVersion() external view {
+        assertEq(
+            LibRainDeployCloneSnapshot.factoryImportRootForToml(vm, "[dependencies]\nrain-factory = \"0.2.5\"\n"),
+            "rain-factory-0.2.5/src/"
+        );
+        assertEq(
+            LibRainDeployCloneSnapshot.factoryImportRootForToml(
+                vm, "[dependencies]\nrain-factory = { version = \"0.2.6\", git = \"https://example.com\" }\n"
+            ),
+            "rain-factory-0.2.6/src/"
+        );
+        assertEq(
+            LibRainDeployCloneSnapshot.factoryImportRootForToml(vm, "[dependencies]\nforge-std = \"1.17.0\"\n"), "../"
         );
     }
 
