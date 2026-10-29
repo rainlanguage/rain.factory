@@ -58,13 +58,11 @@ error BeaconSnapshotRevertFailed(string suite, uint256 snapshotId);
 /// @param state The state index, as `LibRainDeployBeacon.stateAt` takes it.
 error BeaconOwnedByDeployKey(uint256 chainId, uint256 beaconIndex, uint256 state);
 
-/// @param codeHash The beacon's code hash with its suite deployed locally.
 /// @param ownerAnswered Whether `owner()` returned.
 /// @param owner The `owner()` answer, raw.
 /// @param implementationAnswered Whether `implementation()` returned.
 /// @param implementation The `implementation()` answer, raw.
 struct BeaconProbe {
-    bytes32 codeHash;
     bool ownerAnswered;
     bytes owner;
     bool implementationAnswered;
@@ -126,7 +124,6 @@ library LibRainDeployCloneOnChainChecks {
         (bool implementationAnswered, bytes memory implementation) =
             beacon.staticcall(abi.encodeCall(IBeacon.implementation, ()));
         BeaconProbe memory probe = BeaconProbe({
-            codeHash: beacon.codehash,
             ownerAnswered: ownerAnswered,
             owner: owner,
             implementationAnswered: implementationAnswered,
