@@ -10,7 +10,7 @@ import {
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {CLONE_ARTIFACT_PATH, CloneDeploy, LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../concrete/MockCloneFactory.sol";

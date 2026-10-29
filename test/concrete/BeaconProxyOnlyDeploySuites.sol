@@ -9,7 +9,7 @@ import {BeaconProxyDeploy} from "../../src/lib/LibRainDeployBeaconProxy.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeploySuites} from "../abstract/ExternalDeploySuites.sol";
 import {LibBeaconProxyTest} from "../lib/LibBeaconProxyTest.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 
 /// @title BeaconProxyOnlyDeploySuites
 /// @notice A declaration whose only suite is one beacon proxy candidate: no release, no clone.

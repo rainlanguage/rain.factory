@@ -32,7 +32,7 @@ import {
     perNetworkCloneReleaseAddresses,
     perNetworkCloneReleased
 } from "../../abstract/PerNetworkCloneDeploys.sol";
-import {LibCloneCandidates} from "../../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../../src/lib/LibCloneCandidates.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {LibExtendedNetworksFixture} from "../../lib/LibExtendedNetworksFixture.sol";
 

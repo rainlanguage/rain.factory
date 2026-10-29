@@ -15,7 +15,7 @@ import {exampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
 import {BeaconProxyOnlyDeploySuites} from "../../concrete/BeaconProxyOnlyDeploySuites.sol";
 import {ExampleCloneDeploy} from "../../concrete/ExampleCloneDeploy.sol";
 import {MixedCloneBeaconProxyDeploySuites} from "../../concrete/MixedCloneBeaconProxyDeploySuites.sol";
-import {LibCloneCandidates} from "../../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../../src/lib/LibCloneCandidates.sol";
 
 /// @title LibRainDeployCloneMechanismCandidatesTest
 /// @notice A declaration's clone and beacon proxy candidates, as the suite readers see them: the clone and beacon

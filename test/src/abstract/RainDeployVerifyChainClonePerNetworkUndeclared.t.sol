@@ -10,7 +10,7 @@ import {
 import {RainDeployVerifyChain} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyChain.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
-import {LibCloneCandidates} from "../../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../../src/lib/LibCloneCandidates.sol";
 import {
     NoPerNetworkCloneAdmin,
     PerNetworkCloneDeploys,
