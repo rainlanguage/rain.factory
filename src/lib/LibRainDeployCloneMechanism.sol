@@ -12,7 +12,7 @@ import {
     DeployMechanismHandler,
     DeploySuite
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ChainBeacon} from "./LibRainDeployBeacon.sol";
@@ -178,7 +178,8 @@ library LibRainDeployCloneMechanism {
                     : id == BEACON_PROXY_MECHANISM
                         ? LibRainDeployCloneSnapshot.releasedBeaconProxyImport
                         : LibRainDeployCloneSnapshot.releasedBeaconProxyPerNetworkImport,
-            legacyRecordId: noLegacyRecord
+            legacyRecordId: noLegacyRecord,
+            checkNetworks: noNetworksCheck
         });
     }
 
@@ -257,6 +258,14 @@ library LibRainDeployCloneMechanism {
 
     function noLegacyRecord(DeployDeclaration memory, Vm, string memory) internal pure returns (bytes32) {
         return 0;
+    }
+
+    function noNetworksCheck(DeployDeclaration memory, SupportedNetwork[] memory)
+        internal
+        pure
+        returns (uint256[] memory)
+    {
+        return new uint256[](0);
     }
 
     /// The extended networks `config` declares for `suite`, or none.
