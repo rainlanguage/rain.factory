@@ -34,6 +34,7 @@ import {
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
+import {LibRainDeployBeaconResolution, ResolvedBeacon} from "./LibRainDeployBeaconResolution.sol";
 
 /// The extended networks one per-network release declares beyond its record.
 struct ExtendedNetworksDeclaration {
@@ -53,6 +54,8 @@ struct CloneLayerConfig {
     ExtendedNetworksDeclaration[] extended;
     /// The root a generated lib reaches this package's `src/` by; `extend` derives it from `foundry.toml`.
     string factoryImportRoot;
+    /// The beacons `checkNetworks` resolved on the networks checked, for `checkNetwork`.
+    ResolvedBeacon[] resolvedBeacons;
 }
 
 /// @dev Tags an EIP-1167 clone suite's `mechanismData`: `abi.encode(CLONE_MECHANISM, abi.encode(CloneTarget))`.
@@ -139,12 +142,14 @@ library LibRainDeployCloneMechanism {
                 extended: new ExtendedNetworksDeclaration[](0),
                 factoryImportRoot: LibRainDeployCloneSnapshot.factoryImportRootForToml(
                     StdConstants.VM, StdConstants.VM.readFile("foundry.toml")
-                )
+                ),
+                resolvedBeacons: new ResolvedBeacon[](0)
             })
         );
         h.checkDeclaration = checkDeclaration;
         h.checkNetwork = LibRainDeployCloneOnChainChecks.checkNetworkBeacons;
         h.legacyRecordId = LibRainDeployCloneSnapshot.legacyRecordId;
+        h.checkNetworks = LibRainDeployBeaconResolution.checkNetworks;
         return h;
     }
 
@@ -215,6 +220,14 @@ library LibRainDeployCloneMechanism {
     function setBeacons(DeployDeclaration memory d, ChainBeacon[] memory beacons) internal pure {
         CloneLayerConfig memory config = layerConfig(d);
         config.beacons = beacons;
+        setLayerConfig(d, config);
+    }
+
+    /// @param d The declaration, extended, mutated.
+    /// @param resolved The beacons resolved on the networks checked.
+    function setResolvedBeacons(DeployDeclaration memory d, ResolvedBeacon[] memory resolved) internal pure {
+        CloneLayerConfig memory config = layerConfig(d);
+        config.resolvedBeacons = resolved;
         setLayerConfig(d, config);
     }
 
