@@ -364,7 +364,9 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         //forge-lint: disable-next-line(unsafe-cheatcode)
         vm.createDir(NO_MECHANISM_DATA_ROOT, true);
         //forge-lint: disable-next-line(unsafe-cheatcode)
-        vm.writeFile(path, string.concat("address constant DEPLOYED_ADDRESS = address(", vm.toString(address(1)), ");\n"));
+        vm.writeFile(
+            path, string.concat("address constant DEPLOYED_ADDRESS = address(", vm.toString(address(1)), ");\n")
+        );
         vm.expectRevert(abi.encodeWithSelector(FrozenSnapshotMechanismDataMissing.selector, path));
         this.externalReleasedMechanismData(path);
         //forge-lint: disable-next-line(unsafe-cheatcode)
