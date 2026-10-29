@@ -133,6 +133,18 @@ library LibRainDeployBeaconResolution {
         return resolveBeaconsOn(d, chainBeacons, LibRainDeploy.declaredNetworkConfigs(d.networks), networks);
     }
 
+    /// `resolveBeacons` on every declared network, reading `d.networks` only when a beacon is declared.
+    /// @param d The declaration, extended.
+    /// @return Each declared beacon, resolved on its network, in declaration order.
+    function resolveDeclaredBeacons(DeployDeclaration memory d) internal returns (ResolvedBeacon[] memory) {
+        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d).beacons;
+        if (chainBeacons.length == 0) {
+            return new ResolvedBeacon[](0);
+        }
+        SupportedNetwork[] memory supported = LibRainDeploy.declaredNetworkConfigs(d.networks);
+        return resolveBeaconsOn(d, chainBeacons, supported, supported);
+    }
+
     /// `resolveBeacons`'s refusals and resolution, over declarations already read.
     /// @param d The declaration, extended.
     /// @param chainBeacons The declared beacons.

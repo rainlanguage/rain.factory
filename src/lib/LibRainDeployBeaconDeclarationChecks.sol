@@ -3,7 +3,6 @@
 pragma solidity ^0.8.25;
 
 import {DeployDeclaration} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {LibRainDeployBeaconResolution} from "./LibRainDeployBeaconResolution.sol";
 
 /// @param chainId The beacon's chain id.
@@ -22,6 +21,6 @@ library LibRainDeployBeaconDeclarationChecks {
     function checkDeclaration(DeployDeclaration memory d) internal {
         // Called for its refusals.
         // slither-disable-next-line unused-return
-        LibRainDeployBeaconResolution.resolveBeacons(d, LibRainDeploy.declaredNetworkConfigs(d.networks));
+        LibRainDeployBeaconResolution.resolveDeclaredBeacons(d);
     }
 }
