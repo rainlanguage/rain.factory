@@ -100,7 +100,7 @@ library LibRainDeployExtendedNetworks {
                 LibCodeGen.addressConstantString(
                     vm,
                     string.concat(
-                        "/// @dev The deterministic deploy address of the EIP-1167 clone on chain id\n/// ",
+                        "/// @dev The deterministic deploy address on chain id\n/// ",
                         chainId,
                         ", a network the release is declared on beyond its record."
                     ),
@@ -109,7 +109,7 @@ library LibRainDeployExtendedNetworks {
                 ),
                 LibCodeGen.bytesConstantString(
                     vm,
-                    string.concat("/// @dev The init data the clone is broadcast with on chain id ", chainId, "."),
+                    string.concat("/// @dev The init data broadcast on chain id ", chainId, "."),
                     string.concat("INIT_DATA_", chainId),
                     networks[i].data
                 )
