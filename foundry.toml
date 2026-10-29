@@ -28,11 +28,12 @@ line_length = 120
 # Library repo: the ICloneable* interface surface plus the Lib* logic that
 # implements it. The concrete CloneFactory, its deploy-pin snapshots and deploy
 # scripts live in rain.factory.deploy (rainlanguage/rain.factory#46). The
-# published src/ imports nothing external, so every dependency here is
-# test-harness or build-script only: forge-std, OZ Clones as the independent
-# equivalence oracle for the EIP1167 construction, OZ BeaconProxy whose
-# creation code `script/Build.sol` pins into `src/generated/`, and
-# rain-sol-codegen, which writes that file.
+# published src/ imports one external interface: rain-deploy's
+# `IConfigRegistryV5`, which registry beacon proxies resolve through, and
+# rain-metadata, which it imports. The rest is test-harness or build-script
+# only: forge-std, OZ Clones as the independent equivalence oracle for the
+# EIP1167 construction, OZ BeaconProxy whose creation code `script/Build.sol`
+# pins into `src/generated/`, and rain-sol-codegen, which writes that file.
 [dependencies]
 forge-std = "1.17.0"
 # Frozen, with the [profile.default] compiler settings: changing either changes
@@ -40,6 +41,8 @@ forge-std = "1.17.0"
 # derivation, which needs a new interface version.
 "@openzeppelin-contracts" = "5.6.1"
 rain-sol-codegen = "0.1.39"
+rain-deploy = "0.1.27"
+rain-metadata = "0.1.43"
 
 [soldeer]
 recursive_deps = false

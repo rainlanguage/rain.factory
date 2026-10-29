@@ -2,24 +2,26 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {IRegistryBeaconSourceV1} from "../../src/lib/LibICloneableFactoryV6.sol";
-
 /// Thrown for a name nothing is bound to, as the config registry does.
 error TestNameNotRegistered(address authority, bytes32 name);
 
-/// A config registry stand-in: `getV3` answers whatever value a test binds.
-contract TestRegistryBeaconSource is IRegistryBeaconSourceV1 {
+/// A config registry stand-in: `getV5` answers whatever value and type a test
+/// binds. Only `getV5` is implemented, so it does not inherit
+/// `IConfigRegistryV5`; `testStandInAnswersGetV5` holds its selector to it.
+contract TestRegistryBeaconSource {
     mapping(address authority => mapping(bytes32 name => bytes value)) internal sValues;
+    mapping(address authority => mapping(bytes32 name => bytes32 valueTypeHash)) internal sValueTypeHashes;
 
-    function bind(address authority, bytes32 name, bytes memory value) external {
+    function bind(address authority, bytes32 name, string memory valueType, bytes memory value) external {
         sValues[authority][name] = value;
+        sValueTypeHashes[authority][name] = keccak256(bytes(valueType));
     }
 
-    function getV3(address authority, bytes32 name) external view returns (bytes memory, uint256) {
+    function getV5(address authority, bytes32 name) external view returns (bytes memory, uint256, bytes32) {
         bytes memory value = sValues[authority][name];
         if (value.length == 0) {
             revert TestNameNotRegistered(authority, name);
         }
-        return (value, block.timestamp);
+        return (value, block.timestamp, sValueTypeHashes[authority][name]);
     }
 }
