@@ -5,6 +5,7 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
@@ -26,6 +27,10 @@ import {
 /// @param suite The suite whose snapshot was being written.
 /// @param snapshotId The state snapshot that could not be reverted.
 error SnapshotStateRevertFailed(string suite, uint256 snapshotId);
+
+/// Thrown when a clone snapshot's local deploy left no nonzero address to read its code from.
+/// @param suite The suite whose snapshot was being written.
+error SnapshotNothingDeployed(string suite);
 
 /// Thrown when a file in the frozen record carries the `BEACON_PROXY` marker more than once.
 /// @param path The record file.
@@ -58,12 +63,13 @@ library LibRainDeployCloneSnapshot {
     string constant BEACON_PROXY_MARKER = "\n/// @dev Marks a beacon proxy record: its factory call's `implementation` is the\n"
         "/// beacon.\nbool constant BEACON_PROXY = true;\n";
 
-    /// The record body of a clone or beacon proxy suite deployed locally at `deployed`.
+    /// The record body of a clone or beacon proxy suite.
     /// @param vm The Vm instance for string operations.
-    /// @param deployed Where it was deployed, in its address order.
+    /// @param addresses For a per-network suite, its address on each payload network in payload order.
+    /// @param runtime A nonzero address it was deployed at locally: its `DEPLOYED_ADDRESS` when not per network.
     /// @param suite The suite.
     /// @return The record's constants.
-    function cloneSnapshotConstants(Vm vm, address[] memory deployed, DeploySuite memory suite)
+    function cloneSnapshotConstants(Vm vm, address[] memory addresses, address runtime, DeploySuite memory suite)
         internal
         view
         returns (string memory)
@@ -72,7 +78,7 @@ library LibRainDeployCloneSnapshot {
         string memory addressConstants;
         string memory mechanismDataComment;
         if (LibRainDeployCloneMechanism.isPerNetwork(suite)) {
-            addressConstants = perNetworkAddressConstants(vm, deployed, suite);
+            addressConstants = perNetworkAddressConstants(vm, addresses, suite);
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
                 "/// tagged `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`."
@@ -87,7 +93,7 @@ library LibRainDeployCloneSnapshot {
                     : "/// @dev The deterministic deploy address of the EIP-1167 clone, through its\n"
                     "/// factory's open salt.",
                 "DEPLOYED_ADDRESS",
-                deployed[0]
+                runtime
             );
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
@@ -102,7 +108,7 @@ library LibRainDeployCloneSnapshot {
                 vm, "/// @dev The creation bytecode of the contract.", "CREATION_CODE", suite.creationCode
             ),
             LibCodeGen.bytesConstantString(
-                vm, "/// @dev The runtime bytecode of the contract.", "RUNTIME_CODE", deployed[0].code
+                vm, "/// @dev The runtime bytecode of the contract.", "RUNTIME_CODE", runtime.code
             ),
             LibCodeGen.bytesConstantString(
                 vm,
@@ -118,10 +124,10 @@ library LibRainDeployCloneSnapshot {
     }
 
     /// @param vm The Vm instance for string operations.
-    /// @param deployed Where a per-network suite was deployed, in its address order.
+    /// @param addresses A per-network suite's address on each payload network, in payload order.
     /// @param suite The suite.
     /// @return Its `DEPLOYED_ADDRESS_<chainId>` constants.
-    function perNetworkAddressConstants(Vm vm, address[] memory deployed, DeploySuite memory suite)
+    function perNetworkAddressConstants(Vm vm, address[] memory addresses, DeploySuite memory suite)
         internal
         pure
         returns (string memory)
@@ -145,21 +151,22 @@ library LibRainDeployCloneSnapshot {
                             : ", through its factory's open salt with that network's init data."
                     ),
                     string.concat("DEPLOYED_ADDRESS_", chainId),
-                    deployed[i]
+                    addresses[i]
                 )
             );
         }
         return addressConstants;
     }
 
-    /// Writes the record of a clone or beacon proxy suite deployed locally at `deployed` into `snapshotDir`.
+    /// Writes the record of a clone or beacon proxy suite into `snapshotDir`.
     /// @param vm The Vm instance for file operations.
     /// @param snapshotDir The checked directory to write into.
     /// @param contractName The contract the snapshot describes.
     /// @param spdxLicenseIdentifier The SPDX licence identifier the written snapshot declares.
     /// @param copyrightText The copyright text the written snapshot declares.
     /// @param suite The suite.
-    /// @param deployed Where it was deployed, in its address order.
+    /// @param addresses As `cloneSnapshotConstants`.
+    /// @param runtime As `cloneSnapshotConstants`.
     function writeCloneSnapshotFile(
         Vm vm,
         string memory snapshotDir,
@@ -167,17 +174,58 @@ library LibRainDeployCloneSnapshot {
         string memory spdxLicenseIdentifier,
         string memory copyrightText,
         DeploySuite memory suite,
-        address[] memory deployed
+        address[] memory addresses,
+        address runtime
     ) internal {
         LibFs.buildFileForContract(
             vm,
-            deployed[0],
+            runtime,
             snapshotDir,
             contractName,
             spdxLicenseIdentifier,
             copyrightText,
-            cloneSnapshotConstants(vm, deployed, suite)
+            cloneSnapshotConstants(vm, addresses, runtime, suite)
         );
+    }
+
+    /// @param suite The suite deployed.
+    /// @param deployed `deployLocally`'s addresses, one per `suite.networks` entry.
+    /// @return The first nonzero one.
+    function runtimeAddress(DeploySuite memory suite, address[] memory deployed) internal pure returns (address) {
+        for (uint256 i = 0; i < deployed.length; i++) {
+            if (deployed[i] != address(0)) {
+                return deployed[i];
+            }
+        }
+        revert SnapshotNothingDeployed(suite.suite);
+    }
+
+    /// @param d The declaration.
+    /// @param suite A per-network suite.
+    /// @param deployed `deployLocally`'s addresses, one per `suite.networks` entry.
+    /// @return Its address on each payload network in payload order: the one deployed for that chain id, else the
+    /// one its factory call derives there.
+    function payloadAddresses(DeployDeclaration memory d, DeploySuite memory suite, address[] memory deployed)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
+        CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
+        address[] memory addresses = new address[](clones.networks.length);
+        for (uint256 i = 0; i < clones.networks.length; i++) {
+            uint256 chainId = clones.networks[i].chainId;
+            for (uint256 j = 0; j < chainIds.length; j++) {
+                if (chainIds[j] == chainId && deployed[j] != address(0)) {
+                    addresses[i] = deployed[j];
+                    break;
+                }
+            }
+            if (addresses[i] == address(0)) {
+                addresses[i] = LibRainDeployCloneMechanism.deployedAddress(d, suite, chainId);
+            }
+        }
+        return addresses;
     }
 
     /// The tag a frozen record's markers say its release carries; zero for a record with no `MECHANISM_DATA`.
@@ -311,7 +359,8 @@ library LibRainDeployCloneSnapshot {
             file.spdxLicenseIdentifier,
             file.copyrightText,
             suite,
-            deployed
+            LibRainDeployCloneMechanism.isPerNetwork(suite) ? payloadAddresses(d, suite, deployed) : deployed,
+            runtimeAddress(suite, deployed)
         );
         if (!vm.revertToState(snapshotId)) {
             revert SnapshotStateRevertFailed(suite.suite, snapshotId);
