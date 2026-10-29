@@ -167,15 +167,12 @@ library LibRainDeployBeaconResolution {
                 onNetworks++;
             }
         }
-        DeploySuite[] memory released = new DeploySuite[](d.released.length);
-        DerivedDeploy[] memory derived = new DerivedDeploy[](d.released.length);
         ResolvedBeacon[] memory resolved = new ResolvedBeacon[](onNetworks);
         uint256 resolvedIndex = 0;
         for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
             uint256 chainId = chainBeacons[beaconIndex].chainId;
             if (LibRainDeploy.hasChainId(networks, chainId)) {
-                ResolvedBeacon memory beacon =
-                    resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex, released, derived);
+                ResolvedBeacon memory beacon = resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
                 for (uint256 earlier = 0; earlier < resolvedIndex; earlier++) {
                     if (resolved[earlier].chainId == chainId && resolved[earlier].beacon.beacon == beacon.beacon.beacon)
                     {
@@ -195,16 +192,12 @@ library LibRainDeployBeaconResolution {
     /// @param declaration The beacon, left unwritten so one declaration can be resolved on several networks.
     /// @param chainId The beacon's network.
     /// @param beaconIndex The beacon's index in the declared beacons, for the refusal.
-    /// @param released Each released suite once resolved, as `resolveReleased` takes it.
-    /// @param derived Each released suite's derivation, as `resolveReleased` takes it.
     /// @return The beacon, resolved on `chainId`.
     function resolveBeacon(
         DeployDeclaration memory d,
         DeployBeacon memory declaration,
         uint256 chainId,
-        uint256 beaconIndex,
-        DeploySuite[] memory released,
-        DerivedDeploy[] memory derived
+        uint256 beaconIndex
     ) internal returns (ResolvedBeacon memory) {
         DeployBeacon memory beacon = DeployBeacon({
             beaconSuite: declaration.beaconSuite,
@@ -220,19 +213,17 @@ library LibRainDeployBeaconResolution {
             if (beacon.beacon != address(0) || beacon.beaconCodeHash != bytes32(0)) {
                 revert BeaconNamedTwice(chainId, beaconIndex);
             }
-            uint256 releasedIndex = resolveReleased(d, beacon.beaconSuite, released, derived);
-            resolved.suite = released[releasedIndex];
-            resolved.derived = derived[releasedIndex];
-            beacon.beacon = LibRainDeployDeclaration.mechanismOf(d, released[releasedIndex])
-                .deployedAddress(d, released[releasedIndex], chainId);
-            beacon.beaconCodeHash = derived[releasedIndex].bytecodeHash;
+            (resolved.suite, resolved.derived) = resolveReleased(d, beacon.beaconSuite);
+            beacon.beacon =
+                LibRainDeployDeclaration.mechanismOf(d, resolved.suite).deployedAddress(d, resolved.suite, chainId);
+            beacon.beaconCodeHash = resolved.derived.bytecodeHash;
         } else if (beacon.beacon == address(0) || beacon.beaconCodeHash == bytes32(0)) {
             revert BeaconUnnamed(chainId, beaconIndex);
         }
         LibRainDeployBeacon.checkTransitionMigrations(chainId, beacon);
         resolved.chainId = chainId;
         resolved.beacon = beacon;
-        resolveImplementations(d, resolved, released, derived);
+        resolveImplementations(d, resolved);
         if (bytes(beacon.beaconSuite).length != 0) {
             checkSeatedState(d, resolved, beaconIndex);
         }
@@ -242,51 +233,35 @@ library LibRainDeployBeaconResolution {
     /// Resolves each state's implementation suite, address and derivation on `resolved.chainId`.
     /// @param d The declaration, extended.
     /// @param resolved The beacon, its `chainId` and `beacon` set, its implementations written.
-    /// @param released Each released suite once resolved, as `resolveReleased` takes it.
-    /// @param derived Each released suite's derivation, as `resolveReleased` takes it.
-    function resolveImplementations(
-        DeployDeclaration memory d,
-        ResolvedBeacon memory resolved,
-        DeploySuite[] memory released,
-        DerivedDeploy[] memory derived
-    ) internal {
+    function resolveImplementations(DeployDeclaration memory d, ResolvedBeacon memory resolved) internal {
         uint256 states = resolved.beacon.transitions.length + 1;
         resolved.implementations = new DeploySuite[](states);
         resolved.implementationAddresses = new address[](states);
         resolved.implementationDerived = new DerivedDeploy[](states);
         for (uint256 state = 0; state < states; state++) {
-            uint256 releasedIndex = resolveReleased(
-                d, LibRainDeployBeacon.stateAt(resolved.beacon, state).implementation, released, derived
-            );
-            resolved.implementations[state] = released[releasedIndex];
-            resolved.implementationAddresses[state] = LibRainDeployDeclaration.mechanismOf(d, released[releasedIndex])
-                .deployedAddress(d, released[releasedIndex], resolved.chainId);
-            resolved.implementationDerived[state] = derived[releasedIndex];
+            (DeploySuite memory suite, DerivedDeploy memory derived) =
+                resolveReleased(d, LibRainDeployBeacon.stateAt(resolved.beacon, state).implementation);
+            resolved.implementations[state] = suite;
+            resolved.implementationAddresses[state] =
+                LibRainDeployDeclaration.mechanismOf(d, suite).deployedAddress(d, suite, resolved.chainId);
+            resolved.implementationDerived[state] = derived;
         }
     }
 
-    /// Refuses `BeaconSuiteNotReleased` when `key` is not in `d.released`; derives a released suite the first time it
-    /// is resolved and reuses that derivation after.
+    /// Refuses `BeaconSuiteNotReleased` when `key` is not in `d.released`; resolves and derives the released suite.
     /// @param d The declaration, extended.
     /// @param key The key a beacon names.
-    /// @param released Each released suite, filled when first resolved by its form on every declared network.
-    /// @param derived Each released suite's derivation, filled when first resolved.
-    /// @return The index of `key` in `d.released`.
-    function resolveReleased(
-        DeployDeclaration memory d,
-        string memory key,
-        DeploySuite[] memory released,
-        DerivedDeploy[] memory derived
-    ) internal returns (uint256) {
-        uint256 releasedIndex = LibRainDeployDeclaration.suiteIndex(d.released, key);
-        if (releasedIndex == d.released.length) {
+    /// @return The released suite, resolved by its form on every declared network.
+    /// @return The suite's derivation.
+    function resolveReleased(DeployDeclaration memory d, string memory key)
+        internal
+        returns (DeploySuite memory, DerivedDeploy memory)
+    {
+        if (LibRainDeployDeclaration.suiteIndex(d.released, key) == d.released.length) {
             revert BeaconSuiteNotReleased(key);
         }
-        if (bytes(derived[releasedIndex].suite).length == 0) {
-            released[releasedIndex] = LibRainDeployCloneOnChainChecks.released(d, key);
-            derived[releasedIndex] = deriveDeployment(d, released[releasedIndex]);
-        }
-        return releasedIndex;
+        DeploySuite memory suite = LibRainDeployCloneOnChainChecks.released(d, key);
+        return (suite, deriveDeployment(d, suite));
     }
 
     /// Derives a suite through its own mechanism under a reverted snapshot, as core `deriveDeployment` does.
