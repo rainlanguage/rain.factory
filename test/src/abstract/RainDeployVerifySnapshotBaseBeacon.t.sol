@@ -2,10 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    BeaconDeclaredTwice,
-    BeaconOnUncheckedNetwork
-} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
+import {BeaconDeclaredTwice, BeaconOnUncheckedNetwork} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
 import {
     BeaconNamedTwice,
     BeaconSeatedOwner,

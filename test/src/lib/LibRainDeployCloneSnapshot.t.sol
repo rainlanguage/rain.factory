@@ -12,7 +12,10 @@ import {
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
-import {CLONE_PER_NETWORK_MECHANISM, LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {
+    CLONE_PER_NETWORK_MECHANISM,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -154,8 +157,8 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         "            storedRuntimeCode: PerNetworkClone_0_0_1_RUNTIME_CODE,\n"
         "            artifactPath: \"rain-factory/EIP1167Clone.sol:EIP1167Clone\",\n"
         "            dependencies: abi.decode(PerNetworkClone_0_0_1_DEPENDENCIES, (DeployDependency[])),\n"
-        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n"
-        "            networks: new string[](0)\n" "        });\n";
+        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n" "            networks: new string[](0)\n"
+        "        });\n";
 
     /// The committed `per-network-clone` record's path, as `frozenSnapshotPaths` spells it.
     /// @return The one record file.
