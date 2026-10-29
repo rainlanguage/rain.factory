@@ -7,12 +7,15 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {
     DeployDeclaration,
     DeploySuite,
+    MechanismUnclaimed,
     RainDeploySuitesBase,
     SnapshotFile
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
+    FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
 } from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
@@ -453,5 +456,92 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         checkPerNetworkRecord(
             "0_0_5", perNetworkCloneChainIds(), perNetworkCloneSuite(perNetworkCloneChainIds(), networks)
         );
+    }
+
+    /// A line naming `MECHANISM_DATA` that is not the start of its declaration is refused as unreadable.
+    function testAStrayMentionOfMechanismDataIsUnreadable() external {
+        string[4] memory strays = [
+            "bytes constant MECHANISM_DATA=hex\"02\";\n",
+            " bytes constant MECHANISM_DATA = hex\"02\";\n",
+            "/// MECHANISM_DATA\n",
+            "uint256 constant NOT_MECHANISM_DATA = 1;\n"
+        ];
+        for (uint256 i = 0; i < strays.length; i++) {
+            checkRefused(
+                string.concat("stray-mechanism-data-", vm.toString(i)),
+                string.concat(MECHANISM_DATA_LINE, strays[i], everyNetworkLine(address(1))),
+                FrozenSnapshotUnreadable.selector
+            );
+        }
+    }
+
+    /// A one-address record with neither `MECHANISM_DATA` nor the marker carries no tag.
+    function testAOneAddressRecordWithoutMechanismDataHasNoTag() external {
+        checkRead("no-data-one-address", everyNetworkLine(address(1)), bytes32(0));
+    }
+
+    /// A per-network record with neither `MECHANISM_DATA` nor the marker is refused.
+    function testAPerNetworkRecordWithoutMechanismDataIsRefused() external {
+        checkRefused(
+            "no-data-per-network",
+            string.concat(perNetworkLine(137, address(2)), perNetworkLine(42161, address(3))),
+            FrozenSnapshotMechanismDataMissing.selector
+        );
+    }
+
+    /// A record's last line is read when no newline ends it.
+    function testALastLineWithoutANewlineIsRead() external {
+        checkRead(
+            "unterminated-mechanism-data",
+            string.concat(everyNetworkLine(address(1)), "bytes constant MECHANISM_DATA = hex\"01\";"),
+            CLONE_MECHANISM
+        );
+        checkRead(
+            "unterminated-marker",
+            string.concat(MECHANISM_DATA_LINE, everyNetworkLine(address(1)), "bool constant BEACON_PROXY = true;"),
+            BEACON_PROXY_MECHANISM
+        );
+    }
+
+    /// @param path The record.
+    /// @return The mechanism id the declaration reads it as.
+    function externalRecordedMechanismId(string memory path) external view returns (bytes32) {
+        return LibRainDeploySnapshot.recordedMechanismId(declaration(), vm, path);
+    }
+
+    /// A record tagged by a mechanism the declaration does not carry is not claimed as a legacy record.
+    function testARecordTaggedByAnUndeclaredMechanismIsUnclaimed() external {
+        (string memory dir, string memory path) = writeRecord(
+            "undeclared-tag",
+            string.concat(
+                "bytes constant MECHANISM_DATA = hex\"",
+                vm.replace(vm.toString(keccak256("undeclared mechanism")), "0x", ""),
+                "\";\n",
+                everyNetworkLine(address(1))
+            )
+        );
+        vm.expectRevert(abi.encodeWithSelector(MechanismUnclaimed.selector, path));
+        this.externalRecordedMechanismId(path);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(dir, true);
+    }
+
+    /// Each mechanism's released import brings in its own tag constant from this repo's mechanism source.
+    function testEachMechanismsReleasedImportNamesItsOwnTag() external view {
+        DeployDeclaration memory d = declaration();
+        bytes32[4] memory tags =
+            [CLONE_MECHANISM, CLONE_PER_NETWORK_MECHANISM, BEACON_PROXY_MECHANISM, BEACON_PROXY_PER_NETWORK_MECHANISM];
+        string[4] memory names = [
+            "CLONE_MECHANISM",
+            "CLONE_PER_NETWORK_MECHANISM",
+            "BEACON_PROXY_MECHANISM",
+            "BEACON_PROXY_PER_NETWORK_MECHANISM"
+        ];
+        for (uint256 i = 0; i < tags.length; i++) {
+            assertEq(
+                LibRainDeployDeclaration.mechanismById(d, tags[i], "").releasedImport(d, ""),
+                string.concat("import {", names[i], "} from \"../lib/LibRainDeployCloneMechanism.sol\";\n")
+            );
+        }
     }
 }
