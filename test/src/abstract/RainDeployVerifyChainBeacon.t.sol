@@ -356,8 +356,19 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         this.externalCheckDeployedOnNetworks(networksNamed(LibRainDeploy.ARBITRUM_ONE, LibRainDeploy.BASE));
     }
 
+    function requiredOn(DeploySuite[] memory suites, SupportedNetwork[] memory networks)
+        internal
+        pure
+        returns (DeploySuite[] memory)
+    {
+        for (uint256 i = 0; i < suites.length; i++) {
+            suites[i].networks = LibRainDeploy.networkNames(networks);
+        }
+        return suites;
+    }
+
     function externalCheckReleasedOnNetworks(SupportedNetwork[] memory networks) external {
-        checkDeployedOnNetworks(declaration(), networks, releasedSuites());
+        checkDeployedOnNetworks(declaration(), networks, requiredOn(releasedSuites(), networks));
     }
 
     function testReleasedSuitesBeaconsNameAreDerivedOnceInTheChainCheck() external {
@@ -583,6 +594,7 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
                 LibRainDeployCloneOnChainChecks.resolveBeacon(d, chainBeacons[i].beacon, chainBeacons[i].chainId, i);
             }
         }
+        candidate.networks = LibRainDeploy.networkNames(networks);
         addRecordedNetworks(d, candidate);
         addCandidateNetworks(d, candidate, LibRainDeploy.networkChainIds(networks));
         return deriveDeployment(d, candidate);
@@ -759,7 +771,7 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
     }
 
     function externalCheckLocallyOn(SupportedNetwork[] memory networks, DeploySuite[] memory suites) external {
-        checkDeployedOnNetworks(declaration(), Vm(address(new LocalForkVm())), networks, suites);
+        checkDeployedOnNetworks(declaration(), Vm(address(new LocalForkVm())), networks, requiredOn(suites, networks));
     }
 
     function testReleasedSuiteABeaconImplementsIsDerivedOnceInTheLocalChainCheck() external {
