@@ -2,7 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployCandidate, DeployDeclaration} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployCandidate,
+    DeployDeclaration,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {BeaconProxyDeploy} from "../../src/lib/LibRainDeployBeaconProxy.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExampleCloneDeploys, exampleCloneDeploys} from "../abstract/ExampleCloneDeploys.sol";
@@ -21,7 +25,12 @@ contract MixedCloneBeaconProxyDeploySuites is ExampleCloneDeploys, ExternalDeplo
         return proxies;
     }
 
-    function declaration() internal view override returns (DeployDeclaration memory) {
+    function declaration()
+        internal
+        view
+        override(ExampleCloneDeploys, RainDeploySuitesBase)
+        returns (DeployDeclaration memory)
+    {
         DeployDeclaration memory d = ExampleCloneDeploys.declaration();
         LibCloneCandidates.addBeaconProxies(d, beaconProxyDeploys());
         return d;
