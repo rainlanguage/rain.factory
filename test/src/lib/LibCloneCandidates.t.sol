@@ -9,7 +9,9 @@ import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {CloneDeploy} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibCloneCandidates, NoFactoryDeploys} from "../../../src/lib/LibCloneCandidates.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {exampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
+import {perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 
 /// @title LibCloneCandidatesTest
@@ -103,5 +105,28 @@ contract LibCloneCandidatesTest is Test {
             );
         }
         assertNotEq(d.candidates[2].snapshot.storedDeployedAddress, d.candidates[3].snapshot.storedDeployedAddress);
+    }
+
+    function testAddBeaconProxiesBuildsAPerNetworkProxyOnEveryDeclaredNetwork() external view {
+        DeployDeclaration memory d = declaration();
+        string[] memory networks = new string[](2);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        networks[1] = LibRainDeploy.BASE;
+        LibRainDeployDeclaration.setNetworks(d, networks);
+        BeaconProxyDeploy[] memory proxies = new BeaconProxyDeploy[](1);
+        proxies[0] = LibBeaconProxyTest.example(bytes32(uint256(7)));
+        proxies[0].data = "";
+        proxies[0].initDataPerNetwork = true;
+        proxies[0].initData = perNetworkCloneInitData;
+
+        LibCloneCandidates.addBeaconProxies(d, proxies);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = 42161;
+        ids[1] = 8453;
+        assertEq(d.candidates.length, 1);
+        assertAddedCandidate(
+            d.candidates[0], LibRainDeployCloneMechanism.beaconProxyCandidate(proxies[0], ids), networks
+        );
     }
 }
