@@ -111,7 +111,7 @@ contract LibCloneCandidatesTest is Test {
         DeployDeclaration memory d = declaration();
         string[] memory networks = new string[](2);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
-        networks[1] = LibRainDeploy.BASE;
+        networks[1] = LibRainDeploy.POLYGON;
         LibRainDeployDeclaration.setNetworks(d, networks);
         BeaconProxyDeploy[] memory proxies = new BeaconProxyDeploy[](1);
         proxies[0] = LibBeaconProxyTest.example(bytes32(uint256(7)));
@@ -123,7 +123,7 @@ contract LibCloneCandidatesTest is Test {
 
         uint256[] memory ids = new uint256[](2);
         ids[0] = 42161;
-        ids[1] = 8453;
+        ids[1] = 137;
         assertEq(d.candidates.length, 1);
         assertAddedCandidate(
             d.candidates[0], LibRainDeployCloneMechanism.beaconProxyCandidate(proxies[0], ids), networks
