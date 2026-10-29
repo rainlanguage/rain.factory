@@ -6,7 +6,7 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {BeaconProxyDeploy, LibRainDeployBeaconProxy} from "../../src/lib/LibRainDeployBeaconProxy.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {MockBeaconProxyFactory} from "../concrete/MockBeaconProxyFactory.sol";
 import {perNetworkCloneInitData} from "../abstract/PerNetworkCloneDeploys.sol";
 

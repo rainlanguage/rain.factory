@@ -14,8 +14,8 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifySnapshotBase} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifySnapshotBase.sol";
+} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifySnapshotBase} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifySnapshotBase.sol";
 import {
     BeaconState,
     BeaconTransition,
@@ -24,12 +24,12 @@ import {
     LibRainDeployBeacon
 } from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
 import {LibBeaconTest} from "../../lib/LibBeaconTest.sol";
-import {MIGRATION_HEAD_GENESIS, Prerequisite} from "rain-deploy-0.1.27/src/interface/IMigrationRegistryV5.sol";
+import {MIGRATION_HEAD_GENESIS, Prerequisite} from "rain-deploy-0.1.29/src/interface/IMigrationRegistryV5.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
 
 contract RainDeployVerifySnapshotBaseBeaconTest is RainDeployVerifySnapshotBase {

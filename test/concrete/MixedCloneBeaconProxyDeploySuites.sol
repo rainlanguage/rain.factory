@@ -6,7 +6,7 @@ import {
     DeployCandidate,
     DeployDeclaration,
     RainDeploySuitesBase
-} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {BeaconProxyDeploy} from "../../src/lib/LibRainDeployBeaconProxy.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExampleCloneDeploys, exampleCloneDeploys} from "../abstract/ExampleCloneDeploys.sol";

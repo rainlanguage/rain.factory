@@ -2,13 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotNotReleased,
     FrozenSnapshotsOutnumberReleases,
     RainDeployVerifySnapshotBase,
     StoredAddressMismatch
-} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifySnapshotBase.sol";
+} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifySnapshotBase.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeployCloneSnapshot} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
@@ -16,7 +16,7 @@ import {
     FrozenSnapshotAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,

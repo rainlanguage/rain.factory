@@ -9,15 +9,15 @@ import {
     DeployDependency,
     DeploySuite,
     RainDeploySuitesBase
-} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyBase} from "rain-deploy-0.1.27/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyBase} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
 import {BeaconState, BeaconTransition, ChainBeacon, DeployBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {Prerequisite} from "rain-deploy-0.1.27/src/interface/IMigrationRegistryV5.sol";
-import {MigrationRegistry} from "rain-deploy-0.1.27/src/concrete/MigrationRegistry.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {Prerequisite} from "rain-deploy-0.1.29/src/interface/IMigrationRegistryV5.sol";
+import {MigrationRegistry} from "rain-deploy-0.1.29/src/concrete/MigrationRegistry.sol";
 import {MockDeployable} from "../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../concrete/MockDeployableV2.sol";
 import {LibBeaconTest} from "../lib/LibBeaconTest.sol";

@@ -52,7 +52,7 @@ forge-std = "1.17.0"
 # a bump that changes `src/generated/` needs a new interface version.
 "@openzeppelin-contracts" = "5.7.0"
 rain-sol-codegen = "0.1.39"
-rain-deploy = "0.1.27"
+rain-deploy = "0.1.29"
 rain-metadata = "0.1.43"
 safe-global-safe-smart-account = "1.4.1-3"
 

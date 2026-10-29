@@ -8,7 +8,7 @@ import {
 } from "../interface/ICloneableFactoryV7.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 import {REGISTRY_BEACON_PROXY_CREATION_CODE} from "../generated/RegistryBeaconProxy.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV5.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.29/src/interface/IConfigRegistryV5.sol";
 
 /// @dev The value type hash a beacon binding must carry.
 bytes32 constant BEACON_BINDING_VALUE_TYPE_HASH = keccak256("address");

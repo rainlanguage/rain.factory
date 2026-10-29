@@ -8,14 +8,14 @@ import {
     DeployDependency,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.27/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
-} from "rain-deploy-0.1.27/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CLONE_ARTIFACT_PATH} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_MECHANISM,

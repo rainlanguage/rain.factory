@@ -10,7 +10,7 @@ import {
 import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.sol";
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {DelegatedBeacon} from "../../../src/lib/LibICloneableFactoryV5.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {CloneTarget} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {EXAMPLE_BEACON_PROXY_RUNTIME_CODE, LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";

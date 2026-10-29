@@ -7,8 +7,8 @@ import {BeaconProxy} from "@openzeppelin-contracts-5.7.0/proxy/beacon/BeaconProx
 import {RegistryBeaconProxy} from "./RegistryBeaconProxy.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
-import {LibRainDeployConfig} from "rain-deploy-0.1.27/src/lib/LibRainDeployConfig.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeployConfig} from "rain-deploy-0.1.29/src/lib/LibRainDeployConfig.sol";
 
 /// @title Build
 /// @notice Writes `src/generated/BeaconProxy.sol`: OpenZeppelin `BeaconProxy`'s

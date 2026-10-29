@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {RainDeployBroadcast} from "rain-deploy-0.1.27/src/abstract/RainDeployBroadcast.sol";
+import {RainDeployBroadcast} from "rain-deploy-0.1.29/src/abstract/RainDeployBroadcast.sol";
 import {ExternalDeploySuites} from "./ExternalDeploySuites.sol";
-import {DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {MockOriginOwned} from "../concrete/MockOriginOwned.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 

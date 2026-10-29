@@ -14,7 +14,7 @@ import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
 import {TestCloneable} from "../../../src/test/TestCloneable.sol";
 import {RegistryBeaconProxy} from "../../../script/RegistryBeaconProxy.sol";
 import {TestRegistryBeaconSource, TestNameNotRegistered} from "../../concrete/TestRegistryBeaconSource.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.27/src/interface/IConfigRegistryV5.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.29/src/interface/IConfigRegistryV5.sol";
 
 /// @title LibICloneableFactoryV7RegistryBeaconProxyTest
 /// `registryBeaconProxy` through `TestCloneFactory`: the beacon comes from the

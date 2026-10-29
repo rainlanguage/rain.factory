@@ -18,7 +18,7 @@ import {
     DeployBeacon,
     LibRainDeployBeacon
 } from "../../../src/lib/LibRainDeployBeacon.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";

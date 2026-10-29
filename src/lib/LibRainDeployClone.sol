@@ -7,7 +7,7 @@ import {console2} from "forge-std-1.17.0/src/console2.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 
-import {DeployDependency} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {DeployDependency} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {ChainDeploy} from "./LibRainDeployExtendedNetworks.sol";
 
 uint256 constant EIP1167_CREATION_CODE_PREFIX_LENGTH = 10;
