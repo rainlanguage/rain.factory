@@ -67,6 +67,55 @@ library LibRainDeployBeaconResolution {
         return chainIds;
     }
 
+    /// The `CLONE_MECHANISM` handler's `checkNetwork`: each beacon `checkNetworks` resolved on `chainId`, in order.
+    /// @param d The declaration, extended.
+    /// @param network The selected fork's network.
+    /// @param chainId Its chain id.
+    function checkNetwork(DeployDeclaration memory d, string memory network, uint256 chainId) internal view {
+        ResolvedBeacon[] memory resolved = LibRainDeployCloneMechanism.layerConfig(d).resolvedBeacons;
+        for (uint256 i = 0; i < resolved.length; i++) {
+            if (resolved[i].chainId == chainId) {
+                checkResolvedBeacon(network, resolved[i]);
+            }
+        }
+    }
+
+    /// The beacon's suite, when named, live with its dependencies and derived code; the beacon at its applied state;
+    /// that state's implementation suite live with its dependencies and derived code.
+    /// @param network The selected fork's network.
+    /// @param resolved The beacon, resolved on the selected fork's chain id.
+    function checkResolvedBeacon(string memory network, ResolvedBeacon memory resolved) internal view {
+        DeployBeacon memory beacon = resolved.beacon;
+        // Deliberately rechecked by `checkBeacon`, which holds a beacon to its code hash on its own.
+        if (bytes(beacon.beaconSuite).length != 0) {
+            checkSuiteOnNetwork(network, resolved.suite, resolved.derived, beacon.beacon);
+        }
+        uint256 state = LibRainDeployBeacon.appliedState(network, beacon);
+        LibRainDeployBeacon.checkBeacon(
+            network, beacon, resolved.implementationAddresses[state], LibRainDeployBeacon.stateAt(beacon, state).owner
+        );
+        checkSuiteOnNetwork(
+            network,
+            resolved.implementations[state],
+            resolved.implementationDerived[state],
+            resolved.implementationAddresses[state]
+        );
+    }
+
+    /// @param network The selected fork's network.
+    /// @param suite The suite.
+    /// @param derived Its derivation.
+    /// @param deployedAddress Its address on the selected fork.
+    function checkSuiteOnNetwork(
+        string memory network,
+        DeploySuite memory suite,
+        DerivedDeploy memory derived,
+        address deployedAddress
+    ) internal view {
+        LibRainDeploy.checkDeclaredDependencies(network, suite.dependencies);
+        LibRainDeploy.checkDeployedCode(network, deployedAddress, derived.bytecodeHash);
+    }
+
     /// When a beacon is declared, `BeaconOnUncheckedNetwork` for any beacon off `d.networks` before resolving any; then,
     /// for each beacon on `networks`, `resolveBeacon`'s refusals and `BeaconDeclaredTwice` for one at an address an
     /// earlier one on its network resolved to.

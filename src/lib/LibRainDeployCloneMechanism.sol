@@ -147,7 +147,7 @@ library LibRainDeployCloneMechanism {
             })
         );
         h.checkDeclaration = checkDeclaration;
-        h.checkNetwork = LibRainDeployCloneOnChainChecks.checkNetworkBeacons;
+        h.checkNetwork = LibRainDeployBeaconResolution.checkNetwork;
         h.legacyRecordId = LibRainDeployCloneSnapshot.legacyRecordId;
         h.checkNetworks = LibRainDeployBeaconResolution.checkNetworks;
         return h;

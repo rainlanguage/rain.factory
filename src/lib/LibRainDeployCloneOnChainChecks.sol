@@ -21,6 +21,7 @@ import {
     LibRainDeployCloneMechanism
 } from "./LibRainDeployCloneMechanism.sol";
 import {LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
+import {ResolvedBeacon} from "./LibRainDeployBeaconResolution.sol";
 
 /// @param suite The beacon proxy suite.
 /// @param network The network.
@@ -183,36 +184,24 @@ library LibRainDeployCloneOnChainChecks {
         return beacon;
     }
 
-    /// Beacon proxy suites only: refuses `BeaconProxyBeaconUndeclared` when no beacon in the handler's config is the
-    /// proxy's beacon on `chainId`, then checks that beacon on the selected fork at its applied state.
+    /// Beacon proxy suites only: refuses `BeaconProxyBeaconUndeclared` when no beacon `checkNetworks` resolved on
+    /// `chainId` is the proxy's beacon.
     function checkOnChain(
         DeployDeclaration memory d,
         DeploySuite memory suite,
         string memory network,
         uint256 chainId,
         address
-    ) internal {
+    ) internal pure {
         if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
             return;
         }
         address proxyBeacon = LibRainDeployCloneMechanism.beacon(suite, chainId);
-        ChainBeacon[] memory chainBeacons = beacons(d);
-        for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
-            if (chainBeacons[beaconIndex].chainId != chainId) {
-                continue;
+        ResolvedBeacon[] memory resolved = LibRainDeployCloneMechanism.layerConfig(d).resolvedBeacons;
+        for (uint256 i = 0; i < resolved.length; i++) {
+            if (resolved[i].chainId == chainId && resolved[i].beacon.beacon == proxyBeacon) {
+                return;
             }
-            DeployBeacon memory beacon = resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
-            if (beacon.beacon != proxyBeacon) {
-                continue;
-            }
-            uint256 state = LibRainDeployBeacon.appliedState(network, beacon);
-            LibRainDeployBeacon.checkBeacon(
-                network,
-                beacon,
-                implementationAt(d, beacon, state, chainId),
-                LibRainDeployBeacon.stateAt(beacon, state).owner
-            );
-            return;
         }
         revert BeaconProxyBeaconUndeclared(suite.suite, network, proxyBeacon);
     }
@@ -225,30 +214,6 @@ library LibRainDeployCloneOnChainChecks {
             LibRainDeployExtendedNetworks.checkExtendedNetworksRecorded(
                 StdConstants.VM, config.extendedNetworksRoot, config.extended[i].suite, config.extended[i].networks
             );
-        }
-    }
-
-    /// Every beacon the layer config declares on `chainId`, checked on the selected fork at its applied state, with its
-    /// own suite (when named) and that state's implementation suite live with their code.
-    function checkNetworkBeacons(DeployDeclaration memory d, string memory network, uint256 chainId) internal {
-        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d).beacons;
-        for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
-            if (chainBeacons[beaconIndex].chainId != chainId) {
-                continue;
-            }
-            DeployBeacon memory beacon = resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
-            if (bytes(beacon.beaconSuite).length != 0) {
-                LibRainDeploy.checkDeployedCode(
-                    network, beacon.beacon, released(d, beacon.beaconSuite).storedBytecodeHash
-                );
-            }
-            uint256 state = LibRainDeployBeacon.appliedState(network, beacon);
-            DeploySuite memory implementation = released(d, LibRainDeployBeacon.stateAt(beacon, state).implementation);
-            address implementationAddress = handlerOf(d, implementation).deployedAddress(d, implementation, chainId);
-            LibRainDeployBeacon.checkBeacon(
-                network, beacon, implementationAddress, LibRainDeployBeacon.stateAt(beacon, state).owner
-            );
-            LibRainDeploy.checkDeployedCode(network, implementationAddress, implementation.storedBytecodeHash);
         }
     }
 
