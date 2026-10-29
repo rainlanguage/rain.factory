@@ -21,7 +21,7 @@ import {
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {DerivedDeploy} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
@@ -32,6 +32,14 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
 
     function externalCheckDeclaration() external {
         LibRainDeployBeaconDeclarationChecks.checkDeclaration(declaration());
+    }
+
+    function externalResolveBeacons(SupportedNetwork[] memory networks) external {
+        LibRainDeployBeaconResolution.resolveBeacons(declaration(), networks);
+    }
+
+    function externalResolvedCount(SupportedNetwork[] memory networks) external returns (uint256) {
+        return LibRainDeployBeaconResolution.resolveBeacons(declaration(), networks).length;
     }
 
     function externalResolveBeaconLeavesDeclaration(DeployBeacon memory beacon) external returns (DeployBeacon memory) {
@@ -124,10 +132,9 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
     function testNarrowedCheckResolvesOnlyTheBeaconsOnItsNetworks() external {
         sBeacons.declare(8453, declared("beacon-upgrade@0_0_1", OWNER));
         sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
-        supportOnly(LibRainDeploy.ARBITRUM_ONE, "");
         vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployable).creationCode, 0);
         vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        this.externalCheckDeclaration();
+        this.externalResolveBeacons(arbitrum());
     }
 
     function testNarrowedResolveCountsOnlyTheBeaconsOnItsNetworks() external {
@@ -136,18 +143,14 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
         DeployBeacon memory other = declared("beacon-upgrade@0_0_1", OWNER);
         other.beacon = address(0xBEAC0);
         sBeacons.declare(8453, other);
-        supportOnly(LibRainDeploy.ARBITRUM_ONE, "");
-        this.externalCheckDeclaration();
-        supportOnly(LibRainDeploy.BASE, "");
-        this.externalCheckDeclaration();
-        supportOnly(LibRainDeploy.ARBITRUM_ONE, LibRainDeploy.BASE);
-        this.externalCheckDeclaration();
+        assertEq(this.externalResolvedCount(arbitrum()), 1);
+        assertEq(this.externalResolvedCount(networksNamed(LibRainDeploy.BASE, "")), 2);
+        assertEq(this.externalResolvedCount(networksNamed(LibRainDeploy.ARBITRUM_ONE, LibRainDeploy.BASE)), 3);
     }
 
     function testNarrowedResolveWithNoBeaconOnItsNetworksIsEmpty() external {
         sBeacons.declare(8453, declared("beacon-implementation@0_0_1", OWNER));
-        supportOnly(LibRainDeploy.ARBITRUM_ONE, "");
-        this.externalCheckDeclaration();
+        assertEq(this.externalResolvedCount(arbitrum()), 0);
     }
 
     function testNoBeaconsResolveWithoutReadingSupportedNetworks() external {
