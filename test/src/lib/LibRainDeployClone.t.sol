@@ -9,7 +9,7 @@ import {
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {ICloneableFactoryV4} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneTarget,
@@ -313,5 +313,64 @@ contract LibRainDeployCloneTest is Test {
             )
         );
         this.externalCloneDeployStep(LibRainDeploy.ARBITRUM_ONE, address(this), abi.encode(clone));
+    }
+
+    /// External wrapper for `deployStepToNetworks` through `cloneDeployStep`.
+    /// @param networks The networks.
+    /// @param stepData The step data on every network.
+    /// @param expectedAddress The expected and derived address on every network.
+    /// @param expectedCodeHash The expected code hash.
+    /// @param dependencies The declared dependencies.
+    /// @return The fork of each network.
+    function externalDeployStepToNetworksThroughCloneStep(
+        SupportedNetwork[] memory networks,
+        bytes memory stepData,
+        address expectedAddress,
+        bytes32 expectedCodeHash,
+        DeployDependency[] memory dependencies
+    ) external returns (uint256[] memory) {
+        return LibRainDeploy.deployStepToNetworks(
+            vm,
+            networks,
+            address(this),
+            LibRainDeployClone.cloneDeployStep,
+            LibRainDeploy.everyNetwork(networks.length, stepData, expectedAddress, expectedAddress),
+            expectedCodeHash,
+            dependencies
+        );
+    }
+
+    /// Arbitrum's catalogue entry, declared as Polygon's chain id.
+    /// @return The mis-bound network.
+    function misboundArbitrum() internal pure returns (SupportedNetwork[] memory) {
+        string[] memory names = new string[](1);
+        names[0] = LibRainDeploy.ARBITRUM_ONE;
+        SupportedNetwork[] memory networks = LibRainDeploy.declaredNetworkConfigs(names);
+        networks[0].chainId = 137;
+        return networks;
+    }
+
+    /// The chain id is checked before a clone step.
+    function testDeployStepToNetworksRefusesAMisboundEndpointBeforeTheCloneStep() external {
+        vm.makePersistent(address(this));
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        MockUncloneableMispredictingCloneFactory factory = new MockUncloneableMispredictingCloneFactory();
+        vm.makePersistent(address(factory));
+        CloneTarget memory target = CloneTarget({
+            factory: address(factory), implementation: address(new MockCloneable()), data: hex"01", salt: bytes32(0)
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibRainDeploy.NetworkChainIdMismatch.selector, LibRainDeploy.ARBITRUM_ONE, 137, 42161
+            )
+        );
+        this.externalDeployStepToNetworksThroughCloneStep(
+            misboundArbitrum(),
+            abi.encode(target),
+            LibRainDeployClone.cloneDeployedAddress(target),
+            bytes32(0),
+            new DeployDependency[](0)
+        );
     }
 }
