@@ -12,7 +12,7 @@ import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../sr
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {perNetworkCloneNetworks, perNetworkCloneReleased} from "../abstract/PerNetworkCloneDeploys.sol";
 import {UpgradedPerNetworkCloneDeploys, upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {LibExtendedNetworksFixture} from "../lib/LibExtendedNetworksFixture.sol";
 
 /// @title UpgradedPerNetworkCloneDeploy

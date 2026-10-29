@@ -15,7 +15,7 @@ import {
     perNetworkCloneNetworks,
     perNetworkCloneReleased
 } from "../abstract/PerNetworkCloneDeploys.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {LibExtendedNetworksFixture} from "../lib/LibExtendedNetworksFixture.sol";
 
 /// @title PerNetworkCloneDeploy

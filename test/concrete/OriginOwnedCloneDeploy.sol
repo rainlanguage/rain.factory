@@ -9,7 +9,7 @@ import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDep
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {MockCloneFactory} from "./MockCloneFactory.sol";
 import {MockOriginOwnedCloneable} from "./MockOriginOwnedCloneable.sol";
 

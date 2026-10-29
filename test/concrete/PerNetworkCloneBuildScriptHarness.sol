@@ -12,7 +12,7 @@ import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codege
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {
     PER_NETWORK_CLONE_RECORD_CONTRACT,
     perNetworkCloneChainIds,

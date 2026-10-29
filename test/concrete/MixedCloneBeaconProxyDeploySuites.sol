@@ -12,7 +12,7 @@ import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMecha
 import {ExampleCloneDeploys, exampleCloneDeploys} from "../abstract/ExampleCloneDeploys.sol";
 import {ExternalDeploySuites} from "../abstract/ExternalDeploySuites.sol";
 import {LibBeaconProxyTest} from "../lib/LibBeaconProxyTest.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 
 /// @title MixedCloneBeaconProxyDeploySuites
 /// @notice The example clone declaration with two beacon proxy candidates added after its clones.

@@ -9,7 +9,7 @@ import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySna
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
 import {BeaconState, ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {LibCloneCandidates} from "../lib/LibCloneCandidates.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
     perNetworkCloneDeploys,
