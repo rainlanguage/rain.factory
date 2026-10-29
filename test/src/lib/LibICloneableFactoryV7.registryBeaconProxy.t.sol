@@ -131,6 +131,16 @@ contract LibICloneableFactoryV7RegistryBeaconProxyTest is Test {
         iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
     }
 
+    /// A clean beacon word followed by any trailing bytes is refused.
+    function testOverlongBinding(bytes memory tail, bytes memory data, bytes32 salt) external {
+        vm.assume(tail.length != 0);
+        iRegistry.bind(AUTHORITY, BEACON_NAME, "address", bytes.concat(abi.encode(newBeacon()), tail));
+        vm.expectRevert(
+            abi.encodeWithSelector(NonCanonicalBeaconBinding.selector, address(iRegistry), AUTHORITY, BEACON_NAME)
+        );
+        iFactory.registryBeaconProxy(address(iRegistry), AUTHORITY, BEACON_NAME, data, salt);
+    }
+
     /// A bound address with no code is refused as a beacon.
     function testBeaconWithoutCode(address beacon, bytes memory data, bytes32 salt) external {
         vm.assume(beacon.code.length == 0);
