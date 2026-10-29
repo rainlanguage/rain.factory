@@ -42,8 +42,9 @@ error FrozenSnapshotBeaconProxyMechanismDataMissing(string path);
 
 /// @title LibRainDeployCloneSnapshot
 /// @notice The record a clone or beacon proxy release is frozen as, and how a released-suites lib reads it back.
-/// The record carries the tagged `mechanismData` verbatim as `MECHANISM_DATA`. A legacy record carries the untagged
-/// payload there; its `BEACON_PROXY` marker and `DEPLOYED_ADDRESS_<chainId>` constants say which tag it gets.
+/// The record carries the tagged `mechanismData` as `MECHANISM_DATA`, a per-network one's addresses the deploy's. A
+/// legacy record carries the untagged payload there; its `BEACON_PROXY` marker and `DEPLOYED_ADDRESS_<chainId>`
+/// constants say which tag it gets.
 library LibRainDeployCloneSnapshot {
     /// This package's soldeer name: the remapping prefix a consumer reaches it by.
     string constant PACKAGE_NAME = "rain-factory";
@@ -77,8 +78,10 @@ library LibRainDeployCloneSnapshot {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
+        bytes memory mechanismData = suite.mechanismData;
         if (LibRainDeployCloneMechanism.isPerNetwork(suite)) {
             addressConstants = perNetworkAddressConstants(vm, addresses, suite);
+            mechanismData = perNetworkMechanismData(addresses, suite);
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
                 "/// tagged `abi.encode`d `CloneNetworks` a released suite carries as its\n" "/// `mechanismData`."
@@ -119,8 +122,23 @@ library LibRainDeployCloneSnapshot {
                 "DEPENDENCIES",
                 abi.encode(suite.dependencies)
             ),
-            LibCodeGen.bytesConstantString(vm, mechanismDataComment, "MECHANISM_DATA", suite.mechanismData)
+            LibCodeGen.bytesConstantString(vm, mechanismDataComment, "MECHANISM_DATA", mechanismData)
         );
+    }
+
+    /// @param addresses A per-network suite's address on each payload network, in payload order.
+    /// @param suite The suite.
+    /// @return Its tagged `mechanismData` with each network's `deployedAddress` set to its entry in `addresses`.
+    function perNetworkMechanismData(address[] memory addresses, DeploySuite memory suite)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
+        for (uint256 i = 0; i < clones.networks.length; i++) {
+            clones.networks[i].deployedAddress = addresses[i];
+        }
+        return abi.encode(LibRainDeployCloneMechanism.mechanismTag(suite.mechanismData), abi.encode(clones));
     }
 
     /// @param vm The Vm instance for string operations.
