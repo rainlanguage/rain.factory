@@ -12,7 +12,7 @@ import {LibBeaconDeclarations} from "../lib/LibBeaconDeclarations.sol";
 import {LibBeaconTest} from "../lib/LibBeaconTest.sol";
 import {MockDeployable} from "./MockDeployable.sol";
 
-/// The one release `BeaconOwnerDeploy` declares.
+/// @dev The one release `BeaconOwnerDeploy` declares.
 string constant BEACON_OWNER_DEPLOY_RELEASE = "deployable@0_0_1";
 
 /// @title BeaconOwnerDeploy
