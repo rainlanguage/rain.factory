@@ -127,6 +127,11 @@ error ExtendedNetworkUnfrozen(string suite, string network, address deployedAddr
 /// @param slot The slot read.
 error CloneInitializeReadsStorage(string suite, address account, bytes32 slot);
 
+/// Thrown when the snapshot a shared network's local deploy runs in fails to restore.
+/// @param suite The suite deployed.
+/// @param snapshotId The snapshot that failed to restore.
+error CloneSnapshotRevertFailed(string suite, uint256 snapshotId);
+
 /// @title LibRainDeployCloneMechanism
 /// @notice The clone and beacon proxy mechanisms over a suite whose `mechanismData` carries one of their ids.
 library LibRainDeployCloneMechanism {
@@ -298,6 +303,8 @@ library LibRainDeployCloneMechanism {
         return new ChainDeploy[](0);
     }
 
+    /// Deploys the target on every network in play under its own chain id, one sharing an earlier network's address
+    /// in a reverted snapshot, so a refusal on any network refuses.
     /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
     /// per-network suite's own clone there, or zero on a network it records no clone on. Every address is left
     /// deployed, once, under the chain id of its first network.
@@ -307,17 +314,31 @@ library LibRainDeployCloneMechanism {
     {
         uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         address[] memory deployed = new address[](chainIds.length);
+        bool[] memory inPlay = new bool[](chainIds.length);
         // Empty for a one-data suite, which derives on every network.
         uint256[] memory recorded = addressChainIds(suite);
         uint256 callerChainId = block.chainid;
         LibRainDeploy.etchDependencies(vm, suite.dependencies);
         for (uint256 i = 0; i < chainIds.length; i++) {
             // The matrix refuses an unrecorded network in play before deriving, so one here is out of play.
-            if (recorded.length > 0 && !contains(recorded, chainIds[i])) {
-                continue;
+            inPlay[i] = recorded.length == 0 || contains(recorded, chainIds[i]);
+            if (inPlay[i]) {
+                deployed[i] = deployedAddress(d, suite, chainIds[i]);
             }
-            deployed[i] = deployedAddress(d, suite, chainIds[i]);
-            if (!deployedEarlier(deployed, i)) {
+        }
+        // Before any address is left deployed, so a shared network deploys onto a fresh address as its broadcast does.
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            if (inPlay[i] && deployedEarlier(deployed, inPlay, i)) {
+                uint256 snapshotId = vm.snapshotState();
+                vm.chainId(chainIds[i]);
+                deployTarget(vm, suite, chainIds[i], deployed[i]);
+                if (!vm.revertToStateAndDelete(snapshotId)) {
+                    revert CloneSnapshotRevertFailed(suite.suite, snapshotId);
+                }
+            }
+        }
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            if (inPlay[i] && !deployedEarlier(deployed, inPlay, i)) {
                 vm.chainId(chainIds[i]);
                 deployTarget(vm, suite, chainIds[i], deployed[i]);
             }
@@ -336,10 +357,14 @@ library LibRainDeployCloneMechanism {
         return false;
     }
 
-    /// @return Whether an entry of `addresses` before `index` equals the one at `index`.
-    function deployedEarlier(address[] memory addresses, uint256 index) internal pure returns (bool) {
+    /// @return Whether an entry of `addresses` before `index` that is in play equals the one at `index`.
+    function deployedEarlier(address[] memory addresses, bool[] memory inPlay, uint256 index)
+        internal
+        pure
+        returns (bool)
+    {
         for (uint256 j = 0; j < index; j++) {
-            if (addresses[j] == addresses[index]) {
+            if (inPlay[j] && addresses[j] == addresses[index]) {
                 return true;
             }
         }
