@@ -42,8 +42,8 @@ error FrozenSnapshotBeaconProxyMechanismDataMissing(string path);
 
 /// @title LibRainDeployCloneSnapshot
 /// @notice The record a clone or beacon proxy release is frozen as, and how a released-suites lib reads it back.
-/// The record carries the untagged payload as `MECHANISM_DATA`, the `BEACON_PROXY` marker for a beacon proxy and
-/// `DEPLOYED_ADDRESS_<chainId>` for one per network; those three say which tag the released suite carries.
+/// The record carries the tagged `mechanismData` verbatim as `MECHANISM_DATA`. A legacy record carries the untagged
+/// payload there; its `BEACON_PROXY` marker and `DEPLOYED_ADDRESS_<chainId>` constants say which tag it gets.
 library LibRainDeployCloneSnapshot {
     /// This package's soldeer name: the remapping prefix a consumer reaches it by.
     string constant PACKAGE_NAME = "rain-factory";
@@ -275,11 +275,7 @@ library LibRainDeployCloneSnapshot {
     /// @param tag A record's tag, nonzero.
     /// @param prefix The prefix the record's constants are aliased under.
     /// @return The Solidity expression a released-suites lib gives the release's `mechanismData`, its tag named.
-    function releasedMechanismDataExpression(Vm, bytes32 tag, string memory prefix)
-        internal
-        pure
-        returns (string memory)
-    {
+    function releasedMechanismDataExpression(bytes32 tag, string memory prefix) internal pure returns (string memory) {
         return string.concat("abi.encode(", mechanismConstantName(tag), ", ", prefix, "_MECHANISM_DATA)");
     }
 
@@ -384,7 +380,7 @@ library LibRainDeployCloneSnapshot {
             revert FrozenSnapshotMechanismDataMissing(path);
         }
         if (isLegacyRecord(vm, path, lines)) {
-            return releasedMechanismDataExpression(vm, recordedMechanismTag(vm, path, lines), prefix);
+            return releasedMechanismDataExpression(recordedMechanismTag(vm, path, lines), prefix);
         }
         return string.concat(prefix, "_MECHANISM_DATA");
     }

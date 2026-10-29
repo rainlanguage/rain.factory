@@ -345,9 +345,8 @@ library LibRainDeployCloneMechanism {
             return;
         }
         string memory root = layerConfig(d).extendedNetworksRoot;
-        ChainDeploy[] memory extended = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
-            Vm(address(uint160(uint256(keccak256("hevm cheat code"))))), root, suite.suite
-        );
+        ChainDeploy[] memory extended =
+            LibRainDeployExtendedNetworks.recordedExtendedNetworks(StdConstants.VM, root, suite.suite);
         suite.mechanismData = appendExtendedNetworks(suite, extended).mechanismData;
     }
 
