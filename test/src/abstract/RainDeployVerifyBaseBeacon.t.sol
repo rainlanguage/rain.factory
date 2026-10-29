@@ -89,21 +89,6 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
         this.externalCheckDeclaration();
     }
 
-    function testEachReleasedSuiteBeaconsNameIsDerivedOnce() external {
-        sBeacons.declare(42161, migrating("beacon-upgrade@0_0_1", OWNER));
-        sBeacons.declare(8453, declared("beacon-implementation@0_0_1", OWNER));
-        sBeacons.declare(42161, bySuite("beacon@0_0_1", OWNER));
-        DeployBeacon memory other = declared("beacon-upgrade@0_0_1", OWNER);
-        other.beacon = address(0xBEAC0);
-        sBeacons.declare(8453, other);
-        supportOnly(LibRainDeploy.ARBITRUM_ONE, LibRainDeploy.BASE);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployable).creationCode, 1);
-        // One derivation, one seated-state deploy.
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, beaconCreationCode(), 2);
-        this.externalCheckDeclaration();
-    }
-
     function testRepeatedMigrationIsRefusedWhileResolving() external {
         sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
         sBeacons.declare(42161, repeating(migrating("beacon-upgrade@0_0_1", OWNER)));

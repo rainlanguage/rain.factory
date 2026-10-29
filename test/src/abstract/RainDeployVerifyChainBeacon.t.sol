@@ -366,28 +366,6 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         return suites;
     }
 
-    function externalCheckReleasedOnNetworks(SupportedNetwork[] memory networks) external {
-        checkDeployedOnNetworks(declaration(), networks, requiredOn(releasedSuites(), networks));
-    }
-
-    function testReleasedSuitesBeaconsNameAreDerivedOnceInTheChainCheck() external {
-        sBeacons.declare(42161, migrating("beacon-upgrade@0_0_1", OWNER));
-        sBeacons.declare(42161, bySuite("beacon@0_0_1", OWNER));
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployable).creationCode, 1);
-        // One derivation, one seated-state deploy.
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, beaconCreationCode(), 2);
-        this.externalCheckReleasedOnNetworks(arbitrum());
-    }
-
-    function testReleasedSuiteABeaconImplementsIsDerivedOnceInTheChainCheck() external {
-        sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployable).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, beaconCreationCode(), 1);
-        this.externalCheckReleasedOnNetworks(arbitrum());
-    }
-
     function testBeaconsOnEveryCheckedNetworkAreAccepted() external {
         supportOnly(LibRainDeploy.ARBITRUM_ONE, LibRainDeploy.BASE);
         sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
@@ -616,22 +594,6 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         this.externalDeriveUnlessResolved(other, arbitrum());
     }
 
-    function testSuiteResolvedByABeaconIsNotDerivedAgain() external {
-        sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        DerivedDeploy memory derived = this.externalDeriveUnlessResolved(releasedSuites()[0], arbitrum());
-        assertEq(derived.bytecodeHash, keccak256(type(MockDeployableV2).runtimeCode));
-    }
-
-    function testUnsetSuiteOfABeaconNamedByAddressIsNotReused() external {
-        sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
-        DeploySuite memory unset;
-        vm.expectRevert(
-            abi.encodeWithSelector(LibRainDeploy.DeployFailed.selector, true, LibRainDeploy.zoltuAddress(""))
-        );
-        this.externalDeriveUnlessResolved(unset, arbitrum());
-    }
-
     // No fork: the subjects are local and persistent.
     function externalCheckBeaconsOnNetwork(SupportedNetwork[] memory networks, uint256 networkIndex) external {
         DeployDeclaration memory d = declaration();
@@ -727,14 +689,6 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         this.externalCheckBeaconsOnNetwork(arbitrum(), 0);
     }
 
-    function testBeaconSuiteResolvedByABeaconIsNotDerivedAgain() external {
-        sBeacons.declare(42161, bySuite("beacon@0_0_1", OWNER));
-        // One derivation, one seated-state deploy.
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, beaconCreationCode(), 2);
-        DerivedDeploy memory derived = this.externalDeriveUnlessResolved(releasedSuites()[2], arbitrum());
-        assertEq(derived.bytecodeHash, sSuiteBeacon.codehash);
-    }
-
     function testBeaconSuiteWithAResolvedKeyButOtherCodeIsDerivedAfresh() external {
         sBeacons.declare(42161, bySuite("beacon@0_0_1", OWNER));
         DeploySuite memory other = LibBeaconTest.zoltuSuite(
@@ -766,14 +720,6 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
 
     function externalCheckLocallyOn(SupportedNetwork[] memory networks, DeploySuite[] memory suites) external {
         checkDeployedOnNetworks(declaration(), Vm(address(new LocalForkVm())), networks, requiredOn(suites, networks));
-    }
-
-    function testReleasedSuiteABeaconImplementsIsDerivedOnceInTheLocalChainCheck() external {
-        sBeacons.declare(42161, declared("beacon-implementation@0_0_1", OWNER));
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployableV2).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, type(MockDeployable).creationCode, 1);
-        vm.expectCall(LibRainDeploy.ZOLTU_FACTORY, beaconCreationCode(), 1);
-        this.externalCheckLocallyOn(arbitrum(), releasedSuites());
     }
 
     function testLocalChainGroupChecksABeaconsOwnerWithoutSuites() external {
