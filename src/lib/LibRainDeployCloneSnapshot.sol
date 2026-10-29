@@ -5,7 +5,6 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
@@ -220,28 +219,16 @@ library LibRainDeployCloneSnapshot {
 
     /// @param d The declaration.
     /// @param suite A per-network suite.
-    /// @param deployed `deployLocally`'s addresses, one per `suite.networks` entry.
-    /// @return Its address on each payload network in payload order: the one deployed for that chain id, else the
-    /// one its factory call derives there.
-    function payloadAddresses(DeployDeclaration memory d, DeploySuite memory suite, address[] memory deployed)
+    /// @return `LibRainDeployCloneMechanism.deployedAddress` on each payload network's chain id, in payload order.
+    function payloadAddresses(DeployDeclaration memory d, DeploySuite memory suite)
         internal
         pure
         returns (address[] memory)
     {
-        uint256[] memory chainIds = LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(suite.networks));
         CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
         address[] memory addresses = new address[](clones.networks.length);
         for (uint256 i = 0; i < clones.networks.length; i++) {
-            uint256 chainId = clones.networks[i].chainId;
-            for (uint256 j = 0; j < chainIds.length; j++) {
-                if (chainIds[j] == chainId && deployed[j] != address(0)) {
-                    addresses[i] = deployed[j];
-                    break;
-                }
-            }
-            if (addresses[i] == address(0)) {
-                addresses[i] = LibRainDeployCloneMechanism.deployedAddress(d, suite, chainId);
-            }
+            addresses[i] = LibRainDeployCloneMechanism.deployedAddress(d, suite, clones.networks[i].chainId);
         }
         return addresses;
     }
@@ -373,7 +360,7 @@ library LibRainDeployCloneSnapshot {
             file.spdxLicenseIdentifier,
             file.copyrightText,
             suite,
-            LibRainDeployCloneMechanism.isPerNetwork(suite) ? payloadAddresses(d, suite, deployed) : deployed,
+            LibRainDeployCloneMechanism.isPerNetwork(suite) ? payloadAddresses(d, suite) : deployed,
             runtimeAddress(suite, deployed)
         );
         if (!vm.revertToState(snapshotId)) {
