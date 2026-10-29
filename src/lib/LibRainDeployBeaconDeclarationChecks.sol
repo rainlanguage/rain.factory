@@ -2,9 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
-import {IERC5313} from "@openzeppelin-contracts-5.7.0/interfaces/IERC5313.sol";
-import {IBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/IBeacon.sol";
 import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.27/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.27/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.27/src/lib/LibRainDeployDeclaration.sol";
@@ -12,9 +9,9 @@ import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBea
 import {LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 import {
     BeaconNamedTwice,
+    BeaconProbe,
     BeaconSeatedImplementation,
     BeaconSeatedOwner,
-    BeaconSnapshotRevertFailed,
     BeaconUnnamed,
     LibRainDeployCloneOnChainChecks
 } from "./LibRainDeployCloneOnChainChecks.sol";
@@ -104,27 +101,16 @@ library LibRainDeployBeaconDeclarationChecks {
         uint256 beaconIndex,
         address initialImplementation
     ) internal {
-        uint256 snapshotId = StdConstants.VM.snapshotState();
-        StdConstants.VM.chainId(chainId);
-        LibRainDeployCloneOnChainChecks.handlerOf(d, suite).deployLocallyOnChain(d, StdConstants.VM, suite);
-        // slither-disable-next-line low-level-calls
-        (bool ownerAnswered, bytes memory owner) = beacon.beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
-        // slither-disable-next-line low-level-calls
-        (bool implementationAnswered, bytes memory implementation) =
-            beacon.beacon.staticcall(abi.encodeCall(IBeacon.implementation, ()));
-        // Restores the chain id with the state.
-        if (!StdConstants.VM.revertToState(snapshotId)) {
-            revert BeaconSnapshotRevertFailed(suite.suite, snapshotId);
+        BeaconProbe memory probe = LibRainDeployCloneOnChainChecks.probeBeacon(d, suite, beacon.beacon, chainId);
+        if (LibRainDeployCloneOnChainChecks.seatsOther(probe.ownerAnswered, probe.owner, beacon.initial.owner)) {
+            revert BeaconSeatedOwner(chainId, beaconIndex, probe.owner);
         }
-        if (seatsOther(ownerAnswered, owner, beacon.initial.owner)) {
-            revert BeaconSeatedOwner(chainId, beaconIndex, owner);
+        if (
+            LibRainDeployCloneOnChainChecks.seatsOther(
+                probe.implementationAnswered, probe.implementation, initialImplementation
+            )
+        ) {
+            revert BeaconSeatedImplementation(chainId, beaconIndex, probe.implementation);
         }
-        if (seatsOther(implementationAnswered, implementation, initialImplementation)) {
-            revert BeaconSeatedImplementation(chainId, beaconIndex, implementation);
-        }
-    }
-
-    function seatsOther(bool answered, bytes memory answer, address expected) internal pure returns (bool) {
-        return answered && answer.length != 0 && keccak256(answer) != keccak256(abi.encode(expected));
     }
 }
