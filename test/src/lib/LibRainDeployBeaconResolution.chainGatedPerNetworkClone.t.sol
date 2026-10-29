@@ -111,6 +111,17 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
         assertEq(baseClone.code.length, 0);
     }
 
+    function testPerNetworkCloneSuiteSharingAnAddressIsRefusedByTheSharingNetworksInit() external {
+        CloneNetworks memory clones = chainGatedClones(abi.encode(uint256(42161)));
+        assertEq(
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 0)),
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 1))
+        );
+        DeploySuite memory suite = chainGatedSuite(clones);
+        vm.expectRevert(abi.encodeWithSelector(MockChainGatedCloneableWrongChain.selector, 42161, 8453));
+        this.externalDeriveDeployment(suite);
+    }
+
     function testPerNetworkCloneSuiteRefusedByALaterNetworksInitIsRefused() external {
         DeploySuite memory suite = chainGatedSuite(chainGatedClones(abi.encode(uint256(42161), uint256(8453))));
         vm.expectRevert(abi.encodeWithSelector(MockChainGatedCloneableWrongChain.selector, 42161, 8453));
