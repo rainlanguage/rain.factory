@@ -5,18 +5,30 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {
     DeployDeclaration,
+    DeployDependency,
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
-import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {
+    FrozenSnapshotMechanismDataMissing,
+    LibRainDeploySnapshot
+} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
+import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,
     LibRainDeployCloneMechanism
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {LibRainDeployCloneSnapshot} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
+import {
+    LibRainDeployCloneSnapshot,
+    SnapshotNothingDeployed,
+    SnapshotStateRevertFailed
+} from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
+import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
+import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
+import {MockSnapshotDeletingCloneable} from "../../concrete/MockSnapshotDeletingCloneable.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -271,5 +283,93 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         );
         assertTrue(vm.contains(emitted, EXPECTED_PER_NETWORK_ENTRY));
         assertFalse(vm.contains(emitted, "DEPLOYED_ADDRESS"));
+    }
+
+    string constant NOTHING_DEPLOYED_ROOT = "fixture-lib/snapshot-clone/nothing-deployed";
+    string constant UNREVERTABLE_DEPLOY_ROOT = "fixture-lib/snapshot-clone/unrevertable-deploy";
+    string constant NO_MECHANISM_DATA_ROOT = "fixture-lib/snapshot-clone/no-mechanism-data";
+
+    function externalWriteSuiteSnapshot(string memory root, DeploySuite memory suite) external returns (string memory) {
+        return LibRainDeployCloneSnapshot.writeSuiteSnapshot(
+            declaration(),
+            vm,
+            SnapshotFile(root, "0_0_1", "Record", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+            suite
+        );
+    }
+
+    function externalReleasedMechanismData(string memory path) external view returns (string memory) {
+        return LibRainDeployCloneSnapshot.releasedMechanismData(declaration(), vm, path, "Record_0_0_1");
+    }
+
+    /// A suite on no network, and a per-network suite on no network its payload carries, deploy nothing to record.
+    function testWriterRefusesASuiteWhoseLocalDeployDeploysNothing() external {
+        DeploySuite memory suite = exampleCloneReleaseSuite();
+        suite.networks = new string[](0);
+        vm.expectRevert(abi.encodeWithSelector(SnapshotNothingDeployed.selector, suite.suite));
+        this.externalWriteSuiteSnapshot(NOTHING_DEPLOYED_ROOT, suite);
+
+        suite = LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
+        suite.networks = new string[](1);
+        suite.networks[0] = LibRainDeploy.BASE;
+        vm.expectRevert(abi.encodeWithSelector(SnapshotNothingDeployed.selector, suite.suite));
+        this.externalWriteSuiteSnapshot(NOTHING_DEPLOYED_ROOT, suite);
+    }
+
+    /// @return A per-network clone on Arbitrum One of an implementation whose initialization deletes every state
+    /// snapshot.
+    function snapshotDeletingSuite() internal pure returns (DeploySuite memory) {
+        CloneNetworks memory clones = CloneNetworks({
+            factory: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
+            implementation: LibRainDeploy.zoltuAddress(type(MockSnapshotDeletingCloneable).creationCode),
+            salt: bytes32(uint256(7)),
+            networks: new ChainDeploy[](1)
+        });
+        clones.networks[0] = ChainDeploy({chainId: 42161, data: hex"01", deployedAddress: address(0)});
+        DeployDependency[] memory dependencies = new DeployDependency[](2);
+        dependencies[0] =
+            DeployDependency({deployedAddress: clones.factory, runtimeCode: type(MockCloneFactory).runtimeCode});
+        dependencies[1] = DeployDependency({
+            deployedAddress: clones.implementation, runtimeCode: type(MockSnapshotDeletingCloneable).runtimeCode
+        });
+        string[] memory networks = new string[](1);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(clones.implementation);
+        return DeploySuite({
+            suite: "snapshot-deleting-clone@0_0_1",
+            creationCode: LibRainDeployClone.cloneCreationCode(clones.implementation),
+            storedDeployedAddress: address(0),
+            storedBytecodeHash: keccak256(runtimeCode),
+            storedRuntimeCode: runtimeCode,
+            artifactPath: CLONE_ARTIFACT_PATH,
+            dependencies: dependencies,
+            mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
+            networks: networks
+        });
+    }
+
+    /// A local deploy that deletes the writer's state snapshot is refused rather than left behind.
+    function testWriterRefusesALocalDeployWhoseStateSnapshotCannotBeReverted() external {
+        DeploySuite memory suite = snapshotDeletingSuite();
+        uint256 writerSnapshotId = vm.snapshotState() + 1;
+        vm.expectRevert(abi.encodeWithSelector(SnapshotStateRevertFailed.selector, suite.suite, writerSnapshotId));
+        this.externalWriteSuiteSnapshot(UNREVERTABLE_DEPLOY_ROOT, suite);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(UNREVERTABLE_DEPLOY_ROOT, true);
+    }
+
+    /// A one-address record declaring no `MECHANISM_DATA` has none to release.
+    function testReleasedMechanismDataRefusesARecordWithoutMechanismData() external {
+        string memory path = string.concat(NO_MECHANISM_DATA_ROOT, "/Record.sol");
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.createDir(NO_MECHANISM_DATA_ROOT, true);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.writeFile(
+            path, string.concat("address constant DEPLOYED_ADDRESS = address(", vm.toString(address(1)), ");\n")
+        );
+        vm.expectRevert(abi.encodeWithSelector(FrozenSnapshotMechanismDataMissing.selector, path));
+        this.externalReleasedMechanismData(path);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(NO_MECHANISM_DATA_ROOT, true);
     }
 }

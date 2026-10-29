@@ -332,6 +332,10 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         );
         assertEq(occurrences(record, string.concat(";\n", MARKER_BLOCK)), 1);
         assertEq(this.externalRecordedMechanism(path), BEACON_PROXY_PER_NETWORK_MECHANISM);
+        assertEq(
+            LibRainDeployCloneMechanism.mechanismTag(recordedBytes(path, record, "MECHANISM_DATA")),
+            BEACON_PROXY_PER_NETWORK_MECHANISM
+        );
         assertTrue(
             vm.contains(record, "/// @dev The deterministic deploy address of the beacon proxy on chain id\n/// 42161,")
         );
