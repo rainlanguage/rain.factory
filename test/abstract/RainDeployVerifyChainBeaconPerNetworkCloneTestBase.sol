@@ -3,9 +3,10 @@
 pragma solidity ^0.8.25;
 
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {LibRainDeployBeaconDeclarationChecks} from "../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
+import {LibRainDeployBeaconResolution} from "../../src/lib/LibRainDeployBeaconResolution.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
@@ -55,7 +56,17 @@ abstract contract RainDeployVerifyChainBeaconPerNetworkCloneTestBase is PerNetwo
     /// @param chainId The network.
     /// @return The beacon's address on it.
     function externalResolveBeacon(uint256 chainId) external returns (address) {
-        return LibRainDeployBeaconDeclarationChecks.resolveBeacon(declaration(), beacons()[0].beacon, chainId, 0);
+        DeployDeclaration memory d = declaration();
+        return LibRainDeployBeaconResolution.resolveBeacon(
+            d,
+            beacons()[0].beacon,
+            chainId,
+            0,
+            new DeploySuite[](d.released.length),
+            new DerivedDeploy[](d.released.length)
+        )
+        .beacon
+        .beacon;
     }
 
     function testBeaconNamedBySuiteIsAtItsNetworksClone() external {

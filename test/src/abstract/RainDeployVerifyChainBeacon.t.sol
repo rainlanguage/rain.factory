@@ -16,13 +16,12 @@ import {
     DeployBeacon,
     LibRainDeployBeacon
 } from "../../../src/lib/LibRainDeployBeacon.sol";
-import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {
     BeaconNamedTwice,
     BeaconSeatedOwner,
     BeaconSuiteNotReleased,
-    BeaconUnnamed,
-    LibRainDeployCloneOnChainChecks
+    BeaconUnnamed
 } from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
 import {BeaconDeclaredTwice, BeaconOnUncheckedNetwork} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
@@ -588,12 +587,7 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         returns (DerivedDeploy memory)
     {
         DeployDeclaration memory d = declaration();
-        ChainBeacon[] memory chainBeacons = LibRainDeployCloneMechanism.layerConfig(d).beacons;
-        for (uint256 i = 0; i < chainBeacons.length; i++) {
-            if (LibRainDeploy.hasChainId(networks, chainBeacons[i].chainId)) {
-                LibRainDeployCloneOnChainChecks.resolveBeacon(d, chainBeacons[i].beacon, chainBeacons[i].chainId, i);
-            }
-        }
+        LibRainDeployBeaconResolution.resolveBeacons(d, networks);
         candidate.networks = LibRainDeploy.networkNames(networks);
         addRecordedNetworks(d, candidate);
         addCandidateNetworks(d, candidate, LibRainDeploy.networkChainIds(networks));
@@ -640,9 +634,9 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
 
     // No fork: the subjects are local and persistent.
     function externalCheckBeaconsOnNetwork(SupportedNetwork[] memory networks, uint256 networkIndex) external {
-        LibRainDeployCloneOnChainChecks.checkNetworkBeacons(
-            declaration(), networks[networkIndex].name, networks[networkIndex].chainId
-        );
+        DeployDeclaration memory d = declaration();
+        LibRainDeployBeaconResolution.checkNetworks(d, networks);
+        LibRainDeployBeaconResolution.checkNetwork(d, networks[networkIndex].name, networks[networkIndex].chainId);
     }
 
     function testAppliedMigrationExpectsItsTransitionOffline() external {

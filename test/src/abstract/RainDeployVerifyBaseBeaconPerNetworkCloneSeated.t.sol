@@ -15,7 +15,7 @@ import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
 import {BeaconVerifyFixture} from "../../abstract/BeaconVerifyFixture.sol";
 
 /// @title RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest
-/// @notice `LibRainDeployBeaconDeclarationChecks.checkSeatedState` deploys only the beacon network's own clone of a
+/// @notice `LibRainDeployBeaconResolution.checkSeatedState` deploys only the beacon network's own clone of a
 /// per-network clone beacon suite.
 contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixture {
     using LibBeaconDeclarations for ChainBeacon[];
