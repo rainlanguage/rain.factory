@@ -76,9 +76,7 @@ contract LibCloneCandidatesTest is Test {
         assertEq(abi.encode(d.candidates[0]), abi.encode(prior), "earlier candidates kept");
         for (uint256 i = 0; i < clones.length; i++) {
             assertAddedCandidate(
-                d.candidates[proxies.length + i],
-                LibRainDeployCloneMechanism.cloneCandidate(clones[i], ids),
-                d.networks
+                d.candidates[proxies.length + i], LibRainDeployCloneMechanism.cloneCandidate(clones[i], ids), d.networks
             );
         }
         assertNotEq(d.candidates[2].snapshot.storedDeployedAddress, d.candidates[3].snapshot.storedDeployedAddress);
