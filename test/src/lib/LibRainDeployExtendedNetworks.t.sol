@@ -167,10 +167,10 @@ contract LibRainDeployExtendedNetworksTest is Test {
         assertEq(
             LibRainDeployExtendedNetworks.extendedNetworksBody(vm, networks),
             string.concat(
-                "\n/// @dev The deterministic deploy address of the EIP-1167 clone on chain id\n/// 137, a network the",
+                "\n/// @dev The deterministic deploy address on chain id\n/// 137, a network the",
                 " release is declared on beyond its record.\naddress constant DEPLOYED_ADDRESS_137 =",
-                " address(0x1111111111111111111111111111111111111111);\n\n/// @dev The init data the clone is",
-                " broadcast with on chain id 137.\nbytes constant INIT_DATA_137 = hex\"00aa\";\n"
+                " address(0x1111111111111111111111111111111111111111);\n\n/// @dev The init data broadcast",
+                " on chain id 137.\nbytes constant INIT_DATA_137 = hex\"00aa\";\n"
             )
         );
         assertEq(LibRainDeployExtendedNetworks.extendedNetworksBody(vm, new ChainDeploy[](0)), "");
