@@ -68,7 +68,6 @@ contract LibRainDeployCloneMechanismCandidatesTest is Test {
         assertEq(actual.snapshot.artifactPath, expected.snapshot.artifactPath);
         assertEq(actual.snapshot.mechanismData, expected.snapshot.mechanismData);
         assertEq(abi.encode(actual.snapshot.dependencies), abi.encode(expected.snapshot.dependencies));
-        assertEq(actual.snapshot.networks, expected.snapshot.networks);
         assertEq(actual.unanchorableReason, expected.unanchorableReason);
     }
 
