@@ -653,8 +653,10 @@ contract LibRainDeployCloneMechanismTest is Test {
         bytes memory other = sharingInitData(137);
         DeploySuite memory suite = LibRainDeployCloneMechanism.cloneCandidate(clone, chainIds).snapshot;
         suite.networks = networkNames(chainIds);
+        uint256 callerChainId = block.chainid;
 
         address[] memory deployed = sDeploy.externalDeployLocally(vm, suite);
+        assertEq(block.chainid, callerChainId);
         assertEq(deployed, sDeploy.externalDeployedAddresses(suite));
         assertEq(deployed.length, 3);
         assertEq(deployed[0], exampleCloneAddress(shared));
