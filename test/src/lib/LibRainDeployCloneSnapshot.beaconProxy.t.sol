@@ -384,8 +384,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         string memory prefix = string.concat("bytes constant ", name, " =");
         for (uint256 i = 0; i < lines.length; i++) {
             if (vm.indexOf(lines[i], prefix) == 0) {
-                (bool readable, string memory value) =
-                    LibRainDeploySnapshot.declarationValue(vm, lines, i, "    hex\"");
+                (bool readable, string memory value) = LibRainDeploySnapshot.declarationValue(vm, lines, i, "    hex\"");
                 assertTrue(readable, name);
                 return vm.parseBytes(vm.replace(vm.replace(value, "hex\"", "0x"), "\";", ""));
             }
