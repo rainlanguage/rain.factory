@@ -1,9 +1,9 @@
 [[dependencies]]
 name = "@openzeppelin-contracts"
-version = "5.6.1"
-url = "https://soldeer-revisions.s3.amazonaws.com/@openzeppelin-contracts/5_6_1_15-03-2026_09:19:50_contracts.zip"
-checksum = "a3b6bc661be858c7c27f60a1708cbebe8c71034b4cc1e9fe270d0a05b069352f"
-integrity = "bce03af7ada1eee21a7fff393f238bcd7cd75a022a4db55ffb6b0dbb32433d35"
+version = "5.7.0"
+url = "https://soldeer-revisions.s3.amazonaws.com/@openzeppelin-contracts/5_7_0_29-07-2026_19:34:46_contracts.zip"
+checksum = "fe08a24bc34334b2976c6ad69a0d74bdfa63de8a5c8528579060f25a11fb5cd5"
+integrity = "3e13bc4d96bdef6e35f6b1e0dc0e455843a958edc597750dff20ca50295b767d"
 
 [[dependencies]]
 name = "forge-std"
@@ -14,10 +14,10 @@ integrity = "fa706c8a7caf3426c90f75e6aafa3224b0a6c899b490800cf6944e4ec42f9344"
 
 [[dependencies]]
 name = "rain-deploy"
-version = "0.1.27"
-url = "https://soldeer-revisions.s3.amazonaws.com/rain-deploy/0_1_27_28-10-2026_18:45:20_rain.zip"
-checksum = "b0cd03b4e3326d1273252e6f26ada439132156c8d958a91d932ad8e93795ca66"
-integrity = "8ad62edf4808a164366c5d45b538a064767f9279c86d01c172d86a71f4d294c6"
+version = "0.1.29"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-deploy/0_1_29_29-10-2026_11:28:37_rain.zip"
+checksum = "8de2a1aa0b36f0b4184c74034378b365307e91d9b6b955a43dd9a7698537a36d"
+integrity = "fdec4728f17773d4cfd1252ce01e8edd0f2b711b5da1c1e9317aaefa4cdded0a"
 
 [[dependencies]]
 name = "rain-metadata"
@@ -32,3 +32,10 @@ version = "0.1.39"
 url = "https://soldeer-revisions.s3.amazonaws.com/rain-sol-codegen/0_1_39_01-10-2026_22:33:18_rain.sol.zip"
 checksum = "356774c9461a4486196d4c7c59f6e6e7099aa567eff4c40bb21ebc5f752f9389"
 integrity = "29de970d9b88ec2eac8a4914a04f76736862b96936aba8b5d61d99189064bbd4"
+
+[[dependencies]]
+name = "safe-global-safe-smart-account"
+version = "1.4.1-3"
+url = "https://soldeer-revisions.s3.amazonaws.com/safe-global-safe-smart-account/1_4_1-3_04-10-2024_19:23:24_safe-global-safe-smart-account-1.4.zip"
+checksum = "c1a19ae2fbc8448d24b1f561f7f93072edf0b628b6acfc46369043131fd4ba93"
+integrity = "036adada50297472c6d8361056a7c8617f28013cb1989b37b389184cd3ca5336"

@@ -1,3 +1,10 @@
+# Release metadata, not foundry config: `LibRainDeploySnapshot.deployTag` reads
+# `version` as the release being built. Newest published release, moved only by
+# the release PR that cuts the next tag.
+[external.package]
+name = "rain-factory"
+version = "0.2.5"
+
 [profile.default]
 src = 'src'
 test = 'test'
@@ -16,8 +23,15 @@ cbor_metadata = false
 
 libs = ["dependencies"]
 
-# `script/Build.sol` regenerates `src/generated/`.
-fs_permissions = [{ access = "read-write", path = "./src/generated" }]
+# `script/Build.sol` regenerates `src/generated/` and stages `foundry.toml` in
+# `.staged-config/`.
+fs_permissions = [
+  { access = "read", path = "./foundry.toml" },
+  { access = "read-write", path = "./src/generated" },
+  { access = "read", path = "./test" },
+  { access = "read-write", path = "./fixture-lib" },
+  { access = "read-write", path = "./.staged-config" },
+]
 
 [fuzz]
 runs = 2048
@@ -25,24 +39,34 @@ runs = 2048
 [fmt]
 line_length = 120
 
-# Library repo: the ICloneable* interface surface plus the Lib* logic that
-# implements it. The concrete CloneFactory, its deploy-pin snapshots and deploy
-# scripts live in rain.factory.deploy (rainlanguage/rain.factory#46). The
-# published src/ imports one external interface: rain-deploy's
-# `IConfigRegistryV5`, which registry beacon proxies resolve through, and
-# rain-metadata, which it imports. The rest is test-harness or build-script
-# only: forge-std, OZ Clones as the independent equivalence oracle for the
-# EIP1167 construction, OZ BeaconProxy whose creation code `script/Build.sol`
-# pins into `src/generated/`, and rain-sol-codegen, which writes that file.
+# Library repo: the ICloneable* interface surface, the Lib* logic that
+# implements it, and the clone and beacon-proxy deploy mechanisms that extend
+# rain-deploy's suites. The concrete CloneFactory, its deploy-pin snapshots and
+# deploy scripts live in rain.factory.deploy (rainlanguage/rain.factory#46).
+# Registry beacon proxies resolve through rain-deploy's `IConfigRegistryV5`,
+# imported, which imports rain-metadata.
 [dependencies]
 forge-std = "1.17.0"
-# Frozen, with the [profile.default] compiler settings: changing either changes
-# the generated BeaconProxy creation code and so the ICloneableFactoryV5 address
-# derivation, which needs a new interface version.
-"@openzeppelin-contracts" = "5.6.1"
+# With the [profile.default] compiler settings this fixes the generated
+# BeaconProxy creation code and so the ICloneableFactoryV5 address derivation:
+# a bump that changes `src/generated/` needs a new interface version.
+"@openzeppelin-contracts" = "5.7.0"
 rain-sol-codegen = "0.1.39"
-rain-deploy = "0.1.27"
+rain-deploy = "0.1.29"
 rain-metadata = "0.1.43"
+safe-global-safe-smart-account = "1.4.1-3"
 
 [soldeer]
 recursive_deps = false
+# rain-deploy:generated:rpc_endpoints:begin
+[rpc_endpoints]
+arbitrum = "${ARBITRUM_RPC_URL}"
+base = "${BASE_RPC_URL}"
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+bsc = "${BSC_RPC_URL}"
+ethereum = "${ETHEREUM_RPC_URL}"
+flare = "${FLARE_RPC_URL}"
+hyperevm = "${HYPEREVM_RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
+robinhood = "${ROBINHOOD_RPC_URL}"
+# rain-deploy:generated:rpc_endpoints:end

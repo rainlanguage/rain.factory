@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std-1.17.0/src/Test.sol";
 
-import {Clones} from "@openzeppelin-contracts-5.6.1/proxy/Clones.sol";
+import {Clones} from "@openzeppelin-contracts-5.7.0/proxy/Clones.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../../src/interface/ICloneableV2.sol";
 import {ICLONEABLE_FACTORY_V4_NAMESPACED_DOMAIN} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {

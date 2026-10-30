@@ -1,0 +1,192 @@
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
+pragma solidity =0.8.25;
+
+import {Vm} from "forge-std-1.17.0/src/Vm.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {ICloneableFactoryV4} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
+import {RainDeployVerifyChain, SuiteRequiredNowhere} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {ExtendedNetworkUnfrozen, LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {
+    PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
+    PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
+    PerNetworkCloneDeploys,
+    etchPerNetworkCloneRelease,
+    onlyFirstRecordedNetworkSuites,
+    perNetworkCloneReleaseAddress,
+    perNetworkCloneReleaseAddresses
+} from "../../abstract/PerNetworkCloneDeploys.sol";
+import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
+
+/// @title RainDeployVerifyChainClonePerNetworkUnrecordedTest
+/// @notice The chain matrix over a per-network clone release cut when the repo supported Arbitrum
+/// One alone, in a repo that now supports Polygon too.
+contract RainDeployVerifyChainClonePerNetworkUnrecordedTest is PerNetworkCloneDeploys, RainDeployVerifyChain {
+    /// Puts the release's dependencies, and its clone at the address for each network, on every
+    /// fork.
+    function setUp() external {
+        etchPerNetworkCloneRelease(vm, declaration().released[0], perNetworkCloneReleaseAddresses());
+    }
+
+    /// External wrapper for `checkDeployedOnNetworks`.
+    /// @param networks The networks to check on.
+    /// @param suites The suites to check.
+    function externalCheckDeployedOnNetworks(SupportedNetwork[] memory networks, DeploySuite[] memory suites) external {
+        checkDeployedOnNetworks(declaration(), networks, suites);
+    }
+
+    /// `checkDeployedOnNetworks` over every declared network on local forks.
+    /// @param suites The suites to check.
+    function externalCheckOnLocalForks(DeploySuite[] memory suites) external {
+        DeployDeclaration memory d = declaration();
+        checkDeployedOnNetworks(
+            d, Vm(address(new LocalForkVm())), LibRainDeploy.declaredNetworkConfigs(d.networks), suites
+        );
+    }
+
+    /// External wrapper for `checkDeployedOnSupportedNetworks`.
+    /// @param suites The suites to check.
+    function externalCheckDeployedOnSupportedNetworks(DeploySuite[] memory suites) external {
+        checkDeployedOnSupportedNetworks(declaration(), suites);
+    }
+
+    /// @return Arbitrum One, as the networks a suite is required on there alone.
+    function arbitrumOnly() internal pure returns (string[] memory) {
+        string[] memory arbitrum = new string[](1);
+        arbitrum[0] = LibRainDeploy.ARBITRUM_ONE;
+        return arbitrum;
+    }
+
+    /// The release, recording Arbitrum One alone.
+    /// @return It, as the one suite to check.
+    function arbitrumOnlyRelease() internal view returns (DeploySuite[] memory) {
+        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(declaration().released[0]);
+        CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(suites[0]), (CloneNetworks));
+        assertEq(clones.networks.length, 1);
+        assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        assertEq(
+            clones.networks[0].deployedAddress, perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID)
+        );
+        return suites;
+    }
+
+    /// The release is refused on Polygon as unfrozen, naming the Polygon init data's address, whether
+    /// its clone is there or that address is empty: the frozen check runs before the code check.
+    function testUnrecordedNetworkIsRefusedAsUnfrozenWhetherOrNotItsCloneIsLive() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        address polygonAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkUnfrozen.selector, "per-network-clone@0_0_1", LibRainDeploy.POLYGON, polygonAddress
+            )
+        );
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+
+        vm.etch(polygonAddress, hex"");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkUnfrozen.selector, "per-network-clone@0_0_1", LibRainDeploy.POLYGON, polygonAddress
+            )
+        );
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+    }
+
+    /// The recorded network, checked alone, is still checked at its recorded address.
+    function testRecordedNetworkIsStillCheckedAtItsRecordedAddress() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        address arbitrumAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        vm.etch(arbitrumAddress, hex"");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibRainDeploy.NotDeployedOnNetwork.selector, LibRainDeploy.ARBITRUM_ONE, arbitrumAddress
+            )
+        );
+        this.externalCheckDeployedOnNetworks(LibRainDeploy.declaredNetworkConfigs(arbitrumOnly()), suites);
+    }
+
+    /// A release no candidate is named by takes no network from one.
+    function testReleaseNoCandidateNamesIsRefusedOnItsUnrecordedNetworkBeforeAnyFork() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        suites[0].suite = "other-clone@0_0_1";
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibRainDeployClone.CloneNetworkUndeclared.selector, PER_NETWORK_CLONE_POLYGON_CHAIN_ID
+            )
+        );
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+
+        (bool forked,) = address(vm).call(abi.encodeWithSignature("selectFork(uint256)", uint256(0)));
+        assertFalse(forked, "the matrix forked a network before refusing the unrecorded one");
+    }
+
+    /// An unrecorded network the release does not declare is refused as unfrozen before any network is forked or any
+    /// suite is derived.
+    function testUnrecordedNetworkIsRefusedAsUnfrozenBeforeAnyFork() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        address factory = abi.decode(LibRainDeployCloneMechanism.payload(suites[0]), (CloneNetworks)).factory;
+        vm.expectCall(factory, abi.encodeWithSelector(ICloneableFactoryV4.cloneDeterministicOpenSalt.selector), 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkUnfrozen.selector,
+                "per-network-clone@0_0_1",
+                LibRainDeploy.POLYGON,
+                perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID)
+            )
+        );
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+
+        (bool forked,) = address(vm).call(abi.encodeWithSignature("selectFork(uint256)", uint256(0)));
+        assertFalse(forked, "the matrix forked a network before refusing the unfrozen one");
+    }
+
+    /// A release required nowhere is refused as such before its unrecorded network is refused as unfrozen, and so is a
+    /// suite required nowhere checked after a release required on its unrecorded network.
+    function testSuiteRequiredNowherePrecedesTheFrozenCheck() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        suites[0].networks = new string[](0);
+        vm.expectRevert(abi.encodeWithSelector(SuiteRequiredNowhere.selector, "per-network-clone@0_0_1"));
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+
+        suites = new DeploySuite[](2);
+        suites[0] = arbitrumOnlyRelease()[0];
+        suites[1] = arbitrumOnlyRelease()[0];
+        suites[1].suite = "other-clone@0_0_1";
+        suites[1].networks = new string[](0);
+        vm.expectRevert(abi.encodeWithSelector(SuiteRequiredNowhere.selector, "other-clone@0_0_1"));
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+    }
+
+    /// A release required nowhere is refused as such before an address is derived on a network its candidate has no
+    /// entry for.
+    function testSuiteRequiredNowherePrecedesTheAddressDerivation() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        suites[0].suite = "other-clone@0_0_1";
+        suites[0].networks = new string[](0);
+        vm.expectRevert(abi.encodeWithSelector(SuiteRequiredNowhere.selector, "other-clone@0_0_1"));
+        this.externalCheckDeployedOnSupportedNetworks(suites);
+    }
+
+    /// A release not required on its unrecorded network is not refused there as unfrozen, and passes where it is
+    /// required and live.
+    function testUnrecordedNetworkNotRequiredIsNotRefusedAsUnfrozen() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        suites[0].networks = arbitrumOnly();
+        this.externalCheckOnLocalForks(suites);
+    }
+
+    /// A release not required on its unrecorded network is still checked where it is required.
+    function testUnrecordedNetworkNotRequiredLeavesTheRecordedNetworkChecked() external {
+        DeploySuite[] memory suites = arbitrumOnlyRelease();
+        suites[0].networks = arbitrumOnly();
+        address arbitrumAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        vm.etch(arbitrumAddress, hex"");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibRainDeploy.NotDeployedOnNetwork.selector, LibRainDeploy.ARBITRUM_ONE, arbitrumAddress
+            )
+        );
+        this.externalCheckOnLocalForks(suites);
+    }
+}

@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
+pragma solidity =0.8.25;
+
+import {DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeployBeaconDeclarationChecks} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
+import {BeaconSeatedOwner} from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
+import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
+import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
+import {MockChainSeatedBeacon} from "../../concrete/MockChainSeatedBeacon.sol";
+import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
+import {LibBeaconTest} from "../../lib/LibBeaconTest.sol";
+import {BeaconVerifyFixture} from "../../abstract/BeaconVerifyFixture.sol";
+
+contract RainDeployVerifyBaseBeaconChainSeatedTest is BeaconVerifyFixture {
+    using LibBeaconDeclarations for ChainBeacon[];
+
+    address constant ELSEWHERE_OWNER = address(0xE15E);
+
+    function releasedSuites() internal pure override returns (DeploySuite[] memory) {
+        DeploySuite[] memory fixture = super.releasedSuites();
+        DeploySuite[] memory released = new DeploySuite[](fixture.length + 1);
+        for (uint256 i = 0; i < fixture.length; i++) {
+            released[i] = fixture[i];
+        }
+        released[fixture.length] = LibBeaconTest.zoltuSuite(
+            "chain-beacon@0_0_1",
+            abi.encodePacked(
+                type(MockChainSeatedBeacon).creationCode,
+                abi.encode(
+                    LibRainDeploy.zoltuAddress(type(MockDeployableV2).creationCode), OWNER, ELSEWHERE_OWNER, 42161
+                )
+            ),
+            type(MockChainSeatedBeacon).runtimeCode,
+            "test/concrete/MockChainSeatedBeacon.sol:MockChainSeatedBeacon"
+        );
+        return released;
+    }
+
+    function externalCheckDeclaration() external {
+        LibRainDeployBeaconDeclarationChecks.checkDeclaration(declaration());
+    }
+
+    function testBeaconSuiteSeatingItsNetworksOwnerResolves() external {
+        sBeacons.declare(42161, bySuite("chain-beacon@0_0_1", OWNER));
+        supportOnly(LibRainDeploy.ARBITRUM_ONE, "");
+        this.externalCheckDeclaration();
+    }
+
+    function testBeaconSuiteSeatingAnotherNetworksOwnerIsRefused() external {
+        sBeacons.declare(8453, bySuite("chain-beacon@0_0_1", OWNER));
+        supportOnly(LibRainDeploy.BASE, "");
+        vm.expectRevert(abi.encodeWithSelector(BeaconSeatedOwner.selector, 8453, 0, abi.encode(ELSEWHERE_OWNER)));
+        this.externalCheckDeclaration();
+    }
+
+    function testSeatedStateCheckRestoresTheChainId() external {
+        uint256 chainId = block.chainid;
+        sBeacons.declare(42161, bySuite("chain-beacon@0_0_1", OWNER));
+        supportOnly(LibRainDeploy.ARBITRUM_ONE, "");
+        this.externalCheckDeclaration();
+        assertEq(block.chainid, chainId);
+    }
+}

@@ -61,8 +61,13 @@ makes this half a standalone publish.
 - NatSpec is terse: what an item does and non-obvious invariants only. rainix
   `comment-loc-cap` (comment lines at most 2x code lines across `src`) binds;
   cut prose to fit, never exempt.
-- The OZ pin and the `foundry.toml` compiler settings are frozen: they fix the
+- The OZ pin and the `foundry.toml` compiler settings fix the generated
   `BeaconProxy` and `RegistryBeaconProxy` creation code in the V5 and V7 address
-  derivations, so changing either needs a new interface version.
-- `rain-deploy` is a dependency for its `IConfigRegistryV5` interface only,
-  imported, never copied. Its deploy-pin code belongs to the deploy half.
+  derivations: a change to either that changes `src/generated/` needs a new
+  interface version.
+- `rain-deploy` is a dependency for the clone and beacon-proxy deploy
+  mechanisms: `LibRainDeployCloneMechanism.extend(d)` appends the clone,
+  clone-per-network, beacon-proxy and beacon-proxy-per-network handlers to a
+  consumer's `declaration()`; deploy pins and deploy scripts still live in
+  `rain.factory.deploy`. Registry beacon proxies import its `IConfigRegistryV5`,
+  never a copy.
