@@ -3,15 +3,32 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {DeployCandidate, DeployDeclaration} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployCandidate,
+    DeployDeclaration,
+    DeploySuite
+} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {CloneDeploy} from "../../../src/lib/LibRainDeployClone.sol";
-import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
+import {CloneDeploy, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {
+    CLONE_PER_NETWORK_MECHANISM,
+    LibRainDeployCloneMechanism
+} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibCloneCandidates, NoFactoryDeploys} from "../../../src/lib/LibCloneCandidates.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {exampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
-import {perNetworkCloneInitData} from "../../abstract/PerNetworkCloneDeploys.sol";
+import {
+    exampleCloneDeploys,
+    exampleCloneFactory,
+    exampleCloneImplementation
+} from "../../abstract/ExampleCloneDeploys.sol";
+import {
+    NoPerNetworkCloneAdmin,
+    PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN,
+    PER_NETWORK_CLONE_POLYGON_ADMIN,
+    perNetworkCloneDeploys,
+    perNetworkCloneInitData
+} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 
 /// @title LibCloneCandidatesTest
@@ -38,6 +55,12 @@ contract LibCloneCandidatesTest is Test {
 
     function externalAddNoBeaconProxies() external view {
         LibCloneCandidates.addBeaconProxies(declaration(), new BeaconProxyDeploy[](0));
+    }
+
+    function externalAddPerNetworkClonesOn(string[] memory networks) external view {
+        DeployDeclaration memory d = declaration();
+        LibRainDeployDeclaration.setNetworks(d, networks);
+        LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
     }
 
     /// @param actual The candidate added.
@@ -128,5 +151,69 @@ contract LibCloneCandidatesTest is Test {
         assertAddedCandidate(
             d.candidates[0], LibRainDeployCloneMechanism.beaconProxyCandidate(proxies[0], ids), networks
         );
+    }
+
+    /// @param networks The declared networks.
+    /// @param ids Their chain ids, as literals, in the same order.
+    function checkPerNetworkCloneOn(string[] memory networks, uint256[] memory ids) internal view {
+        DeployDeclaration memory d = declaration();
+        LibRainDeployDeclaration.setNetworks(d, networks);
+        CloneDeploy[] memory clones = perNetworkCloneDeploys();
+        LibCloneCandidates.addClones(d, clones);
+
+        assertEq(LibCloneCandidates.chainIds(d), ids);
+        assertEq(d.candidates.length, 1);
+        DeploySuite memory suite = d.candidates[0].snapshot;
+        assertEq(LibRainDeployCloneMechanism.mechanismTag(suite.mechanismData), CLONE_PER_NETWORK_MECHANISM);
+        CloneNetworks memory built = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
+        assertEq(built.networks.length, ids.length, "one entry per declared network");
+        for (uint256 i = 0; i < ids.length; i++) {
+            bytes memory data =
+                abi.encode(ids[i] == 42161 ? PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN : PER_NETWORK_CLONE_POLYGON_ADMIN);
+            assertEq(built.networks[i].chainId, ids[i]);
+            assertEq(built.networks[i].data, data);
+            assertEq(
+                built.networks[i].deployedAddress,
+                LibRainDeployClone.cloneDeployedAddress(
+                    CloneTarget({
+                        factory: exampleCloneFactory(),
+                        implementation: exampleCloneImplementation(),
+                        data: data,
+                        salt: clones[0].salt
+                    })
+                )
+            );
+        }
+    }
+
+    function testAddClonesBuildsAPerNetworkCloneForExactlyTheDeclaredNetworksInOrder() external view {
+        string[] memory networks = new string[](2);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        networks[1] = LibRainDeploy.POLYGON;
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = 42161;
+        ids[1] = 137;
+        checkPerNetworkCloneOn(networks, ids);
+
+        networks[0] = LibRainDeploy.POLYGON;
+        networks[1] = LibRainDeploy.ARBITRUM_ONE;
+        ids[0] = 137;
+        ids[1] = 42161;
+        checkPerNetworkCloneOn(networks, ids);
+
+        networks = new string[](1);
+        networks[0] = LibRainDeploy.POLYGON;
+        ids = new uint256[](1);
+        ids[0] = 137;
+        checkPerNetworkCloneOn(networks, ids);
+    }
+
+    function testAddClonesSurfacesTheInitDataRevertOfADeclaredNetwork() external {
+        string[] memory networks = new string[](3);
+        networks[0] = LibRainDeploy.ARBITRUM_ONE;
+        networks[1] = LibRainDeploy.POLYGON;
+        networks[2] = LibRainDeploy.BASE;
+        vm.expectRevert(abi.encodeWithSelector(NoPerNetworkCloneAdmin.selector, uint256(8453)));
+        this.externalAddPerNetworkClonesOn(networks);
     }
 }
