@@ -22,7 +22,7 @@ import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 contract LibRainDeployCloneOnChainChecksRegistryBeaconProxyTest is Test {
     uint256 constant ARBITRUM_ONE_CHAIN_ID = 42161;
 
-    function checkOnChain(DeploySuite memory suite) external {
+    function checkOnChain(DeploySuite memory suite) external view {
         DeployDeclaration memory d;
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneOnChainChecks.checkOnChain(
