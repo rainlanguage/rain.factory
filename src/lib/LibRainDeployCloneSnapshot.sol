@@ -84,7 +84,6 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
-        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
         bytes memory mechanismData = suite.mechanismData;
@@ -169,7 +168,6 @@ library LibRainDeployCloneSnapshot {
         CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
         string memory addressConstants = "";
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
-        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         for (uint256 i = 0; i < clones.networks.length; i++) {
             string memory chainId = vm.toString(clones.networks[i].chainId);
             addressConstants = string.concat(
