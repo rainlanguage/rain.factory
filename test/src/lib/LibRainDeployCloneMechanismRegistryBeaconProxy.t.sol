@@ -186,6 +186,7 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         external
     {
         vm.assume(runtimeCode.length > 0);
+        vm.assume(runtimeCode[0] != 0xef);
         RegistryBeaconProxyTarget memory target = liveTarget();
         DeploySuite memory suite = suiteOf(target);
         suite.storedRuntimeCode = runtimeCode;
