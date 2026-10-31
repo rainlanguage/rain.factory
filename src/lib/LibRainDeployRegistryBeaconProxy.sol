@@ -130,6 +130,15 @@ library LibRainDeployRegistryBeaconProxy {
             revert RegistryBeaconProxyBeaconConstructionFailed(target.beacon, implementation);
         }
         vm.etch(target.beacon, beaconCode);
+        uint256 moment = vm.getBlockTimestamp();
+        try IConfigRegistryV5(target.registry).getV5(target.authority, target.beaconName) returns (
+            bytes memory, uint256 registeredAt, bytes32
+        ) {
+            if (registeredAt > moment) {
+                moment = registeredAt;
+            }
+        } catch {}
+        vm.warp(moment + 1);
         vm.prank(target.authority);
         IConfigRegistryV5(target.registry)
             .registerV5(target.authority, target.beaconName, "address", abi.encode(target.beacon), "");
