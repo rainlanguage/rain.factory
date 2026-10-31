@@ -105,8 +105,20 @@ library LibICloneableFactoryV7 {
         bytes memory data,
         bytes32 salt
     ) internal view returns (address) {
+        return predictRegistryBeaconProxyAddress(address(this), registry, authority, beaconName, data, salt);
+    }
+
+    /// `ICloneableFactoryV7.predictRegistryBeaconProxyAddress` as `factory` answers it.
+    function predictRegistryBeaconProxyAddress(
+        address factory,
+        address registry,
+        address authority,
+        bytes32 beaconName,
+        bytes memory data,
+        bytes32 salt
+    ) internal pure returns (address) {
         return LibICloneableFactoryV5.predictCreate2Address(
-            address(this),
+            factory,
             effectiveRegistryBeaconProxySalt(data, salt),
             keccak256(registryBeaconProxyCreationCode(registry, authority, beaconName))
         );

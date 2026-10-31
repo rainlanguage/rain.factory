@@ -14,12 +14,17 @@ import {
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     BeaconOwnedByDeployKey,
-    LibRainDeployCloneOnChainChecks
+    LibRainDeployCloneOnChainChecks,
+    RegistryBeaconOwnedByDeployKey
 } from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
+import {RegistryBeaconProxyTarget} from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
+import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 
 /// @title LibRainDeployCloneOnChainChecksBroadcastSeatTest
 /// @notice `checkBroadcastSeat` refuses a beacon proxy suite when the deploy key owns any state of a declared beacon,
-/// naming the first such state, and does not limit a clone suite.
+/// naming the first such state, refuses a registry beacon proxy suite when the deploy key owns its declared beacon,
+/// whatever the declared beacons' owners, and does not limit a clone suite.
 contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
     address constant OWNER = address(0xB0B);
     address constant NEW_OWNER = address(0xCAFE);
@@ -49,7 +54,7 @@ contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
     }
 
     /// Beacon 0 on 42161: `initial0`, then `NEW_OWNER`. Beacon 1 on 8453: `OWNER`, then `NEW_OWNER`, then `last1`.
-    function checkBroadcastSeat(bytes32 mechanismId, address initial0, address last1) external view {
+    function declaration(address initial0, address last1) internal view returns (DeployDeclaration memory) {
         address[] memory owners0 = new address[](1);
         owners0[0] = NEW_OWNER;
         address[] memory owners1 = new address[](2);
@@ -61,10 +66,38 @@ contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
         DeployDeclaration memory d;
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setBeacons(d, beacons);
+        return d;
+    }
+
+    function checkBroadcastSeat(bytes32 mechanismId, address initial0, address last1) external view {
         DeploySuite memory suite;
         suite.suite = "suite";
         suite.mechanismData = abi.encode(mechanismId, "");
-        LibRainDeployCloneOnChainChecks.checkBroadcastSeat(d, suite, 1, DEPLOYER);
+        LibRainDeployCloneOnChainChecks.checkBroadcastSeat(declaration(initial0, last1), suite, 1, DEPLOYER);
+    }
+
+    function checkRegistryBroadcastSeat(DeploySuite memory suite, address declaredOwner) external view {
+        LibRainDeployCloneOnChainChecks.checkBroadcastSeat(
+            declaration(declaredOwner, declaredOwner), suite, 42161, DEPLOYER
+        );
+    }
+
+    function registrySuite(address beaconOwner)
+        internal
+        returns (RegistryBeaconProxyTarget memory, DeploySuite memory)
+    {
+        RegistryBeaconProxyTarget memory target =
+            LibRegistryBeaconProxyTest.live(
+                vm, address(new MockCloneableV2()), beaconOwner, hex"deadbeef", bytes32(uint256(5))
+            );
+        DeploySuite memory suite =
+        LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
+            LibRegistryBeaconProxyTest.declared(
+                "registry-beacon-proxy@0_0_1", target, LibRegistryBeaconProxyTest.runtimeOf(vm, target)
+            )
+        )
+        .snapshot;
+        return (target, suite);
     }
 
     function testBroadcastSeatRefusesTheDeployKeyOwningTheLastStateOfTheLastBeacon() external {
@@ -83,5 +116,16 @@ contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
 
     function testBroadcastSeatPassesACloneSuiteWhoseDeployKeyOwnsABeacon() external view {
         this.checkBroadcastSeat(CLONE_MECHANISM, DEPLOYER, DEPLOYER);
+    }
+
+    function testBroadcastSeatRefusesARegistryBeaconProxyWhoseDeclaredBeaconTheDeployKeyOwns() external {
+        (RegistryBeaconProxyTarget memory target, DeploySuite memory suite) = registrySuite(DEPLOYER);
+        vm.expectRevert(abi.encodeWithSelector(RegistryBeaconOwnedByDeployKey.selector, 42161, target.beacon));
+        this.checkRegistryBroadcastSeat(suite, OWNER);
+    }
+
+    function testBroadcastSeatPassesARegistryBeaconProxyWhoseDeclaredBeaconTheDeployKeyDoesNotOwn() external {
+        (, DeploySuite memory suite) = registrySuite(OWNER);
+        this.checkRegistryBroadcastSeat(suite, DEPLOYER);
     }
 }
