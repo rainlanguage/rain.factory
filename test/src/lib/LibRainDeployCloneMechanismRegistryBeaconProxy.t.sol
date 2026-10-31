@@ -131,6 +131,7 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         assertFalse(LibRainDeployCloneMechanism.isRegistryBeaconProxy(tagged("")));
         assertFalse(
             LibRainDeployCloneMechanism.isRegistryBeaconProxy(
+                //forge-lint: disable-next-line(unsafe-typecast)
                 tagged(abi.encodePacked(bytes31(REGISTRY_BEACON_PROXY_MECHANISM)))
             )
         );
