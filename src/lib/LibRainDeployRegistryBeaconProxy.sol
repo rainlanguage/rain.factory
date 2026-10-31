@@ -5,10 +5,13 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {console2} from "forge-std-1.17.0/src/console2.sol";
 import {IERC5313} from "@openzeppelin-contracts-5.7.0/interfaces/IERC5313.sol";
+import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {ICloneableFactoryV7} from "../interface/ICloneableFactoryV7.sol";
 import {LibICloneableFactoryV7} from "./LibICloneableFactoryV7.sol";
 
 import {DeployDependency} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {ConfigRegistry} from "rain-deploy-0.1.29/src/concrete/ConfigRegistry.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.29/src/interface/IConfigRegistryV5.sol";
 
 /// @dev The artifact path a registry beacon proxy suite carries.
 string constant REGISTRY_BEACON_PROXY_ARTIFACT_PATH = "rain-factory/RegistryBeaconProxy.sol:RegistryBeaconProxy";
@@ -29,9 +32,11 @@ struct RegistryBeaconProxyDeploy {
     address registry;
     address authority;
     bytes32 beaconName;
+    /// The beacon the binding MUST resolve to at broadcast. Not committed to by the address.
+    address beacon;
     bytes data;
     bytes32 salt;
-    /// MUST include the factory and the registry.
+    /// MUST include the factory, the registry and the beacon.
     DeployDependency[] dependencies;
     /// The proxy's runtime code, generated into `src/generated/` and checked by `Git is clean`.
     bytes runtimeCode;
@@ -43,6 +48,7 @@ struct RegistryBeaconProxyTarget {
     address registry;
     address authority;
     bytes32 beaconName;
+    address beacon;
     bytes data;
     bytes32 salt;
 }
@@ -51,17 +57,38 @@ struct RegistryBeaconProxyTarget {
 /// @notice The REGISTRY_BEACON_PROXY mechanism.
 library LibRainDeployRegistryBeaconProxy {
     /// Thrown when the factory on a network does not derive the address this package derives.
+    /// @param network The network whose factory was read.
+    /// @param factory The factory that was asked.
+    /// @param expected The address this package derives.
+    /// @param predicted The address the factory says it would deploy to.
     error RegistryBeaconProxyFactoryPredictionMismatch(
         string network, address factory, address expected, address predicted
     );
 
+    /// Thrown when the binding on a network does not resolve to the declared beacon.
+    /// @param network The network whose registry was read.
+    /// @param expected The declared beacon.
+    /// @param resolved The beacon the binding resolves to.
+    error RegistryBeaconProxyBeaconMismatch(string network, address expected, address resolved);
+
     /// Thrown when a registry beacon proxy deployed on the fork answers `owner()` with the deploy key.
+    /// @param network The network.
+    /// @param proxy The proxy.
     error RegistryBeaconProxySeatsDeployKey(string network, address proxy);
 
+    /// Thrown when `registryBeaconProxyRuntimeCode` cannot construct the beacon locally.
+    /// @param beacon The beacon address.
+    /// @param implementation The implementation it was to serve.
+    error RegistryBeaconProxyBeaconConstructionFailed(address beacon, address implementation);
+
     /// Thrown when `registryBeaconProxyRuntimeCode` cannot deploy the proxy locally.
+    /// @param registry The registry.
+    /// @param authority The authority.
+    /// @param beaconName The beacon's name.
     error RegistryBeaconProxyLocalDeployFailed(address registry, address authority, bytes32 beaconName);
 
     /// Thrown when `registryBeaconProxyRuntimeCode` cannot revert the local state it wrote.
+    /// @param state The state snapshot.
     error RegistryBeaconProxyLocalStateNotReverted(uint256 state);
 
     /// @param target The proxy.
@@ -76,16 +103,36 @@ library LibRainDeployRegistryBeaconProxy {
         );
     }
 
-    /// The proxy's runtime code, for a repo's `script/Build.sol` to generate into `src/generated/`. Deploys the
-    /// creation code against the fork's registry, so the binding MUST resolve there. The local state is reverted.
-    /// @param vm The Vm instance.
+    /// The proxy's runtime code, for a repo's `script/Build.sol` to generate into `src/generated/`. Etches a
+    /// `ConfigRegistry` at `target.registry` binding `beaconName` under `authority` to an `UpgradeableBeacon` at
+    /// `target.beacon` serving `implementation`, deploys the creation code, then reverts the local state.
+    /// @param vm The Vm instance to etch with.
     /// @param target The proxy.
+    /// @param implementation The implementation the beacon serves.
+    /// @param implementationCode The implementation's runtime code.
     /// @return The proxy's runtime code.
-    function registryBeaconProxyRuntimeCode(Vm vm, RegistryBeaconProxyTarget memory target)
-        internal
-        returns (bytes memory)
-    {
+    function registryBeaconProxyRuntimeCode(
+        Vm vm,
+        RegistryBeaconProxyTarget memory target,
+        address implementation,
+        bytes memory implementationCode
+    ) internal returns (bytes memory) {
         uint256 state = vm.snapshotState();
+        vm.etch(target.registry, address(new ConfigRegistry()).code);
+        vm.etch(implementation, implementationCode);
+        // slither-disable-next-line too-many-digits
+        vm.etch(
+            target.beacon, bytes.concat(type(UpgradeableBeacon).creationCode, abi.encode(implementation, target.beacon))
+        );
+        // slither-disable-next-line low-level-calls
+        (bool constructed, bytes memory beaconCode) = target.beacon.call("");
+        if (!constructed) {
+            revert RegistryBeaconProxyBeaconConstructionFailed(target.beacon, implementation);
+        }
+        vm.etch(target.beacon, beaconCode);
+        vm.prank(target.authority);
+        IConfigRegistryV5(target.registry)
+            .registerV5(target.authority, target.beaconName, "address", abi.encode(target.beacon), "");
         bytes memory creationCode = registryBeaconProxyCreationCode(target);
         address proxy;
         assembly ("memory-safe") {
@@ -99,6 +146,17 @@ library LibRainDeployRegistryBeaconProxy {
             revert RegistryBeaconProxyLocalStateNotReverted(state);
         }
         return runtimeCode;
+    }
+
+    /// Refuses `RegistryBeaconProxyBeaconMismatch` unless the binding on the current network resolves to the
+    /// declared beacon.
+    /// @param network The network.
+    /// @param target The proxy.
+    function checkBeacon(string memory network, RegistryBeaconProxyTarget memory target) internal view {
+        address resolved = LibICloneableFactoryV7.resolveBeacon(target.registry, target.authority, target.beaconName);
+        if (resolved != target.beacon) {
+            revert RegistryBeaconProxyBeaconMismatch(network, target.beacon, resolved);
+        }
     }
 
     /// @param target The proxy.
@@ -126,6 +184,7 @@ library LibRainDeployRegistryBeaconProxy {
         RegistryBeaconProxyTarget memory target = abi.decode(targetData, (RegistryBeaconProxyTarget));
 
         console2.log(" - Registry Beacon Proxy Factory:", target.factory);
+        checkBeacon(network, target);
         address expectedAddress = registryBeaconProxyDeployedAddress(target);
         address factoryPredictedAddress = ICloneableFactoryV7(target.factory)
             .predictRegistryBeaconProxyAddress(

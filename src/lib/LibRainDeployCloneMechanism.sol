@@ -922,6 +922,7 @@ library LibRainDeployCloneMechanism {
             registry: proxy.registry,
             authority: proxy.authority,
             beaconName: proxy.beaconName,
+            beacon: proxy.beacon,
             data: proxy.data,
             salt: proxy.salt
         });
