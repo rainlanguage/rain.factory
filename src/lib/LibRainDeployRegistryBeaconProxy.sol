@@ -131,6 +131,7 @@ library LibRainDeployRegistryBeaconProxy {
         }
         vm.etch(target.beacon, beaconCode);
         uint256 moment = vm.getBlockTimestamp();
+        // slither-disable-next-line unused-return
         try IConfigRegistryV5(target.registry).getV5(target.authority, target.beaconName) returns (
             bytes memory, uint256 registeredAt, bytes32
         ) {
