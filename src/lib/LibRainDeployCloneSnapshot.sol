@@ -18,7 +18,8 @@ import {
     BEACON_PROXY_PER_NETWORK_MECHANISM,
     CLONE_MECHANISM,
     CLONE_PER_NETWORK_MECHANISM,
-    LibRainDeployCloneMechanism
+    LibRainDeployCloneMechanism,
+    REGISTRY_BEACON_PROXY_MECHANISM
 } from "./LibRainDeployCloneMechanism.sol";
 
 /// Thrown when the state snapshot taken around a clone snapshot's local deploy could not be
@@ -291,7 +292,11 @@ library LibRainDeployCloneSnapshot {
             ? "CLONE_MECHANISM"
             : tag == CLONE_PER_NETWORK_MECHANISM
                 ? "CLONE_PER_NETWORK_MECHANISM"
-                : tag == BEACON_PROXY_MECHANISM ? "BEACON_PROXY_MECHANISM" : "BEACON_PROXY_PER_NETWORK_MECHANISM";
+                : tag == BEACON_PROXY_MECHANISM
+                    ? "BEACON_PROXY_MECHANISM"
+                    : tag == REGISTRY_BEACON_PROXY_MECHANISM
+                        ? "REGISTRY_BEACON_PROXY_MECHANISM"
+                        : "BEACON_PROXY_PER_NETWORK_MECHANISM";
     }
 
     /// The root a lib in THIS repo's lib dir reaches `SOURCE_ROOT` by.
@@ -436,5 +441,14 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         return releasedImportForTag(d, BEACON_PROXY_PER_NETWORK_MECHANISM);
+    }
+
+    /// @return `releasedImportForTag` of `REGISTRY_BEACON_PROXY_MECHANISM`.
+    function releasedRegistryBeaconProxyImport(DeployDeclaration memory d, string memory)
+        internal
+        pure
+        returns (string memory)
+    {
+        return releasedImportForTag(d, REGISTRY_BEACON_PROXY_MECHANISM);
     }
 }
