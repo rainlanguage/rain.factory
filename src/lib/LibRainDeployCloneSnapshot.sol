@@ -64,8 +64,6 @@ library LibRainDeployCloneSnapshot {
     string constant BEACON_PROXY_MARKER = "\n/// @dev Marks a beacon proxy record: its factory call's `implementation` is the\n"
         "/// beacon.\nbool constant BEACON_PROXY = true;\n";
 
-    string constant REGISTRY_BEACON_PROXY_NAME = "REGISTRY_BEACON_PROXY";
-
     string constant REGISTRY_BEACON_PROXY_DECLARATION = "bool constant REGISTRY_BEACON_PROXY = true;";
 
     /// The marker a registry beacon proxy record carries, as the writer emits it.
