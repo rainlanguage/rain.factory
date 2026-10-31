@@ -102,16 +102,23 @@ library LibRainDeployCloneSnapshot {
                 beaconProxy
                     ? "/// @dev The deterministic deploy address of the beacon proxy, through its\n"
                     "/// factory's beacon-proxy open salt."
-                    : "/// @dev The deterministic deploy address of the EIP-1167 clone, through its\n"
-                    "/// factory's open salt.",
+                    : registryBeaconProxy
+                        ? "/// @dev The deterministic deploy address of the registry beacon proxy, through\n"
+                        "/// its factory's registry-beacon-proxy open salt."
+                        : "/// @dev The deterministic deploy address of the EIP-1167 clone, through its\n"
+                        "/// factory's open salt.",
                 "DEPLOYED_ADDRESS",
                 runtime
             );
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
                 "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`."
-                : "/// @dev The clone factory call this release was cut with: the\n"
-                "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
+                : registryBeaconProxy
+                    ? "/// @dev The registry beacon proxy factory call this release was cut with: the\n"
+                    "/// tagged `abi.encode`d `RegistryBeaconProxyTarget` a released suite carries\n"
+                    "/// as its `mechanismData`."
+                    : "/// @dev The clone factory call this release was cut with: the\n"
+                    "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
         }
         return string.concat(
             beaconProxy ? BEACON_PROXY_MARKER : registryBeaconProxy ? REGISTRY_BEACON_PROXY_MARKER : "",
