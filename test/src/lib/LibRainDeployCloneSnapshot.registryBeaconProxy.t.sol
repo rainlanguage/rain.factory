@@ -3,7 +3,6 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {
     DeployDeclaration,
     DeploySuite,
@@ -12,8 +11,6 @@ import {
 } from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
-import {DeployDependency} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {ConfigRegistry} from "rain-deploy-0.1.29/src/concrete/ConfigRegistry.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
@@ -22,7 +19,6 @@ import {
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
-    RegistryBeaconProxyDeploy,
     RegistryBeaconProxyTarget
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {
@@ -34,7 +30,7 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
-import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
+import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneLayers} from "../../abstract/PerNetworkCloneDeploys.sol";
 
@@ -45,10 +41,6 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
     }
 
     string constant ROOT = "fixture-lib/snapshot-registry-beacon-proxy";
-
-    address constant AUTHORITY = address(uint160(uint256(keccak256("rain.factory.test.registry-authority"))));
-
-    bytes32 constant BEACON_NAME = keccak256("rain.factory.test.registry-beacon");
 
     string constant MARKER_LINE = "bool constant REGISTRY_BEACON_PROXY = true;\n";
 
@@ -223,39 +215,14 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
     }
 
     function registryBeaconProxySuite() internal returns (DeploySuite memory) {
-        address factory = address(new TestCloneFactory());
-        address registry = address(new ConfigRegistry());
-        address implementation = address(new MockCloneableV2());
-        address beacon = address(new UpgradeableBeacon(implementation, address(this)));
-        DeployDependency[] memory dependencies = new DeployDependency[](3);
-        dependencies[0] = DeployDependency({deployedAddress: factory, runtimeCode: factory.code});
-        dependencies[1] = DeployDependency({deployedAddress: registry, runtimeCode: registry.code});
-        dependencies[2] = DeployDependency({deployedAddress: beacon, runtimeCode: beacon.code});
-        RegistryBeaconProxyTarget memory target = RegistryBeaconProxyTarget({
-            factory: factory,
-            registry: registry,
-            authority: AUTHORITY,
-            beaconName: BEACON_NAME,
-            beacon: beacon,
-            data: hex"deadbeef",
-            salt: bytes32(uint256(7))
-        });
+        RegistryBeaconProxyTarget memory target = LibRegistryBeaconProxyTest.live(
+            vm, address(new MockCloneableV2()), address(this), hex"deadbeef", bytes32(uint256(7))
+        );
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
-            RegistryBeaconProxyDeploy({
-                suite: "registry-beacon-proxy",
-                factory: factory,
-                registry: registry,
-                authority: AUTHORITY,
-                beaconName: BEACON_NAME,
-                beacon: beacon,
-                data: target.data,
-                salt: target.salt,
-                dependencies: dependencies,
-                runtimeCode: LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-                    vm, target, implementation, implementation.code
-                )
-            })
+            LibRegistryBeaconProxyTest.declared(
+                "registry-beacon-proxy", target, LibRegistryBeaconProxyTest.runtimeOf(vm, target)
+            )
         )
         .snapshot;
         suite.networks = declaration().networks;
