@@ -172,6 +172,17 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite).length, 0);
     }
 
+    function testRegistryBeaconProxyDeployedAddressIsDerivedFromItsFactoryCallNotItsStoredAddress(address stored)
+        external
+    {
+        DeploySuite memory suite = suiteOf(liveTarget());
+        address expected = suite.storedDeployedAddress;
+        vm.assume(stored != expected);
+        suite.storedDeployedAddress = stored;
+        assertEq(sDeploy.externalDeployedAddress(suite, 42161), expected);
+        assertEq(sDeploy.externalRecordedAddress(suite, 42161), stored);
+    }
+
     function testRegistryBeaconProxySuiteDeploysLocallyToItsAddressOnEveryNetwork() external {
         DeploySuite memory suite = suiteOf(liveTarget());
         address[] memory deployed = sDeploy.externalDeployLocally(vm, suite);

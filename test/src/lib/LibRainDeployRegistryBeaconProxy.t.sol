@@ -59,6 +59,18 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         return LibRegistryBeaconProxyTest.live(vm, implementation, address(this), data, TEST_SALT);
     }
 
+    function unlivedTarget() internal pure returns (RegistryBeaconProxyTarget memory) {
+        return RegistryBeaconProxyTarget({
+            factory: address(0xFAC7),
+            registry: address(0x12E6),
+            authority: LibRegistryBeaconProxyTest.AUTHORITY,
+            beaconName: LibRegistryBeaconProxyTest.BEACON_NAME,
+            beacon: address(0xBEAC0),
+            data: TEST_DATA,
+            salt: TEST_SALT
+        });
+    }
+
     function copy(RegistryBeaconProxyTarget memory target) internal pure returns (RegistryBeaconProxyTarget memory) {
         return RegistryBeaconProxyTarget({
             factory: target.factory,
@@ -257,6 +269,53 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
             )
         );
         this.externalRuntimeCode(target, implementation, "");
+    }
+
+    function testRegistryBeaconProxyRuntimeCodeOutlastsABindingAfterTheClock(uint32 ahead) external {
+        vm.assume(ahead != 0);
+        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
+        bytes memory expected = LibRegistryBeaconProxyTest.runtimeOf(vm, target);
+        uint256 moment = block.timestamp;
+        vm.warp(moment + ahead);
+        LibRegistryBeaconProxyTest.bind(vm, target.registry, target.beacon);
+        vm.warp(moment);
+        assertEq(LibRegistryBeaconProxyTest.runtimeOf(vm, target), expected);
+        assertEq(block.timestamp, moment, "clock left moved");
+    }
+
+    function testRegistryBeaconProxyRuntimeCodeEtchesTheImplementationCodeItIsGiven() external {
+        RegistryBeaconProxyTarget memory target = unlivedTarget();
+        MockCloneableV2 deployed = new MockCloneableV2();
+        bytes memory expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
+            vm, target, address(deployed), address(deployed).code
+        );
+        address implementation = address(0x1A9E);
+        assertEq(
+            LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
+                vm, target, implementation, address(deployed).code
+            ),
+            expected
+        );
+        assertEq(implementation.code.length, 0, "implementation left behind");
+    }
+
+    function testRegistryBeaconProxyRuntimeCodeRefusesAProxyThatCannotDeploy() external {
+        RegistryBeaconProxyTarget memory target = unlivedTarget();
+        MockCloneableV2 implementation = new MockCloneableV2();
+        vm.mockCall(
+            target.beacon,
+            abi.encodeWithSelector(UpgradeableBeacon.implementation.selector),
+            abi.encode(address(0x1A9E))
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyLocalDeployFailed.selector,
+                target.registry,
+                target.authority,
+                target.beaconName
+            )
+        );
+        this.externalRuntimeCode(target, address(implementation), address(implementation).code);
     }
 
     function testCheckBeaconAcceptsTheBoundBeacon() external {
