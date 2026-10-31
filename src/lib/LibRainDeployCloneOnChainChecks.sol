@@ -177,13 +177,14 @@ library LibRainDeployCloneOnChainChecks {
         }
     }
 
-    /// Beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's
-    /// config is owned by `deployer`.
+    /// Beacon proxy and registry beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any
+    /// beacon in the handler's config is owned by `deployer`.
     function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256, address deployer)
         internal
         pure
     {
-        if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
+        bytes32 id = LibRainDeployDeclaration.mechanismIdOf(suite);
+        if (!isBeaconId(id) && id != REGISTRY_BEACON_PROXY_MECHANISM) {
             return;
         }
         ChainBeacon[] memory chainBeacons = beacons(d);
