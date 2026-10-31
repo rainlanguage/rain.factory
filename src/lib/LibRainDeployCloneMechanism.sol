@@ -470,13 +470,17 @@ library LibRainDeployCloneMechanism {
     }
 
     /// @param suite A registry beacon proxy suite.
-    /// @return Its factory call.
+    /// @return Its factory call, its factory, registry and beacon checked among its dependencies.
     function registryBeaconProxyTarget(DeploySuite memory suite)
         internal
         pure
         returns (RegistryBeaconProxyTarget memory)
     {
-        return abi.decode(payload(suite), (RegistryBeaconProxyTarget));
+        RegistryBeaconProxyTarget memory target = abi.decode(payload(suite), (RegistryBeaconProxyTarget));
+        LibRainDeployClone.checkDependencyDeclared(target.factory, suite.dependencies);
+        LibRainDeployClone.checkDependencyDeclared(target.registry, suite.dependencies);
+        LibRainDeployClone.checkDependencyDeclared(target.beacon, suite.dependencies);
+        return target;
     }
 
     /// @param suite A clone or beacon proxy suite that is not per network.
