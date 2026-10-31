@@ -251,15 +251,17 @@ library LibRainDeployCloneSnapshot {
         return addresses;
     }
 
-    /// The tag a frozen record's markers say its release carries; zero for a record with no `MECHANISM_DATA`.
     /// @param vm The Vm instance for string operations.
     /// @param path The record file the lines were read from.
     /// @param lines Its `recordLines`.
-    /// @return The tag.
-    function recordedMechanismTag(Vm vm, string memory path, string[] memory lines) internal pure returns (bytes32) {
-        // Only whether the record is per network is needed, not its addresses.
-        // slither-disable-next-line unused-return
-        (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
+    /// @return The record's `MECHANISM_DATA` declarations.
+    /// @return Its beacon proxy markers.
+    /// @return Its registry beacon proxy markers.
+    function recordedMarkerCounts(Vm vm, string memory path, string[] memory lines)
+        internal
+        pure
+        returns (uint256, uint256, uint256)
+    {
         uint256 mechanismData = 0;
         uint256 markers = 0;
         uint256 registryMarkers = 0;
@@ -278,6 +280,19 @@ library LibRainDeployCloneSnapshot {
                 revert FrozenSnapshotUnreadable(path);
             }
         }
+        return (mechanismData, markers, registryMarkers);
+    }
+
+    /// The tag a frozen record's markers say its release carries; zero for a record with no `MECHANISM_DATA`.
+    /// @param vm The Vm instance for string operations.
+    /// @param path The record file the lines were read from.
+    /// @param lines Its `recordLines`.
+    /// @return The tag.
+    function recordedMechanismTag(Vm vm, string memory path, string[] memory lines) internal pure returns (bytes32) {
+        // Only whether the record is per network is needed, not its addresses.
+        // slither-disable-next-line unused-return
+        (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
+        (uint256 mechanismData, uint256 markers, uint256 registryMarkers) = recordedMarkerCounts(vm, path, lines);
         if (mechanismData > 1) {
             revert FrozenSnapshotMechanismDataAmbiguous(path);
         }
