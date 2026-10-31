@@ -64,6 +64,14 @@ library LibRainDeployCloneSnapshot {
     string constant BEACON_PROXY_MARKER = "\n/// @dev Marks a beacon proxy record: its factory call's `implementation` is the\n"
         "/// beacon.\nbool constant BEACON_PROXY = true;\n";
 
+    string constant REGISTRY_BEACON_PROXY_NAME = "REGISTRY_BEACON_PROXY";
+
+    string constant REGISTRY_BEACON_PROXY_DECLARATION = "bool constant REGISTRY_BEACON_PROXY = true;";
+
+    /// The marker a registry beacon proxy record carries, as the writer emits it.
+    string constant REGISTRY_BEACON_PROXY_MARKER = "\n/// @dev Marks a registry beacon proxy record: its factory call resolves its\n"
+        "/// beacon from a config registry.\nbool constant REGISTRY_BEACON_PROXY = true;\n";
+
     /// The record body of a clone or beacon proxy suite.
     /// @param vm The Vm instance for string operations.
     /// @param addresses For a per-network suite, its address on each payload network in payload order.
@@ -76,6 +84,7 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
+        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
         bytes memory mechanismData = suite.mechanismData;
@@ -105,7 +114,7 @@ library LibRainDeployCloneSnapshot {
                 "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
         }
         return string.concat(
-            beaconProxy ? BEACON_PROXY_MARKER : "",
+            beaconProxy ? BEACON_PROXY_MARKER : registryBeaconProxy ? REGISTRY_BEACON_PROXY_MARKER : "",
             addressConstants,
             LibCodeGen.bytesConstantString(
                 vm, "/// @dev The creation bytecode of the contract.", "CREATION_CODE", suite.creationCode
@@ -153,6 +162,7 @@ library LibRainDeployCloneSnapshot {
         CloneNetworks memory clones = LibRainDeployCloneMechanism.cloneNetworks(suite);
         string memory addressConstants = "";
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
+        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         for (uint256 i = 0; i < clones.networks.length; i++) {
             string memory chainId = vm.toString(clones.networks[i].chainId);
             addressConstants = string.concat(
@@ -245,10 +255,14 @@ library LibRainDeployCloneSnapshot {
         (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
         uint256 mechanismData = 0;
         uint256 markers = 0;
+        uint256 registryMarkers = 0;
         bytes32 markerHash = keccak256(bytes(BEACON_PROXY_DECLARATION));
+        bytes32 registryMarkerHash = keccak256(bytes(REGISTRY_BEACON_PROXY_DECLARATION));
         for (uint256 i = 0; i < lines.length; i++) {
             if (keccak256(bytes(lines[i])) == markerHash) {
                 markers++;
+            } else if (keccak256(bytes(lines[i])) == registryMarkerHash) {
+                registryMarkers++;
             } else if (vm.contains(lines[i], BEACON_PROXY_NAME)) {
                 revert FrozenSnapshotUnreadable(path);
             } else if (vm.indexOf(lines[i], LibRainDeploySnapshot.MECHANISM_DATA_DECLARATION) == 0) {
@@ -260,17 +274,23 @@ library LibRainDeployCloneSnapshot {
         if (mechanismData > 1) {
             revert FrozenSnapshotMechanismDataAmbiguous(path);
         }
-        if (markers > 1) {
+        if (markers + registryMarkers > 1) {
             revert FrozenSnapshotBeaconProxyMarkerAmbiguous(path);
         }
         if (mechanismData == 0) {
-            if (markers != 0) {
+            if (markers + registryMarkers != 0) {
                 revert FrozenSnapshotBeaconProxyMechanismDataMissing(path);
             }
             if (chainIds.length != 0) {
                 revert FrozenSnapshotMechanismDataMissing(path);
             }
             return bytes32(0);
+        }
+        if (registryMarkers != 0) {
+            if (chainIds.length != 0) {
+                revert FrozenSnapshotUnreadable(path);
+            }
+            return REGISTRY_BEACON_PROXY_MECHANISM;
         }
         if (markers != 0) {
             return chainIds.length == 0 ? BEACON_PROXY_MECHANISM : BEACON_PROXY_PER_NETWORK_MECHANISM;
