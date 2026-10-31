@@ -18,10 +18,12 @@ import {
     BEACON_PROXY_MECHANISM,
     BEACON_PROXY_PER_NETWORK_MECHANISM,
     CloneLayerConfig,
-    LibRainDeployCloneMechanism
+    LibRainDeployCloneMechanism,
+    REGISTRY_BEACON_PROXY_MECHANISM
 } from "./LibRainDeployCloneMechanism.sol";
 import {LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ResolvedBeacon} from "./LibRainDeployBeaconResolution.sol";
+import {LibRainDeployRegistryBeaconProxy} from "./LibRainDeployRegistryBeaconProxy.sol";
 
 /// @param suite The beacon proxy suite.
 /// @param network The network.
@@ -135,16 +137,23 @@ library LibRainDeployCloneOnChainChecks {
         return probe;
     }
 
-    /// Beacon proxy suites only: refuses `BeaconProxyBeaconUndeclared` when no beacon `checkNetworks` resolved on
-    /// `chainId` is the proxy's beacon.
+    /// Beacon proxy suites: refuses `BeaconProxyBeaconUndeclared` when no beacon `checkNetworks` resolved on
+    /// `chainId` is the proxy's beacon. Registry beacon proxy suites: `checkBeacon` on `network`.
     function checkOnChain(
         DeployDeclaration memory d,
         DeploySuite memory suite,
         string memory network,
         uint256 chainId,
         address
-    ) internal pure {
-        if (!isBeaconId(LibRainDeployDeclaration.mechanismIdOf(suite))) {
+    ) internal view {
+        bytes32 id = LibRainDeployDeclaration.mechanismIdOf(suite);
+        if (id == REGISTRY_BEACON_PROXY_MECHANISM) {
+            LibRainDeployRegistryBeaconProxy.checkBeacon(
+                network, LibRainDeployCloneMechanism.registryBeaconProxyTarget(suite)
+            );
+            return;
+        }
+        if (!isBeaconId(id)) {
             return;
         }
         address proxyBeacon = LibRainDeployCloneMechanism.beacon(suite, chainId);
