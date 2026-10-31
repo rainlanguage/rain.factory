@@ -84,6 +84,7 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
+        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
         bytes memory mechanismData = suite.mechanismData;
