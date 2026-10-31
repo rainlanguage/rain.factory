@@ -60,6 +60,10 @@ error BeaconSnapshotRevertFailed(string suite, uint256 snapshotId);
 /// @param state The state index, as `LibRainDeployBeacon.stateAt` takes it.
 error BeaconOwnedByDeployKey(uint256 chainId, uint256 beaconIndex, uint256 state);
 
+/// @param chainId The proxy's network.
+/// @param beacon The registry beacon proxy's beacon.
+error RegistryBeaconOwnedByDeployKey(uint256 chainId, address beacon);
+
 /// @param ownerAnswered Whether `owner()` returned.
 /// @param owner The `owner()` answer, raw.
 /// @param implementationAnswered Whether `implementation()` returned.
@@ -177,14 +181,22 @@ library LibRainDeployCloneOnChainChecks {
         }
     }
 
-    /// Beacon proxy and registry beacon proxy suites only: refuses `BeaconOwnedByDeployKey` when any state of any
-    /// beacon in the handler's config is owned by `deployer`.
-    function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256, address deployer)
+    /// Beacon proxy suites: refuses `BeaconOwnedByDeployKey` when any state of any beacon in the handler's config is
+    /// owned by `deployer`. Registry beacon proxy suites: refuses `RegistryBeaconOwnedByDeployKey` when `deployer`
+    /// owns the proxy's beacon.
+    function checkBroadcastSeat(DeployDeclaration memory d, DeploySuite memory suite, uint256 chainId, address deployer)
         internal
-        pure
+        view
     {
         bytes32 id = LibRainDeployDeclaration.mechanismIdOf(suite);
-        if (!isBeaconId(id) && id != REGISTRY_BEACON_PROXY_MECHANISM) {
+        if (id == REGISTRY_BEACON_PROXY_MECHANISM) {
+            address beacon = LibRainDeployCloneMechanism.registryBeaconProxyTarget(suite).beacon;
+            if (IERC5313(beacon).owner() == deployer) {
+                revert RegistryBeaconOwnedByDeployKey(chainId, beacon);
+            }
+            return;
+        }
+        if (!isBeaconId(id)) {
             return;
         }
         ChainBeacon[] memory chainBeacons = beacons(d);
