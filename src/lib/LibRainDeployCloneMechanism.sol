@@ -31,6 +31,13 @@ import {
     BeaconProxyDeploy,
     LibRainDeployBeaconProxy
 } from "./LibRainDeployBeaconProxy.sol";
+import {
+    REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
+    REGISTRY_BEACON_PROXY_UNANCHORABLE_REASON,
+    RegistryBeaconProxyDeploy,
+    RegistryBeaconProxyTarget,
+    LibRainDeployRegistryBeaconProxy
+} from "./LibRainDeployRegistryBeaconProxy.sol";
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
@@ -73,6 +80,10 @@ bytes32 constant BEACON_PROXY_MECHANISM = keccak256("rain.factory.deploy.mechani
 /// abi.encode(CloneNetworks))`.
 bytes32 constant BEACON_PROXY_PER_NETWORK_MECHANISM =
     keccak256("rain.factory.deploy.mechanism.beacon-proxy-per-network");
+
+/// @dev Tags a registry beacon proxy suite's `mechanismData`: `abi.encode(REGISTRY_BEACON_PROXY_MECHANISM,
+/// abi.encode(RegistryBeaconProxyTarget))`.
+bytes32 constant REGISTRY_BEACON_PROXY_MECHANISM = keccak256("rain.factory.deploy.mechanism.registry-beacon-proxy");
 
 /// Thrown when a clone suite's declared factory, run locally, puts the clone somewhere other than
 /// the address the factory formula derives.
@@ -187,20 +198,23 @@ library LibRainDeployCloneMechanism {
                     ? LibRainDeployCloneSnapshot.releasedClonePerNetworkImport
                     : id == BEACON_PROXY_MECHANISM
                         ? LibRainDeployCloneSnapshot.releasedBeaconProxyImport
-                        : LibRainDeployCloneSnapshot.releasedBeaconProxyPerNetworkImport,
+                        : id == REGISTRY_BEACON_PROXY_MECHANISM
+                            ? LibRainDeployCloneSnapshot.releasedRegistryBeaconProxyImport
+                            : LibRainDeployCloneSnapshot.releasedBeaconProxyPerNetworkImport,
             legacyRecordId: noLegacyRecord,
             checkNetworks: noNetworksCheck
         });
     }
 
-    /// Appends `handler()` and the `CLONE_PER_NETWORK_MECHANISM`, `BEACON_PROXY_MECHANISM` and
-    /// `BEACON_PROXY_PER_NETWORK_MECHANISM` handlers to `d`.
+    /// Appends `handler()` and the `CLONE_PER_NETWORK_MECHANISM`, `BEACON_PROXY_MECHANISM`,
+    /// `BEACON_PROXY_PER_NETWORK_MECHANISM` and `REGISTRY_BEACON_PROXY_MECHANISM` handlers to `d`.
     /// @param d The declaration, mutated.
     function extend(DeployDeclaration memory d) internal view {
         LibRainDeployDeclaration.addMechanism(d, handler());
         LibRainDeployDeclaration.addMechanism(d, idHandler(CLONE_PER_NETWORK_MECHANISM));
         LibRainDeployDeclaration.addMechanism(d, idHandler(BEACON_PROXY_MECHANISM));
         LibRainDeployDeclaration.addMechanism(d, idHandler(BEACON_PROXY_PER_NETWORK_MECHANISM));
+        LibRainDeployDeclaration.addMechanism(d, idHandler(REGISTRY_BEACON_PROXY_MECHANISM));
     }
 
     /// @param d The declaration, extended.
@@ -426,6 +440,12 @@ library LibRainDeployCloneMechanism {
     }
 
     /// @param suite The suite.
+    /// @return Whether it is a registry beacon proxy.
+    function isRegistryBeaconProxy(DeploySuite memory suite) internal pure returns (bool) {
+        return mechanismTag(suite.mechanismData) == REGISTRY_BEACON_PROXY_MECHANISM;
+    }
+
+    /// @param suite The suite.
     /// @return The payload its tag wraps.
     function payload(DeploySuite memory suite) internal pure returns (bytes memory) {
         (, bytes memory data) = abi.decode(suite.mechanismData, (bytes32, bytes));
@@ -447,6 +467,20 @@ library LibRainDeployCloneMechanism {
     /// @return The address `target` derives under `suite`'s mechanism.
     function targetAddress(DeploySuite memory suite, CloneTarget memory target) internal pure returns (address) {
         return targetAddress(isBeaconProxy(suite), target);
+    }
+
+    /// @param suite A registry beacon proxy suite.
+    /// @return Its factory call, its factory, registry and beacon checked among its dependencies.
+    function registryBeaconProxyTarget(DeploySuite memory suite)
+        internal
+        pure
+        returns (RegistryBeaconProxyTarget memory)
+    {
+        RegistryBeaconProxyTarget memory target = abi.decode(payload(suite), (RegistryBeaconProxyTarget));
+        LibRainDeployClone.checkDependencyDeclared(target.factory, suite.dependencies);
+        LibRainDeployClone.checkDependencyDeclared(target.registry, suite.dependencies);
+        LibRainDeployClone.checkDependencyDeclared(target.beacon, suite.dependencies);
+        return target;
     }
 
     /// @param suite A clone or beacon proxy suite that is not per network.
@@ -487,6 +521,9 @@ library LibRainDeployCloneMechanism {
         pure
         returns (address)
     {
+        if (isRegistryBeaconProxy(suite)) {
+            return LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(registryBeaconProxyTarget(suite));
+        }
         return targetAddress(suite, cloneTargetOn(suite, chainId));
     }
 
@@ -527,6 +564,9 @@ library LibRainDeployCloneMechanism {
         pure
         returns (bytes memory)
     {
+        if (isRegistryBeaconProxy(suite)) {
+            return abi.encode(registryBeaconProxyTarget(suite));
+        }
         return abi.encode(cloneTargetOn(suite, chainId));
     }
 
@@ -537,6 +577,9 @@ library LibRainDeployCloneMechanism {
         pure
         returns (function(Vm, string memory, address, bytes memory) internal returns (address))
     {
+        if (isRegistryBeaconProxy(suite)) {
+            return LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployStep;
+        }
         return
             isBeaconProxy(suite) ? LibRainDeployBeaconProxy.beaconProxyDeployStep : LibRainDeployClone.cloneDeployStep;
     }
@@ -690,6 +733,11 @@ library LibRainDeployCloneMechanism {
     /// @param chainId The network's chain id.
     /// @param expected The address its target derives there.
     function deployTarget(Vm vm, DeploySuite memory suite, uint256 chainId, address expected) internal {
+        if (isRegistryBeaconProxy(suite)) {
+            checkRegistryBeaconProxyCreationCode(suite);
+            vm.etch(expected, suite.storedRuntimeCode);
+            return;
+        }
         CloneTarget memory target = cloneTargetOn(suite, chainId);
         bool beaconProxy = isBeaconProxy(suite);
         checkCloneCreationCode(suite, beaconProxy, target.implementation);
@@ -713,6 +761,20 @@ library LibRainDeployCloneMechanism {
                     beaconProxy
                         ? LibRainDeployBeaconProxy.beaconProxyCreationCode(implementation)
                         : LibRainDeployClone.cloneCreationCode(implementation)
+                )
+        ) {
+            revert CloneCreationCodeMismatch(suite.suite);
+        }
+    }
+
+    /// Refuses `CloneCreationCodeMismatch` unless `suite`'s creation code is the `RegistryBeaconProxy` creation code
+    /// over its binding.
+    /// @param suite A registry beacon proxy suite.
+    function checkRegistryBeaconProxyCreationCode(DeploySuite memory suite) internal pure {
+        if (
+            keccak256(suite.creationCode)
+                != keccak256(
+                    LibRainDeployRegistryBeaconProxy.registryBeaconProxyCreationCode(registryBeaconProxyTarget(suite))
                 )
         ) {
             revert CloneCreationCodeMismatch(suite.suite);
@@ -850,6 +912,38 @@ library LibRainDeployCloneMechanism {
         candidate.snapshot.storedRuntimeCode = proxy.runtimeCode;
         candidate.snapshot.storedBytecodeHash = keccak256(proxy.runtimeCode);
         return candidate;
+    }
+
+    /// @param proxy The registry beacon proxy declaration.
+    /// @return Its candidate, carrying its declared runtime code.
+    function registryBeaconProxyCandidate(RegistryBeaconProxyDeploy memory proxy)
+        internal
+        pure
+        returns (DeployCandidate memory)
+    {
+        RegistryBeaconProxyTarget memory target = RegistryBeaconProxyTarget({
+            factory: proxy.factory,
+            registry: proxy.registry,
+            authority: proxy.authority,
+            beaconName: proxy.beaconName,
+            beacon: proxy.beacon,
+            data: proxy.data,
+            salt: proxy.salt
+        });
+        return DeployCandidate({
+            snapshot: DeploySuite({
+                suite: proxy.suite,
+                creationCode: LibRainDeployRegistryBeaconProxy.registryBeaconProxyCreationCode(target),
+                storedDeployedAddress: LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target),
+                storedBytecodeHash: keccak256(proxy.runtimeCode),
+                storedRuntimeCode: proxy.runtimeCode,
+                artifactPath: REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
+                dependencies: proxy.dependencies,
+                mechanismData: abi.encode(REGISTRY_BEACON_PROXY_MECHANISM, abi.encode(target)),
+                networks: new string[](0)
+            }),
+            unanchorableReason: REGISTRY_BEACON_PROXY_UNANCHORABLE_REASON
+        });
     }
 
     /// @param clone The declaration, a beacon proxy's beacon in `implementation`.

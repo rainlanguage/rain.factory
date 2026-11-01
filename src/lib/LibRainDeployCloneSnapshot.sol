@@ -18,7 +18,8 @@ import {
     BEACON_PROXY_PER_NETWORK_MECHANISM,
     CLONE_MECHANISM,
     CLONE_PER_NETWORK_MECHANISM,
-    LibRainDeployCloneMechanism
+    LibRainDeployCloneMechanism,
+    REGISTRY_BEACON_PROXY_MECHANISM
 } from "./LibRainDeployCloneMechanism.sol";
 
 /// Thrown when the state snapshot taken around a clone snapshot's local deploy could not be
@@ -63,6 +64,12 @@ library LibRainDeployCloneSnapshot {
     string constant BEACON_PROXY_MARKER = "\n/// @dev Marks a beacon proxy record: its factory call's `implementation` is the\n"
         "/// beacon.\nbool constant BEACON_PROXY = true;\n";
 
+    string constant REGISTRY_BEACON_PROXY_DECLARATION = "bool constant REGISTRY_BEACON_PROXY = true;";
+
+    /// The marker a registry beacon proxy record carries, as the writer emits it.
+    string constant REGISTRY_BEACON_PROXY_MARKER = "\n/// @dev Marks a registry beacon proxy record: its factory call resolves its\n"
+        "/// beacon from a config registry.\nbool constant REGISTRY_BEACON_PROXY = true;\n";
+
     /// The record body of a clone or beacon proxy suite.
     /// @param vm The Vm instance for string operations.
     /// @param addresses For a per-network suite, its address on each payload network in payload order.
@@ -75,6 +82,7 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         bool beaconProxy = LibRainDeployCloneMechanism.isBeaconProxy(suite);
+        bool registryBeaconProxy = LibRainDeployCloneMechanism.isRegistryBeaconProxy(suite);
         string memory addressConstants;
         string memory mechanismDataComment;
         bytes memory mechanismData = suite.mechanismData;
@@ -92,19 +100,26 @@ library LibRainDeployCloneSnapshot {
                 beaconProxy
                     ? "/// @dev The deterministic deploy address of the beacon proxy, through its\n"
                     "/// factory's beacon-proxy open salt."
-                    : "/// @dev The deterministic deploy address of the EIP-1167 clone, through its\n"
-                    "/// factory's open salt.",
+                    : registryBeaconProxy
+                        ? "/// @dev The deterministic deploy address of the registry beacon proxy, through\n"
+                        "/// its factory's registry-beacon-proxy open salt."
+                        : "/// @dev The deterministic deploy address of the EIP-1167 clone, through its\n"
+                        "/// factory's open salt.",
                 "DEPLOYED_ADDRESS",
                 runtime
             );
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
                 "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`."
-                : "/// @dev The clone factory call this release was cut with: the\n"
-                "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
+                : registryBeaconProxy
+                    ? "/// @dev The registry beacon proxy factory call this release was cut with: the\n"
+                    "/// tagged `abi.encode`d `RegistryBeaconProxyTarget` a released suite carries\n"
+                    "/// as its `mechanismData`."
+                    : "/// @dev The clone factory call this release was cut with: the\n"
+                    "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
         }
         return string.concat(
-            beaconProxy ? BEACON_PROXY_MARKER : "",
+            beaconProxy ? BEACON_PROXY_MARKER : registryBeaconProxy ? REGISTRY_BEACON_PROXY_MARKER : "",
             addressConstants,
             LibCodeGen.bytesConstantString(
                 vm, "/// @dev The creation bytecode of the contract.", "CREATION_CODE", suite.creationCode
@@ -233,6 +248,38 @@ library LibRainDeployCloneSnapshot {
         return addresses;
     }
 
+    /// @param vm The Vm instance for string operations.
+    /// @param path The record file the lines were read from.
+    /// @param lines Its `recordLines`.
+    /// @return The record's `MECHANISM_DATA` declarations.
+    /// @return Its beacon proxy markers.
+    /// @return Its registry beacon proxy markers.
+    function recordedMarkerCounts(Vm vm, string memory path, string[] memory lines)
+        internal
+        pure
+        returns (uint256, uint256, uint256)
+    {
+        uint256 mechanismData = 0;
+        uint256 markers = 0;
+        uint256 registryMarkers = 0;
+        bytes32 markerHash = keccak256(bytes(BEACON_PROXY_DECLARATION));
+        bytes32 registryMarkerHash = keccak256(bytes(REGISTRY_BEACON_PROXY_DECLARATION));
+        for (uint256 i = 0; i < lines.length; i++) {
+            if (keccak256(bytes(lines[i])) == markerHash) {
+                markers++;
+            } else if (keccak256(bytes(lines[i])) == registryMarkerHash) {
+                registryMarkers++;
+            } else if (vm.contains(lines[i], BEACON_PROXY_NAME)) {
+                revert FrozenSnapshotUnreadable(path);
+            } else if (vm.indexOf(lines[i], LibRainDeploySnapshot.MECHANISM_DATA_DECLARATION) == 0) {
+                mechanismData++;
+            } else if (vm.contains(lines[i], LibRainDeploySnapshot.MECHANISM_DATA_NAME)) {
+                revert FrozenSnapshotUnreadable(path);
+            }
+        }
+        return (mechanismData, markers, registryMarkers);
+    }
+
     /// The tag a frozen record's markers say its release carries; zero for a record with no `MECHANISM_DATA`.
     /// @param vm The Vm instance for string operations.
     /// @param path The record file the lines were read from.
@@ -242,34 +289,27 @@ library LibRainDeployCloneSnapshot {
         // Only whether the record is per network is needed, not its addresses.
         // slither-disable-next-line unused-return
         (uint256[] memory chainIds,) = LibRainDeploySnapshot.recordedDeployedAddresses(vm, path, lines);
-        uint256 mechanismData = 0;
-        uint256 markers = 0;
-        bytes32 markerHash = keccak256(bytes(BEACON_PROXY_DECLARATION));
-        for (uint256 i = 0; i < lines.length; i++) {
-            if (keccak256(bytes(lines[i])) == markerHash) {
-                markers++;
-            } else if (vm.contains(lines[i], BEACON_PROXY_NAME)) {
-                revert FrozenSnapshotUnreadable(path);
-            } else if (vm.indexOf(lines[i], LibRainDeploySnapshot.MECHANISM_DATA_DECLARATION) == 0) {
-                mechanismData++;
-            } else if (vm.contains(lines[i], LibRainDeploySnapshot.MECHANISM_DATA_NAME)) {
-                revert FrozenSnapshotUnreadable(path);
-            }
-        }
+        (uint256 mechanismData, uint256 markers, uint256 registryMarkers) = recordedMarkerCounts(vm, path, lines);
         if (mechanismData > 1) {
             revert FrozenSnapshotMechanismDataAmbiguous(path);
         }
-        if (markers > 1) {
+        if (markers + registryMarkers > 1) {
             revert FrozenSnapshotBeaconProxyMarkerAmbiguous(path);
         }
         if (mechanismData == 0) {
-            if (markers != 0) {
+            if (markers + registryMarkers != 0) {
                 revert FrozenSnapshotBeaconProxyMechanismDataMissing(path);
             }
             if (chainIds.length != 0) {
                 revert FrozenSnapshotMechanismDataMissing(path);
             }
             return bytes32(0);
+        }
+        if (registryMarkers != 0) {
+            if (chainIds.length != 0) {
+                revert FrozenSnapshotUnreadable(path);
+            }
+            return REGISTRY_BEACON_PROXY_MECHANISM;
         }
         if (markers != 0) {
             return chainIds.length == 0 ? BEACON_PROXY_MECHANISM : BEACON_PROXY_PER_NETWORK_MECHANISM;
@@ -291,7 +331,11 @@ library LibRainDeployCloneSnapshot {
             ? "CLONE_MECHANISM"
             : tag == CLONE_PER_NETWORK_MECHANISM
                 ? "CLONE_PER_NETWORK_MECHANISM"
-                : tag == BEACON_PROXY_MECHANISM ? "BEACON_PROXY_MECHANISM" : "BEACON_PROXY_PER_NETWORK_MECHANISM";
+                : tag == BEACON_PROXY_MECHANISM
+                    ? "BEACON_PROXY_MECHANISM"
+                    : tag == REGISTRY_BEACON_PROXY_MECHANISM
+                        ? "REGISTRY_BEACON_PROXY_MECHANISM"
+                        : "BEACON_PROXY_PER_NETWORK_MECHANISM";
     }
 
     /// The root a lib in THIS repo's lib dir reaches `SOURCE_ROOT` by.
@@ -436,5 +480,14 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         return releasedImportForTag(d, BEACON_PROXY_PER_NETWORK_MECHANISM);
+    }
+
+    /// @return `releasedImportForTag` of `REGISTRY_BEACON_PROXY_MECHANISM`.
+    function releasedRegistryBeaconProxyImport(DeployDeclaration memory d, string memory)
+        internal
+        pure
+        returns (string memory)
+    {
+        return releasedImportForTag(d, REGISTRY_BEACON_PROXY_MECHANISM);
     }
 }

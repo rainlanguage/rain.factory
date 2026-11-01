@@ -30,9 +30,15 @@ import {
     perNetworkCloneInitData
 } from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {
+    RegistryBeaconProxyDeploy,
+    RegistryBeaconProxyTarget
+} from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
+import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 
 /// @title LibCloneCandidatesTest
-/// @notice An empty clone or beacon proxy list is refused where it is added, and a non-empty one appends a candidate
+/// @notice An empty clone, beacon proxy or registry beacon proxy list is refused where it is added, and a non-empty one appends a candidate
 /// per entry, in order, after the candidates already declared.
 contract LibCloneCandidatesTest is Test {
     function declaration() internal pure returns (DeployDeclaration memory) {
@@ -49,12 +55,29 @@ contract LibCloneCandidatesTest is Test {
         return proxies;
     }
 
+    function registryBeaconProxyDeploys() internal returns (RegistryBeaconProxyDeploy[] memory) {
+        RegistryBeaconProxyTarget memory target = LibRegistryBeaconProxyTest.live(
+            vm, address(new MockCloneableV2()), address(this), hex"beef", bytes32(uint256(7))
+        );
+        bytes memory runtimeCode = LibRegistryBeaconProxyTest.runtimeOf(vm, target);
+        RegistryBeaconProxyDeploy[] memory proxies = new RegistryBeaconProxyDeploy[](2);
+        proxies[0] = LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy", target, runtimeCode);
+        target.salt = bytes32(uint256(8));
+        proxies[1] =
+            LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy-second-salt", target, runtimeCode);
+        return proxies;
+    }
+
     function externalAddNoClones() external view {
         LibCloneCandidates.addClones(declaration(), new CloneDeploy[](0));
     }
 
     function externalAddNoBeaconProxies() external view {
         LibCloneCandidates.addBeaconProxies(declaration(), new BeaconProxyDeploy[](0));
+    }
+
+    function externalAddNoRegistryBeaconProxies() external pure {
+        LibCloneCandidates.addRegistryBeaconProxies(declaration(), new RegistryBeaconProxyDeploy[](0));
     }
 
     function externalAddPerNetworkClonesOn(string[] memory networks) external view {
@@ -84,6 +107,11 @@ contract LibCloneCandidatesTest is Test {
     function testAddBeaconProxiesRefusesAnEmptyList() external {
         vm.expectRevert(abi.encodeWithSelector(NoFactoryDeploys.selector));
         this.externalAddNoBeaconProxies();
+    }
+
+    function testAddRegistryBeaconProxiesRefusesAnEmptyList() external {
+        vm.expectRevert(abi.encodeWithSelector(NoFactoryDeploys.selector));
+        this.externalAddNoRegistryBeaconProxies();
     }
 
     function testAddClonesAppendsACandidatePerCloneInOrder() external view {
@@ -124,6 +152,28 @@ contract LibCloneCandidatesTest is Test {
             assertAddedCandidate(
                 d.candidates[clones.length + i],
                 LibRainDeployCloneMechanism.beaconProxyCandidate(proxies[i], ids),
+                d.networks
+            );
+        }
+        assertNotEq(d.candidates[2].snapshot.storedDeployedAddress, d.candidates[3].snapshot.storedDeployedAddress);
+    }
+
+    function testAddRegistryBeaconProxiesAppendsACandidatePerRegistryBeaconProxyInOrder() external {
+        DeployDeclaration memory d = declaration();
+        CloneDeploy[] memory clones = exampleCloneDeploys();
+        LibCloneCandidates.addClones(d, clones);
+        DeployCandidate memory prior = d.candidates[0];
+
+        RegistryBeaconProxyDeploy[] memory proxies = registryBeaconProxyDeploys();
+        assertEq(proxies.length, 2, "two, so a loop that stops early is visible");
+        LibCloneCandidates.addRegistryBeaconProxies(d, proxies);
+
+        assertEq(d.candidates.length, clones.length + proxies.length);
+        assertEq(abi.encode(d.candidates[0]), abi.encode(prior), "earlier candidates kept");
+        for (uint256 i = 0; i < proxies.length; i++) {
+            assertAddedCandidate(
+                d.candidates[clones.length + i],
+                LibRainDeployCloneMechanism.registryBeaconProxyCandidate(proxies[i]),
                 d.networks
             );
         }

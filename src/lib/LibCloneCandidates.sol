@@ -7,6 +7,7 @@ import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
 import {CloneDeploy} from "./LibRainDeployClone.sol";
 import {BeaconProxyDeploy} from "./LibRainDeployBeaconProxy.sol";
+import {RegistryBeaconProxyDeploy} from "./LibRainDeployRegistryBeaconProxy.sol";
 import {LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 
 /// Thrown when an empty clone or beacon proxy list is added to a declaration.
@@ -48,6 +49,23 @@ library LibCloneCandidates {
         DeployCandidate[] memory candidates = new DeployCandidate[](proxies.length);
         for (uint256 i = 0; i < proxies.length; i++) {
             candidates[i] = LibRainDeployCloneMechanism.beaconProxyCandidate(proxies[i], ids);
+        }
+        LibRainDeployDeclaration.addCandidates(d, candidates);
+    }
+
+    /// Adds a candidate per registry beacon proxy. Refuses `NoFactoryDeploys` when empty.
+    /// @param d The declaration.
+    /// @param proxies The registry beacon proxies.
+    function addRegistryBeaconProxies(DeployDeclaration memory d, RegistryBeaconProxyDeploy[] memory proxies)
+        internal
+        pure
+    {
+        if (proxies.length == 0) {
+            revert NoFactoryDeploys();
+        }
+        DeployCandidate[] memory candidates = new DeployCandidate[](proxies.length);
+        for (uint256 i = 0; i < proxies.length; i++) {
+            candidates[i] = LibRainDeployCloneMechanism.registryBeaconProxyCandidate(proxies[i]);
         }
         LibRainDeployDeclaration.addCandidates(d, candidates);
     }
