@@ -89,7 +89,7 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     {
         GeneratedContract[] memory generated = new GeneratedContract[](1);
         generated[0] =
-            GeneratedContract(PER_NETWORK_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "per-network-clone@0_0_1"));
+            GeneratedContract(PER_NETWORK_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "per-network-clone"));
         return generated;
     }
 

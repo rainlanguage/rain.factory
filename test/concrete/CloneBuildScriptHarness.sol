@@ -12,7 +12,14 @@ import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codege
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {EXAMPLE_CLONE_RECORD_CONTRACT, addExampleClone, exampleCloneRelease} from "../abstract/ExampleCloneDeploys.sol";
+import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {
+    EXAMPLE_CLONE_RECORD_CONTRACT,
+    exampleCloneDeploys,
+    exampleCloneRelease,
+    exampleCloneReleased
+} from "../abstract/ExampleCloneDeploys.sol";
 
 /// @title CloneBuildScriptHarness
 /// @notice A clone deploy repo's build script over a fixture record root, its extended networks declared through
@@ -44,7 +51,10 @@ contract CloneBuildScriptHarness is BuildScript {
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
         LibRainDeployCloneMechanism.setExtendedNetworks(d, extended);
-        addExampleClone(d);
+        LibRainDeployDeclaration.addReleased(d, exampleCloneReleased());
+        CloneDeploy[] memory clones = new CloneDeploy[](1);
+        clones[0] = exampleCloneDeploys()[0];
+        LibCloneCandidates.addClones(d, clones);
         return d;
     }
 
@@ -66,7 +76,7 @@ contract CloneBuildScriptHarness is BuildScript {
         returns (GeneratedContract[] memory)
     {
         GeneratedContract[] memory generated = new GeneratedContract[](1);
-        generated[0] = GeneratedContract(EXAMPLE_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "example-clone@0_0_1"));
+        generated[0] = GeneratedContract(EXAMPLE_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "example-clone"));
         return generated;
     }
 
