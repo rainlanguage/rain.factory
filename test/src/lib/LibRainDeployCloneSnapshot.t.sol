@@ -170,8 +170,8 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         "            storedRuntimeCode: PerNetworkClone_0_0_1_RUNTIME_CODE,\n"
         "            artifactPath: \"rain-factory/EIP1167Clone.sol:EIP1167Clone\",\n"
         "            dependencies: abi.decode(PerNetworkClone_0_0_1_DEPENDENCIES, (DeployDependency[])),\n"
-        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n" "            networks: new string[](0)\n"
-        "        });\n";
+        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n" "            networks: new string[](0),\n"
+        "            describedByMeta: \"\"\n" "        });\n";
 
     /// The committed `per-network-clone` record's path, as `frozenSnapshotPaths` spells it.
     /// @return The one record file.
