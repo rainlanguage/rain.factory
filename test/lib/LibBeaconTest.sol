@@ -44,7 +44,8 @@ library LibBeaconTest {
             artifactPath: artifactPath,
             dependencies: new DeployDependency[](0),
             mechanismData: LibRainDeployZoltuMechanism.mechanismData(),
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
     }
 

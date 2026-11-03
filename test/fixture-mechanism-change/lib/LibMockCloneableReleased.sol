@@ -64,7 +64,8 @@ library LibMockCloneableReleased {
             artifactPath: "rain-factory/EIP1167Clone.sol:EIP1167Clone",
             dependencies: abi.decode(MockCloneable_0_0_1_DEPENDENCIES, (DeployDependency[])),
             mechanismData: LibRainDeployZoltuMechanism.mechanismData(),
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         suites[1] = DeploySuite({
             suite: "mock-cloneable@0_0_2",
@@ -75,7 +76,8 @@ library LibMockCloneableReleased {
             artifactPath: "rain-factory/EIP1167Clone.sol:EIP1167Clone",
             dependencies: abi.decode(MockCloneable_0_0_2_DEPENDENCIES, (DeployDependency[])),
             mechanismData: abi.encode(CLONE_MECHANISM, MockCloneable_0_0_2_MECHANISM_DATA),
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         suites[2] = DeploySuite({
             suite: "mock-cloneable@0_0_3",
@@ -86,7 +88,8 @@ library LibMockCloneableReleased {
             artifactPath: "rain-factory/EIP1167Clone.sol:EIP1167Clone",
             dependencies: abi.decode(MockCloneable_0_0_3_DEPENDENCIES, (DeployDependency[])),
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, MockCloneable_0_0_3_MECHANISM_DATA),
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         return suites;
     }

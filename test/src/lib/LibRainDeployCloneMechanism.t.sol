@@ -259,7 +259,8 @@ contract LibRainDeployCloneMechanismTest is Test {
             artifactPath: "test/concrete/MockDeployable.sol:MockDeployable",
             dependencies: new DeployDependency[](0),
             mechanismData: LibRainDeployZoltuMechanism.mechanismData(),
-            networks: perNetworkCloneNetworks()
+            networks: perNetworkCloneNetworks(),
+            describedByMeta: ""
         });
     }
 

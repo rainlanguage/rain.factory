@@ -182,7 +182,8 @@ function perNetworkCloneReleased() pure returns (DeploySuite[] memory) {
         artifactPath: CLONE_ARTIFACT_PATH,
         dependencies: abi.decode(PER_NETWORK_CLONE_DEPENDENCIES, (DeployDependency[])),
         mechanismData: PER_NETWORK_CLONE_MECHANISM_DATA,
-        networks: new string[](0)
+        networks: new string[](0),
+        describedByMeta: ""
     });
     return suites;
 }

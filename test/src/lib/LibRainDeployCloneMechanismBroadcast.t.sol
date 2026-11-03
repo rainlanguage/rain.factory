@@ -74,7 +74,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_MECHANISM, abi.encode(clone)),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 
@@ -105,7 +106,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: exampleCloneDependencies(),
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 
@@ -119,7 +121,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: "test/concrete/MockCloneable.sol:MockCloneable",
             dependencies: new DeployDependency[](0),
             mechanismData: LibRainDeployZoltuMechanism.mechanismData(),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 

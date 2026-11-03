@@ -55,7 +55,8 @@ contract LibRainDeployCloneMechanismDeployLocallyTest is Test {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: networks
+            networks: networks,
+            describedByMeta: ""
         });
     }
 

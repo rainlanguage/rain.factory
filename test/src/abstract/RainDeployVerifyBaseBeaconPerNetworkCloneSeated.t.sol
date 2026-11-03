@@ -50,7 +50,8 @@ contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixt
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         return released;
     }

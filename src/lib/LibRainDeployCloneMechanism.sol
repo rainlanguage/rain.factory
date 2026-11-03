@@ -940,7 +940,8 @@ library LibRainDeployCloneMechanism {
                 artifactPath: REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
                 dependencies: proxy.dependencies,
                 mechanismData: abi.encode(REGISTRY_BEACON_PROXY_MECHANISM, abi.encode(target)),
-                networks: new string[](0)
+                networks: new string[](0),
+                describedByMeta: ""
             }),
             unanchorableReason: REGISTRY_BEACON_PROXY_UNANCHORABLE_REASON
         });
@@ -992,7 +993,8 @@ library LibRainDeployCloneMechanism {
             artifactPath: "",
             dependencies: clone.dependencies,
             mechanismData: mechanismData,
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         if (beaconProxy) {
             snapshot.creationCode = LibRainDeployBeaconProxy.beaconProxyCreationCode(clone.implementation);
