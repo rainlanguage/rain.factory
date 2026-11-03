@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {SupportedNetwork} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {ChainBeacon, DeployBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {BeaconDeclaredTwice} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
 import {BeaconNamedTwice} from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";

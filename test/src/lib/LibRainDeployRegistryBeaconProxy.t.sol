@@ -9,8 +9,8 @@ import {REGISTRY_BEACON_PROXY_CREATION_CODE} from "../../../src/generated/Regist
 import {DelegatedBeacon} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {BeaconBindingTypeMismatch} from "../../../src/lib/LibICloneableFactoryV7.sol";
 import {TestCloneFactory} from "../../../src/test/TestCloneFactory.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.29/src/interface/IConfigRegistryV5.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.30/src/interface/IConfigRegistryV5.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,

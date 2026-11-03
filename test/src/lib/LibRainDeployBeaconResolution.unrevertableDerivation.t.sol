@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeploySuite, DerivationSnapshotRevertFailed} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {DeploySuite, DerivationSnapshotRevertFailed} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy} from "rain-deploy-0.1.30/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {MockSnapshotDeletingCreation} from "../../concrete/MockSnapshotDeletingCreation.sol";
 import {LibBeaconTest} from "../../lib/LibBeaconTest.sol";

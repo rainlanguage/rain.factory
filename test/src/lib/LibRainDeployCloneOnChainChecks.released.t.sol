@@ -7,7 +7,7 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeploySuite
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
