@@ -39,10 +39,10 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     string internal sCopyrightText;
 
     /// @param root The record root to regenerate and cut into, and the config root.
-    /// @param libDir The directory the released-suites lib is written to.
-    constructor(string memory root, string memory libDir) {
+    /// @param libDirectory The directory the released-suites lib is written to.
+    constructor(string memory root, string memory libDirectory) {
         sRoot = root;
-        sLibDir = libDir;
+        sLibDir = libDirectory;
     }
 
     /// @return The releases the declaration holds.
@@ -186,7 +186,8 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
 
     /// @return The paths `run()` declares.
     function externalGeneratedPaths() external view returns (string[] memory) {
-        return generatedPaths();
+        DeployDeclaration memory d = declaration();
+        return generatedPaths(d, checkedGeneratedContracts(d));
     }
 
     /// @return The rolling snapshot's path.

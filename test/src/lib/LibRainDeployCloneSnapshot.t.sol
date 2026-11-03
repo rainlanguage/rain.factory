@@ -212,7 +212,11 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     /// A per-network clone release is imported without `DEPLOYED_ADDRESS` — the record declares
     /// none, so importing it would not compile — and with its `MECHANISM_DATA`.
     function testReleasedImportOfAPerNetworkCloneRelease() external view {
-        assertEq(LibRainDeploySnapshot.releasedImport(vm, perNetworkRecordPaths()[0]), EXPECTED_PER_NETWORK_IMPORT);
+        string memory path = perNetworkRecordPaths()[0];
+        assertEq(
+            LibRainDeploySnapshot.releasedImport(vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)),
+            EXPECTED_PER_NETWORK_IMPORT
+        );
     }
 
     /// A per-network clone release's entry stores no address and carries the record's `MECHANISM_DATA`, the shape of

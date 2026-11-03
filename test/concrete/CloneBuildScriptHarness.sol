@@ -26,10 +26,10 @@ contract CloneBuildScriptHarness is BuildScript {
     ChainDeploy[] internal sExtendedNetworks;
 
     /// @param root The record root to regenerate and cut into, and the config root.
-    /// @param libDir The directory the released-suites lib is written to.
-    constructor(string memory root, string memory libDir) {
+    /// @param libDirectory The directory the released-suites lib is written to.
+    constructor(string memory root, string memory libDirectory) {
         sRoot = root;
-        sLibDir = libDir;
+        sLibDir = libDirectory;
     }
 
     function declaration() internal view override returns (DeployDeclaration memory) {
