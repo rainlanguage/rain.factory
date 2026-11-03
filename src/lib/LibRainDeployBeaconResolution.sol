@@ -8,10 +8,10 @@ import {
     DeployDeclaration,
     DeploySuite,
     DerivationSnapshotRevertFailed
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.29/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.30/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 import {

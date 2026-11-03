@@ -8,14 +8,14 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
@@ -319,7 +319,9 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         assertEq(this.externalRecordedMechanism(path), REGISTRY_BEACON_PROXY_MECHANISM);
         assertEq(this.externalRecordedMechanismId(path), REGISTRY_BEACON_PROXY_MECHANISM);
 
-        string memory imported = LibRainDeploySnapshot.releasedImport(vm, path);
+        string memory imported = LibRainDeploySnapshot.releasedImport(
+            vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+        );
         assertTrue(vm.contains(imported, "DEPLOYED_ADDRESS as RegistryBeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as RegistryBeaconProxyRecord_0_0_1_MECHANISM_DATA"));
 

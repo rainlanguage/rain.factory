@@ -9,13 +9,13 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {
     FrozenSnapshotMechanismDataMissing,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,
@@ -170,8 +170,8 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         "            storedRuntimeCode: PerNetworkClone_0_0_1_RUNTIME_CODE,\n"
         "            artifactPath: \"rain-factory/EIP1167Clone.sol:EIP1167Clone\",\n"
         "            dependencies: abi.decode(PerNetworkClone_0_0_1_DEPENDENCIES, (DeployDependency[])),\n"
-        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n" "            networks: new string[](0)\n"
-        "        });\n";
+        "            mechanismData: PerNetworkClone_0_0_1_MECHANISM_DATA,\n" "            networks: new string[](0),\n"
+        "            describedByMeta: \"\"\n" "        });\n";
 
     /// The committed `per-network-clone` record's path, as `frozenSnapshotPaths` spells it.
     /// @return The one record file.
@@ -212,7 +212,13 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     /// A per-network clone release is imported without `DEPLOYED_ADDRESS` — the record declares
     /// none, so importing it would not compile — and with its `MECHANISM_DATA`.
     function testReleasedImportOfAPerNetworkCloneRelease() external view {
-        assertEq(LibRainDeploySnapshot.releasedImport(vm, perNetworkRecordPaths()[0]), EXPECTED_PER_NETWORK_IMPORT);
+        string memory path = perNetworkRecordPaths()[0];
+        assertEq(
+            LibRainDeploySnapshot.releasedImport(
+                vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+            ),
+            EXPECTED_PER_NETWORK_IMPORT
+        );
     }
 
     /// A per-network clone release's entry stores no address and carries the record's `MECHANISM_DATA`, the shape of
@@ -344,7 +350,8 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: networks
+            networks: networks,
+            describedByMeta: ""
         });
     }
 

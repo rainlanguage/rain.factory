@@ -11,12 +11,12 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ChainBeacon} from "./LibRainDeployBeacon.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -940,7 +940,8 @@ library LibRainDeployCloneMechanism {
                 artifactPath: REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
                 dependencies: proxy.dependencies,
                 mechanismData: abi.encode(REGISTRY_BEACON_PROXY_MECHANISM, abi.encode(target)),
-                networks: new string[](0)
+                networks: new string[](0),
+                describedByMeta: ""
             }),
             unanchorableReason: REGISTRY_BEACON_PROXY_UNANCHORABLE_REASON
         });
@@ -992,7 +993,8 @@ library LibRainDeployCloneMechanism {
             artifactPath: "",
             dependencies: clone.dependencies,
             mechanismData: mechanismData,
-            networks: new string[](0)
+            networks: new string[](0),
+            describedByMeta: ""
         });
         if (beaconProxy) {
             snapshot.creationCode = LibRainDeployBeaconProxy.beaconProxyCreationCode(clone.implementation);

@@ -7,8 +7,8 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeploySuite
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {CloneDeploy, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
@@ -16,7 +16,7 @@ import {
     LibRainDeployCloneMechanism
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibCloneCandidates, NoFactoryDeploys} from "../../../src/lib/LibCloneCandidates.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {
     exampleCloneDeploys,
     exampleCloneFactory,

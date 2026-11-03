@@ -10,15 +10,15 @@ import {
     MechanismUnclaimed,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {
@@ -33,7 +33,7 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {exampleCloneImplementation} from "../../abstract/ExampleCloneDeploys.sol";
@@ -303,7 +303,9 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertFalse(vm.contains(record, "EIP-1167"));
         assertFalse(vm.contains(record, "clone factory"));
 
-        string memory imported = LibRainDeploySnapshot.releasedImport(vm, path);
+        string memory imported = LibRainDeploySnapshot.releasedImport(
+            vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+        );
         assertTrue(vm.contains(imported, "DEPLOYED_ADDRESS as BeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_1_MECHANISM_DATA"));
 
@@ -352,7 +354,9 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertFalse(vm.contains(record, "EIP-1167"));
         assertFalse(vm.contains(record, "clone factory"));
 
-        string memory imported = LibRainDeploySnapshot.releasedImport(vm, path);
+        string memory imported = LibRainDeploySnapshot.releasedImport(
+            vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+        );
         assertFalse(vm.contains(imported, "DEPLOYED_ADDRESS as"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as BeaconProxyRecord_0_0_2_MECHANISM_DATA"));
 

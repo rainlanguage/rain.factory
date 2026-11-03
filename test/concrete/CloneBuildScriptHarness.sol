@@ -2,17 +2,24 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BuildScript} from "rain-deploy-0.1.29/src/abstract/BuildScript.sol";
-import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
+import {BuildScript, GeneratedContract} from "rain-deploy-0.1.30/src/abstract/BuildScript.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.30/src/lib/LibRainDeployZoltuMechanism.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {EXAMPLE_CLONE_RECORD_CONTRACT, addExampleClone, exampleCloneRelease} from "../abstract/ExampleCloneDeploys.sol";
+import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
+import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {
+    EXAMPLE_CLONE_RECORD_CONTRACT,
+    exampleCloneDeploys,
+    exampleCloneRelease,
+    exampleCloneReleased
+} from "../abstract/ExampleCloneDeploys.sol";
 
 /// @title CloneBuildScriptHarness
 /// @notice A clone deploy repo's build script over a fixture record root, its extended networks declared through
@@ -26,10 +33,10 @@ contract CloneBuildScriptHarness is BuildScript {
     ChainDeploy[] internal sExtendedNetworks;
 
     /// @param root The record root to regenerate and cut into, and the config root.
-    /// @param libDir The directory the released-suites lib is written to.
-    constructor(string memory root, string memory libDir) {
+    /// @param libDirectory The directory the released-suites lib is written to.
+    constructor(string memory root, string memory libDirectory) {
         sRoot = root;
-        sLibDir = libDir;
+        sLibDir = libDirectory;
     }
 
     function declaration() internal view override returns (DeployDeclaration memory) {
@@ -44,7 +51,10 @@ contract CloneBuildScriptHarness is BuildScript {
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
         LibRainDeployCloneMechanism.setExtendedNetworks(d, extended);
-        addExampleClone(d);
+        LibRainDeployDeclaration.addReleased(d, exampleCloneReleased());
+        CloneDeploy[] memory clones = new CloneDeploy[](1);
+        clones[0] = exampleCloneDeploys()[0];
+        LibCloneCandidates.addClones(d, clones);
         return d;
     }
 
@@ -59,10 +69,20 @@ contract CloneBuildScriptHarness is BuildScript {
     }
 
     /// @inheritdoc BuildScript
-    function snapshotContractNames() internal pure override returns (string[] memory) {
-        string[] memory names = new string[](1);
-        names[0] = EXAMPLE_CLONE_RECORD_CONTRACT;
-        return names;
+    function generatedContracts(DeployDeclaration memory d)
+        internal
+        pure
+        override
+        returns (GeneratedContract[] memory)
+    {
+        GeneratedContract[] memory generated = new GeneratedContract[](1);
+        generated[0] = GeneratedContract(EXAMPLE_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "example-clone"));
+        return generated;
+    }
+
+    /// @inheritdoc BuildScript
+    function libDir() internal view override returns (string memory) {
+        return sLibDir;
     }
 
     /// @inheritdoc BuildScript
@@ -82,13 +102,6 @@ contract CloneBuildScriptHarness is BuildScript {
                 RAIN_COPYRIGHT_TEXT
             ),
             snapshot
-        );
-    }
-
-    /// @inheritdoc BuildScript
-    function regenerateLibs(DeployDeclaration memory d) internal override {
-        LibRainDeploySnapshot.writeReleasedSuitesLib(
-            vm, sLibDir, recordRoot(), EXAMPLE_CLONE_RECORD_CONTRACT, d.candidates[0].snapshot, d
         );
         LibRainDeployCloneBuild.regenerateExtendedNetworks(vm, d);
     }

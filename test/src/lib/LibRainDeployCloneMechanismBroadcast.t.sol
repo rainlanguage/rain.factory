@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
@@ -17,11 +17,11 @@ import {
     LibRainDeployCloneMechanism,
     UnexpectedStoredDeployedAddress
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {DeploySuite, UnexpectedMechanismData} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuite, UnexpectedMechanismData} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
-} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.30/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
@@ -74,7 +74,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_MECHANISM, abi.encode(clone)),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 
@@ -105,7 +106,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: exampleCloneDependencies(),
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 
@@ -119,7 +121,8 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
             artifactPath: "test/concrete/MockCloneable.sol:MockCloneable",
             dependencies: new DeployDependency[](0),
             mechanismData: LibRainDeployZoltuMechanism.mechanismData(),
-            networks: arbitrumAndPolygon()
+            networks: arbitrumAndPolygon(),
+            describedByMeta: ""
         });
     }
 

@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BuildScript} from "rain-deploy-0.1.29/src/abstract/BuildScript.sol";
-import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployConfig} from "rain-deploy-0.1.29/src/lib/LibRainDeployConfig.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.29/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.29/src/lib/LibRainDeploySnapshot.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.29/src/lib/LibRainDeployZoltuMechanism.sol";
+import {BuildScript, GeneratedContract} from "rain-deploy-0.1.30/src/abstract/BuildScript.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployConfig} from "rain-deploy-0.1.30/src/lib/LibRainDeployConfig.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.30/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.30/src/lib/LibRainDeployZoltuMechanism.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
@@ -39,10 +39,10 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     string internal sCopyrightText;
 
     /// @param root The record root to regenerate and cut into, and the config root.
-    /// @param libDir The directory the released-suites lib is written to.
-    constructor(string memory root, string memory libDir) {
+    /// @param libDirectory The directory the released-suites lib is written to.
+    constructor(string memory root, string memory libDirectory) {
         sRoot = root;
-        sLibDir = libDir;
+        sLibDir = libDirectory;
     }
 
     /// @return The releases the declaration holds.
@@ -81,10 +81,21 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     }
 
     /// @inheritdoc BuildScript
-    function snapshotContractNames() internal pure override returns (string[] memory) {
-        string[] memory names = new string[](1);
-        names[0] = PER_NETWORK_CLONE_RECORD_CONTRACT;
-        return names;
+    function generatedContracts(DeployDeclaration memory d)
+        internal
+        pure
+        override
+        returns (GeneratedContract[] memory)
+    {
+        GeneratedContract[] memory generated = new GeneratedContract[](1);
+        generated[0] =
+            GeneratedContract(PER_NETWORK_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "per-network-clone"));
+        return generated;
+    }
+
+    /// @inheritdoc BuildScript
+    function libDir() internal view override returns (string memory) {
+        return sLibDir;
     }
 
     /// @inheritdoc BuildScript
@@ -104,13 +115,6 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
                 RAIN_COPYRIGHT_TEXT
             ),
             snapshot
-        );
-    }
-
-    /// @inheritdoc BuildScript
-    function regenerateLibs(DeployDeclaration memory d) internal override {
-        LibRainDeploySnapshot.writeReleasedSuitesLib(
-            vm, sLibDir, recordRoot(), PER_NETWORK_CLONE_RECORD_CONTRACT, d.candidates[0].snapshot, d
         );
         regenerateExtendedNetworks(d);
     }
@@ -182,7 +186,8 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
 
     /// @return The paths `run()` declares.
     function externalGeneratedPaths() external view returns (string[] memory) {
-        return generatedPaths();
+        DeployDeclaration memory d = declaration();
+        return generatedPaths(d, checkedGeneratedContracts(d));
     }
 
     /// @return The rolling snapshot's path.

@@ -4,13 +4,13 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {DeployDeclaration} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {CloneLayerConfig, LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 
 /// @title LibRainDeployCloneBuild
 /// @notice The build-side writer of the extended networks records the clone layer config declares. A consumer's
-/// `Build.sol` calls `regenerateExtendedNetworks` from its build hook and `extendedNetworksPaths` from its
+/// `Build.sol` calls `regenerateExtendedNetworks` from its `regenerateSnapshots()` and `extendedNetworksPaths` from its
 /// `buildGeneratedPaths()`.
 library LibRainDeployCloneBuild {
     /// Writes each release's extended networks record from the clone layer config, under its `extendedNetworksRoot`.

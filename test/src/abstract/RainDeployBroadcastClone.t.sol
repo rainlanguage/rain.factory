@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {SuiteSeatsDeployKey} from "rain-deploy-0.1.29/src/abstract/RainDeployBroadcast.sol";
-import {DeploySuite} from "rain-deploy-0.1.29/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
+import {SuiteSeatsDeployKey} from "rain-deploy-0.1.30/src/abstract/RainDeployBroadcast.sol";
+import {DeploySuite} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
@@ -75,7 +75,8 @@ contract RainDeployBroadcastCloneTest is Test {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
-            networks: originOwnedCloneNetworks()
+            networks: originOwnedCloneNetworks(),
+            describedByMeta: ""
         });
     }
 
@@ -190,7 +191,8 @@ contract RainDeployBroadcastCloneTest is Test {
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
             mechanismData: abi.encode(CLONE_MECHANISM, abi.encode(target)),
-            networks: originOwnedCloneNetworks()
+            networks: originOwnedCloneNetworks(),
+            describedByMeta: ""
         });
     }
 

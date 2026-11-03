@@ -9,9 +9,9 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {ICloneableFactoryV7} from "../interface/ICloneableFactoryV7.sol";
 import {LibICloneableFactoryV7} from "./LibICloneableFactoryV7.sol";
 
-import {DeployDependency} from "rain-deploy-0.1.29/src/lib/LibRainDeploy.sol";
-import {ConfigRegistry} from "rain-deploy-0.1.29/src/concrete/ConfigRegistry.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.29/src/interface/IConfigRegistryV5.sol";
+import {DeployDependency} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
+import {ConfigRegistry} from "rain-deploy-0.1.30/src/concrete/ConfigRegistry.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.30/src/interface/IConfigRegistryV5.sol";
 
 /// @dev The artifact path a registry beacon proxy suite carries.
 string constant REGISTRY_BEACON_PROXY_ARTIFACT_PATH = "rain-factory/RegistryBeaconProxy.sol:RegistryBeaconProxy";
