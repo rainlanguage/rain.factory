@@ -10,7 +10,7 @@ import {CloneLayerConfig, LibRainDeployCloneMechanism} from "./LibRainDeployClon
 
 /// @title LibRainDeployCloneBuild
 /// @notice The build-side writer of the extended networks records the clone layer config declares. A consumer's
-/// `Build.sol` calls `regenerateExtendedNetworks` from its build hook and `extendedNetworksPaths` from its
+/// `Build.sol` calls `regenerateExtendedNetworks` from its `regenerateSnapshots()` and `extendedNetworksPaths` from its
 /// `buildGeneratedPaths()`.
 library LibRainDeployCloneBuild {
     /// Writes each release's extended networks record from the clone layer config, under its `extendedNetworksRoot`.

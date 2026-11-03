@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BuildScript} from "rain-deploy-0.1.30/src/abstract/BuildScript.sol";
+import {BuildScript, GeneratedContract} from "rain-deploy-0.1.30/src/abstract/BuildScript.sol";
 import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployConfig} from "rain-deploy-0.1.30/src/lib/LibRainDeployConfig.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
@@ -81,10 +81,21 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
     }
 
     /// @inheritdoc BuildScript
-    function snapshotContractNames() internal pure override returns (string[] memory) {
-        string[] memory names = new string[](1);
-        names[0] = PER_NETWORK_CLONE_RECORD_CONTRACT;
-        return names;
+    function generatedContracts(DeployDeclaration memory d)
+        internal
+        pure
+        override
+        returns (GeneratedContract[] memory)
+    {
+        GeneratedContract[] memory generated = new GeneratedContract[](1);
+        generated[0] =
+            GeneratedContract(PER_NETWORK_CLONE_RECORD_CONTRACT, "", declaredCandidate(d, "per-network-clone@0_0_1"));
+        return generated;
+    }
+
+    /// @inheritdoc BuildScript
+    function libDir() internal view override returns (string memory) {
+        return sLibDir;
     }
 
     /// @inheritdoc BuildScript
@@ -104,13 +115,6 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
                 RAIN_COPYRIGHT_TEXT
             ),
             snapshot
-        );
-    }
-
-    /// @inheritdoc BuildScript
-    function regenerateLibs(DeployDeclaration memory d) internal override {
-        LibRainDeploySnapshot.writeReleasedSuitesLib(
-            vm, sLibDir, recordRoot(), PER_NETWORK_CLONE_RECORD_CONTRACT, d.candidates[0].snapshot, d
         );
         regenerateExtendedNetworks(d);
     }
