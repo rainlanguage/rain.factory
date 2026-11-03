@@ -319,7 +319,9 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         assertEq(this.externalRecordedMechanism(path), REGISTRY_BEACON_PROXY_MECHANISM);
         assertEq(this.externalRecordedMechanismId(path), REGISTRY_BEACON_PROXY_MECHANISM);
 
-        string memory imported = LibRainDeploySnapshot.releasedImport(vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path));
+        string memory imported = LibRainDeploySnapshot.releasedImport(
+            vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+        );
         assertTrue(vm.contains(imported, "DEPLOYED_ADDRESS as RegistryBeaconProxyRecord_0_0_1_DEPLOYED_ADDRESS"));
         assertTrue(vm.contains(imported, "MECHANISM_DATA as RegistryBeaconProxyRecord_0_0_1_MECHANISM_DATA"));
 
