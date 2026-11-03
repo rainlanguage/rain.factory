@@ -214,7 +214,9 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     function testReleasedImportOfAPerNetworkCloneRelease() external view {
         string memory path = perNetworkRecordPaths()[0];
         assertEq(
-            LibRainDeploySnapshot.releasedImport(vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)),
+            LibRainDeploySnapshot.releasedImport(
+                vm, path, LibRainDeploySnapshot.recordedFacts(declaration(), vm, path)
+            ),
             EXPECTED_PER_NETWORK_IMPORT
         );
     }
