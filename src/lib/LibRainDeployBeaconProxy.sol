@@ -131,7 +131,7 @@ library LibRainDeployBeaconProxy {
     }
 
     /// The address the proxy lands at.
-    /// @param params The proxy, its `implementation` the beacon.
+    /// @param params The proxy's factory call, its `implementation` the beacon.
     /// @return The predicted proxy address.
     function beaconProxyDeployedAddress(CloneParams memory params) internal pure returns (address) {
         return LibICloneableFactoryV5.predictBeaconProxyAddress(

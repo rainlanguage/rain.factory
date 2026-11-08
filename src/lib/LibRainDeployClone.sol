@@ -19,7 +19,7 @@ string constant CLONE_UNANCHORABLE_REASON = "An EIP-1167 minimal proxy, assemble
     "it delegates into is the anchored contract, and because that address is embedded in the proxy's runtime the "
     "recorded code hash is what says which implementation this clone delegates to.";
 
-/// What a clone factory is asked to deploy.
+/// The factory call that deploys a clone or beacon proxy.
 struct CloneParams {
     /// The factory that deploys the clone or beacon proxy: an `ICloneableFactoryV6`.
     address factory;
@@ -137,7 +137,7 @@ library LibRainDeployClone {
     /// The address the clone lands at — the same one on every network where both the factory and
     /// the implementation are at the same address, which is what deploying both deterministically
     /// buys.
-    /// @param params The clone being deployed.
+    /// @param params The clone's factory call.
     /// @return The predicted clone address.
     function cloneDeployedAddress(CloneParams memory params) internal pure returns (address) {
         return LibICloneableFactoryV5.predictCloneAddress(
@@ -147,7 +147,7 @@ library LibRainDeployClone {
 
     /// Requires the clone or beacon proxy's factory AND implementation to be among the declared dependencies. For a
     /// beacon proxy the implementation is its beacon.
-    /// @param params The clone or beacon proxy.
+    /// @param params The clone or beacon proxy's factory call.
     /// @param dependencies The dependencies declared beside it.
     function checkCloneDependencies(CloneParams memory params, DeployDependency[] memory dependencies) internal pure {
         bool factoryDeclared = false;

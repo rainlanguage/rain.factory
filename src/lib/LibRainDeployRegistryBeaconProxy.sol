@@ -91,7 +91,7 @@ library LibRainDeployRegistryBeaconProxy {
     /// @param state The state snapshot.
     error RegistryBeaconProxyLocalStateNotReverted(uint256 state);
 
-    /// @param params The proxy.
+    /// @param params The proxy's factory call.
     /// @return Its creation code.
     function registryBeaconProxyCreationCode(RegistryBeaconProxyParams memory params)
         internal
@@ -107,7 +107,7 @@ library LibRainDeployRegistryBeaconProxy {
     /// `ConfigRegistry` at `params.registry` binding `beaconName` under `authority` to an `UpgradeableBeacon` at
     /// `params.beacon` serving `implementation`, deploys the creation code, then reverts the local state.
     /// @param vm The Vm instance to etch with.
-    /// @param params The proxy.
+    /// @param params The proxy's factory call.
     /// @param implementation The implementation the beacon serves.
     /// @param implementationCode The implementation's runtime code.
     /// @return The proxy's runtime code.
@@ -161,7 +161,7 @@ library LibRainDeployRegistryBeaconProxy {
     /// Refuses `RegistryBeaconProxyBeaconMismatch` unless the binding on the current network resolves to the
     /// declared beacon.
     /// @param network The network.
-    /// @param params The proxy.
+    /// @param params The proxy's factory call.
     function checkBeacon(string memory network, RegistryBeaconProxyParams memory params) internal view {
         address resolved = LibICloneableFactoryV7.resolveBeacon(params.registry, params.authority, params.beaconName);
         if (resolved != params.beacon) {
@@ -169,7 +169,7 @@ library LibRainDeployRegistryBeaconProxy {
         }
     }
 
-    /// @param params The proxy.
+    /// @param params The proxy's factory call.
     /// @return The address it lands at.
     function registryBeaconProxyDeployedAddress(RegistryBeaconProxyParams memory params)
         internal
