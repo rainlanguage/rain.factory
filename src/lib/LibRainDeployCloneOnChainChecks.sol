@@ -153,7 +153,7 @@ library LibRainDeployCloneOnChainChecks {
         bytes32 id = LibRainDeployDeclaration.mechanismIdOf(suite);
         if (id == REGISTRY_BEACON_PROXY_MECHANISM) {
             LibRainDeployRegistryBeaconProxy.checkBeacon(
-                network, LibRainDeployCloneMechanism.registryBeaconProxyTarget(suite)
+                network, LibRainDeployCloneMechanism.registryBeaconProxyParams(suite)
             );
             return;
         }
@@ -190,7 +190,7 @@ library LibRainDeployCloneOnChainChecks {
     {
         bytes32 id = LibRainDeployDeclaration.mechanismIdOf(suite);
         if (id == REGISTRY_BEACON_PROXY_MECHANISM) {
-            address beacon = LibRainDeployCloneMechanism.registryBeaconProxyTarget(suite).beacon;
+            address beacon = LibRainDeployCloneMechanism.registryBeaconProxyParams(suite).beacon;
             if (IERC5313(beacon).owner() == deployer) {
                 revert RegistryBeaconOwnedByDeployKey(chainId, beacon);
             }

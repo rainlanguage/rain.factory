@@ -110,13 +110,13 @@ library LibRainDeployCloneSnapshot {
             );
             mechanismDataComment = beaconProxy
                 ? "/// @dev The beacon proxy factory call this release was cut with: the\n"
-                "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`."
+                "/// tagged `abi.encode`d `CloneParams` a released suite carries as its\n" "/// `mechanismData`."
                 : registryBeaconProxy
                     ? "/// @dev The registry beacon proxy factory call this release was cut with: the\n"
-                    "/// tagged `abi.encode`d `RegistryBeaconProxyTarget` a released suite carries\n"
+                    "/// tagged `abi.encode`d `RegistryBeaconProxyParams` a released suite carries\n"
                     "/// as its `mechanismData`."
                     : "/// @dev The clone factory call this release was cut with: the\n"
-                    "/// tagged `abi.encode`d `CloneTarget` a released suite carries as its\n" "/// `mechanismData`.";
+                    "/// tagged `abi.encode`d `CloneParams` a released suite carries as its\n" "/// `mechanismData`.";
         }
         return string.concat(
             beaconProxy ? BEACON_PROXY_MARKER : registryBeaconProxy ? REGISTRY_BEACON_PROXY_MARKER : "",

@@ -20,9 +20,8 @@ string constant CLONE_UNANCHORABLE_REASON = "An EIP-1167 minimal proxy, assemble
     "recorded code hash is what says which implementation this clone delegates to.";
 
 /// What a clone factory is asked to deploy.
-struct CloneTarget {
-    /// The factory that deploys the target: an `ICloneableFactoryV6` for a clone or a
-    /// beacon proxy.
+struct CloneParams {
+    /// The factory that deploys the clone or beacon proxy: an `ICloneableFactoryV6`.
     address factory;
     /// The contract a clone delegates into, or for a beacon proxy the beacon it reads its implementation from.
     address implementation;
@@ -36,11 +35,11 @@ struct CloneTarget {
 
 /// A clone whose init data differs by network, and therefore whose address does.
 struct CloneNetworks {
-    /// See `CloneTarget.factory`.
+    /// See `CloneParams.factory`.
     address factory;
-    /// See `CloneTarget.implementation`.
+    /// See `CloneParams.implementation`.
     address implementation;
-    /// See `CloneTarget.salt`.
+    /// See `CloneParams.salt`.
     bytes32 salt;
     /// One entry per network, keyed by chain id.
     ChainDeploy[] networks;
@@ -52,9 +51,9 @@ struct CloneDeploy {
     /// `RainDeploySuitesBase.allSuites` like any other — the candidate this becomes carries it, so
     /// there is no second rule for a clone's key.
     string suite;
-    /// See `CloneTarget.factory`.
+    /// See `CloneParams.factory`.
     address factory;
-    /// See `CloneTarget.implementation`.
+    /// See `CloneParams.implementation`.
     address implementation;
     /// The init data on every network.
     bytes data;
@@ -62,7 +61,7 @@ struct CloneDeploy {
     bool initDataPerNetwork;
     /// The init data on the network with the given chain id.
     function(uint256) view returns (bytes memory) initData;
-    /// See `CloneTarget.salt`.
+    /// See `CloneParams.salt`.
     bytes32 salt;
     /// What MUST already be on a network, with exactly this code, before the clone is broadcast
     /// there.
@@ -138,34 +137,34 @@ library LibRainDeployClone {
     /// The address the clone lands at — the same one on every network where both the factory and
     /// the implementation are at the same address, which is what deploying both deterministically
     /// buys.
-    /// @param target The clone being deployed.
+    /// @param params The clone being deployed.
     /// @return The predicted clone address.
-    function cloneDeployedAddress(CloneTarget memory target) internal pure returns (address) {
+    function cloneDeployedAddress(CloneParams memory params) internal pure returns (address) {
         return LibICloneableFactoryV5.predictCloneAddress(
-            target.factory, target.implementation, LibICloneableFactoryV5.effectiveOpenSalt(target.salt, target.data)
+            params.factory, params.implementation, LibICloneableFactoryV5.effectiveOpenSalt(params.salt, params.data)
         );
     }
 
     /// Requires the clone or beacon proxy's factory AND implementation to be among the declared dependencies. For a
     /// beacon proxy the implementation is its beacon.
-    /// @param target The clone or beacon proxy.
+    /// @param params The clone or beacon proxy.
     /// @param dependencies The dependencies declared beside it.
-    function checkCloneDependencies(CloneTarget memory target, DeployDependency[] memory dependencies) internal pure {
+    function checkCloneDependencies(CloneParams memory params, DeployDependency[] memory dependencies) internal pure {
         bool factoryDeclared = false;
         bool implementationDeclared = false;
         for (uint256 i = 0; i < dependencies.length; i++) {
-            if (dependencies[i].deployedAddress == target.factory) {
+            if (dependencies[i].deployedAddress == params.factory) {
                 factoryDeclared = true;
             }
-            if (dependencies[i].deployedAddress == target.implementation) {
+            if (dependencies[i].deployedAddress == params.implementation) {
                 implementationDeclared = true;
             }
         }
         if (!factoryDeclared) {
-            revert CloneDependencyUndeclared(target.factory);
+            revert CloneDependencyUndeclared(params.factory);
         }
         if (!implementationDeclared) {
-            revert CloneDependencyUndeclared(target.implementation);
+            revert CloneDependencyUndeclared(params.implementation);
         }
     }
 
@@ -196,7 +195,7 @@ library LibRainDeployClone {
                 }
             }
         }
-        checkCloneDependencies(cloneNetworkTarget(clones, 0), dependencies);
+        checkCloneDependencies(cloneNetworkParams(clones, 0), dependencies);
     }
 
     /// Where a chain id's entry is in a per-network clone.
@@ -212,12 +211,12 @@ library LibRainDeployClone {
         revert CloneNetworkUndeclared(chainId);
     }
 
-    /// The `CloneTarget` one entry of a per-network clone describes.
+    /// The `CloneParams` one entry of a per-network clone describes.
     /// @param clones The per-network clone.
     /// @param index The entry's index in `clones.networks`.
-    /// @return The target.
-    function cloneNetworkTarget(CloneNetworks memory clones, uint256 index) internal pure returns (CloneTarget memory) {
-        return CloneTarget({
+    /// @return The params.
+    function cloneNetworkParams(CloneNetworks memory clones, uint256 index) internal pure returns (CloneParams memory) {
+        return CloneParams({
             factory: clones.factory,
             implementation: clones.implementation,
             data: clones.networks[index].data,
@@ -229,26 +228,26 @@ library LibRainDeployClone {
     /// @param vm The Vm instance to broadcast with.
     /// @param network The network being deployed to, for a refusal to name.
     /// @param deployer The deployer address to broadcast as.
-    /// @param targetData The step data.
+    /// @param paramsData The step data.
     /// @return The address the factory deployed the clone to.
-    function cloneDeployStep(Vm vm, string memory network, address deployer, bytes memory targetData)
+    function cloneDeployStep(Vm vm, string memory network, address deployer, bytes memory paramsData)
         internal
         returns (address)
     {
-        CloneTarget memory target = abi.decode(targetData, (CloneTarget));
+        CloneParams memory params = abi.decode(paramsData, (CloneParams));
 
-        console2.log(" - Clone Factory:", target.factory);
-        address expectedAddress = cloneDeployedAddress(target);
-        address factoryPredictedAddress = ICloneableFactoryV6(target.factory)
-            .predictDeterministicAddressOpenSalt(target.implementation, target.data, target.salt);
+        console2.log(" - Clone Factory:", params.factory);
+        address expectedAddress = cloneDeployedAddress(params);
+        address factoryPredictedAddress = ICloneableFactoryV6(params.factory)
+            .predictDeterministicAddressOpenSalt(params.implementation, params.data, params.salt);
         if (factoryPredictedAddress != expectedAddress) {
-            revert CloneFactoryPredictionMismatch(network, target.factory, expectedAddress, factoryPredictedAddress);
+            revert CloneFactoryPredictionMismatch(network, params.factory, expectedAddress, factoryPredictedAddress);
         }
 
-        console2.log(" - Cloning implementation:", target.implementation);
+        console2.log(" - Cloning implementation:", params.implementation);
         vm.startBroadcast(deployer);
-        address cloneDeployedAddr = ICloneableFactoryV6(target.factory)
-            .cloneDeterministicOpenSalt(target.implementation, target.data, target.salt);
+        address cloneDeployedAddr = ICloneableFactoryV6(params.factory)
+            .cloneDeterministicOpenSalt(params.implementation, params.data, params.salt);
         vm.stopBroadcast();
         return cloneDeployedAddr;
     }

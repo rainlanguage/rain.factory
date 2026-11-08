@@ -11,7 +11,7 @@ import {BEACON_PROXY_CREATION_CODE} from "../generated/BeaconProxy.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 
 import {DeployDependency} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
-import {CloneTarget} from "./LibRainDeployClone.sol";
+import {CloneParams} from "./LibRainDeployClone.sol";
 
 /// @dev The artifact path a beacon proxy suite carries. It names no compiled source here: see
 /// `BEACON_PROXY_UNANCHORABLE_REASON`.
@@ -53,7 +53,7 @@ struct BeaconProxyDeploy {
 }
 
 /// @title LibRainDeployBeaconProxy
-/// @notice The BEACON_PROXY mechanism. A `CloneTarget`'s `implementation` holds the beacon.
+/// @notice The BEACON_PROXY mechanism. A `CloneParams`'s `implementation` holds the beacon.
 library LibRainDeployBeaconProxy {
     /// Thrown when the factory on a network does not derive the address this package derives for
     /// the same beacon proxy.
@@ -131,13 +131,13 @@ library LibRainDeployBeaconProxy {
     }
 
     /// The address the proxy lands at.
-    /// @param target The proxy, its `implementation` the beacon.
+    /// @param params The proxy, its `implementation` the beacon.
     /// @return The predicted proxy address.
-    function beaconProxyDeployedAddress(CloneTarget memory target) internal pure returns (address) {
+    function beaconProxyDeployedAddress(CloneParams memory params) internal pure returns (address) {
         return LibICloneableFactoryV5.predictBeaconProxyAddress(
-            target.factory,
-            target.implementation,
-            LibICloneableFactoryV5.effectiveBeaconProxyOpenSalt(target.salt, target.data)
+            params.factory,
+            params.implementation,
+            LibICloneableFactoryV5.effectiveBeaconProxyOpenSalt(params.salt, params.data)
         );
     }
 
@@ -145,28 +145,28 @@ library LibRainDeployBeaconProxy {
     /// @param vm The Vm instance to broadcast with.
     /// @param network The network being deployed to.
     /// @param deployer The deployer address to broadcast as.
-    /// @param targetData The `abi.encode`d `CloneTarget`.
+    /// @param paramsData The `abi.encode`d `CloneParams`.
     /// @return The address the factory deployed the proxy to.
-    function beaconProxyDeployStep(Vm vm, string memory network, address deployer, bytes memory targetData)
+    function beaconProxyDeployStep(Vm vm, string memory network, address deployer, bytes memory paramsData)
         internal
         returns (address)
     {
-        CloneTarget memory target = abi.decode(targetData, (CloneTarget));
+        CloneParams memory params = abi.decode(paramsData, (CloneParams));
 
-        console2.log(" - Beacon Proxy Factory:", target.factory);
-        address expectedAddress = beaconProxyDeployedAddress(target);
-        address factoryPredictedAddress = ICloneableFactoryV6(target.factory)
-            .predictBeaconProxyAddressOpenSalt(target.implementation, target.data, target.salt);
+        console2.log(" - Beacon Proxy Factory:", params.factory);
+        address expectedAddress = beaconProxyDeployedAddress(params);
+        address factoryPredictedAddress = ICloneableFactoryV6(params.factory)
+            .predictBeaconProxyAddressOpenSalt(params.implementation, params.data, params.salt);
         if (factoryPredictedAddress != expectedAddress) {
             revert BeaconProxyFactoryPredictionMismatch(
-                network, target.factory, expectedAddress, factoryPredictedAddress
+                network, params.factory, expectedAddress, factoryPredictedAddress
             );
         }
 
-        console2.log(" - Beacon proxy of beacon:", target.implementation);
+        console2.log(" - Beacon proxy of beacon:", params.implementation);
         vm.startBroadcast(deployer);
-        address proxy = ICloneableFactoryV6(target.factory)
-            .beaconProxyDeterministicOpenSalt(target.implementation, target.data, target.salt);
+        address proxy = ICloneableFactoryV6(params.factory)
+            .beaconProxyDeterministicOpenSalt(params.implementation, params.data, params.salt);
         vm.stopBroadcast();
 
         // slither-disable-next-line low-level-calls

@@ -43,7 +43,7 @@ struct RegistryBeaconProxyDeploy {
 }
 
 /// The factory call a registry beacon proxy suite's `mechanismData` carries.
-struct RegistryBeaconProxyTarget {
+struct RegistryBeaconProxyParams {
     address factory;
     address registry;
     address authority;
@@ -91,48 +91,48 @@ library LibRainDeployRegistryBeaconProxy {
     /// @param state The state snapshot.
     error RegistryBeaconProxyLocalStateNotReverted(uint256 state);
 
-    /// @param target The proxy.
+    /// @param params The proxy.
     /// @return Its creation code.
-    function registryBeaconProxyCreationCode(RegistryBeaconProxyTarget memory target)
+    function registryBeaconProxyCreationCode(RegistryBeaconProxyParams memory params)
         internal
         pure
         returns (bytes memory)
     {
         return LibICloneableFactoryV7.registryBeaconProxyCreationCode(
-            target.registry, target.authority, target.beaconName
+            params.registry, params.authority, params.beaconName
         );
     }
 
     /// The proxy's runtime code, for a repo's `script/Build.sol` to generate into `src/generated/`. Etches a
-    /// `ConfigRegistry` at `target.registry` binding `beaconName` under `authority` to an `UpgradeableBeacon` at
-    /// `target.beacon` serving `implementation`, deploys the creation code, then reverts the local state.
+    /// `ConfigRegistry` at `params.registry` binding `beaconName` under `authority` to an `UpgradeableBeacon` at
+    /// `params.beacon` serving `implementation`, deploys the creation code, then reverts the local state.
     /// @param vm The Vm instance to etch with.
-    /// @param target The proxy.
+    /// @param params The proxy.
     /// @param implementation The implementation the beacon serves.
     /// @param implementationCode The implementation's runtime code.
     /// @return The proxy's runtime code.
     function registryBeaconProxyRuntimeCode(
         Vm vm,
-        RegistryBeaconProxyTarget memory target,
+        RegistryBeaconProxyParams memory params,
         address implementation,
         bytes memory implementationCode
     ) internal returns (bytes memory) {
         uint256 state = vm.snapshotState();
-        vm.etch(target.registry, address(new ConfigRegistry()).code);
+        vm.etch(params.registry, address(new ConfigRegistry()).code);
         vm.etch(implementation, implementationCode);
         // slither-disable-next-line too-many-digits
         vm.etch(
-            target.beacon, bytes.concat(type(UpgradeableBeacon).creationCode, abi.encode(implementation, target.beacon))
+            params.beacon, bytes.concat(type(UpgradeableBeacon).creationCode, abi.encode(implementation, params.beacon))
         );
         // slither-disable-next-line low-level-calls
-        (bool constructed, bytes memory beaconCode) = target.beacon.call("");
+        (bool constructed, bytes memory beaconCode) = params.beacon.call("");
         if (!constructed) {
-            revert RegistryBeaconProxyBeaconConstructionFailed(target.beacon, implementation);
+            revert RegistryBeaconProxyBeaconConstructionFailed(params.beacon, implementation);
         }
-        vm.etch(target.beacon, beaconCode);
+        vm.etch(params.beacon, beaconCode);
         uint256 moment = vm.getBlockTimestamp();
         // slither-disable-next-line unused-return
-        try IConfigRegistryV5(target.registry).getV5(target.authority, target.beaconName) returns (
+        try IConfigRegistryV5(params.registry).getV5(params.authority, params.beaconName) returns (
             bytes memory, uint256 registeredAt, bytes32
         ) {
             if (registeredAt > moment) {
@@ -140,16 +140,16 @@ library LibRainDeployRegistryBeaconProxy {
             }
         } catch {}
         vm.warp(moment + 1);
-        vm.prank(target.authority);
-        IConfigRegistryV5(target.registry)
-            .registerV5(target.authority, target.beaconName, "address", abi.encode(target.beacon), "");
-        bytes memory creationCode = registryBeaconProxyCreationCode(target);
+        vm.prank(params.authority);
+        IConfigRegistryV5(params.registry)
+            .registerV5(params.authority, params.beaconName, "address", abi.encode(params.beacon), "");
+        bytes memory creationCode = registryBeaconProxyCreationCode(params);
         address proxy;
         assembly ("memory-safe") {
             proxy := create(0, add(creationCode, 0x20), mload(creationCode))
         }
         if (proxy == address(0)) {
-            revert RegistryBeaconProxyLocalDeployFailed(target.registry, target.authority, target.beaconName);
+            revert RegistryBeaconProxyLocalDeployFailed(params.registry, params.authority, params.beaconName);
         }
         bytes memory runtimeCode = proxy.code;
         if (!vm.revertToState(state)) {
@@ -161,23 +161,23 @@ library LibRainDeployRegistryBeaconProxy {
     /// Refuses `RegistryBeaconProxyBeaconMismatch` unless the binding on the current network resolves to the
     /// declared beacon.
     /// @param network The network.
-    /// @param target The proxy.
-    function checkBeacon(string memory network, RegistryBeaconProxyTarget memory target) internal view {
-        address resolved = LibICloneableFactoryV7.resolveBeacon(target.registry, target.authority, target.beaconName);
-        if (resolved != target.beacon) {
-            revert RegistryBeaconProxyBeaconMismatch(network, target.beacon, resolved);
+    /// @param params The proxy.
+    function checkBeacon(string memory network, RegistryBeaconProxyParams memory params) internal view {
+        address resolved = LibICloneableFactoryV7.resolveBeacon(params.registry, params.authority, params.beaconName);
+        if (resolved != params.beacon) {
+            revert RegistryBeaconProxyBeaconMismatch(network, params.beacon, resolved);
         }
     }
 
-    /// @param target The proxy.
+    /// @param params The proxy.
     /// @return The address it lands at.
-    function registryBeaconProxyDeployedAddress(RegistryBeaconProxyTarget memory target)
+    function registryBeaconProxyDeployedAddress(RegistryBeaconProxyParams memory params)
         internal
         pure
         returns (address)
     {
         return LibICloneableFactoryV7.predictRegistryBeaconProxyAddress(
-            target.factory, target.registry, target.authority, target.beaconName, target.data, target.salt
+            params.factory, params.registry, params.authority, params.beaconName, params.data, params.salt
         );
     }
 
@@ -185,30 +185,30 @@ library LibRainDeployRegistryBeaconProxy {
     /// @param vm The Vm instance to broadcast with.
     /// @param network The network being deployed to.
     /// @param deployer The deployer address to broadcast as.
-    /// @param targetData The `abi.encode`d `RegistryBeaconProxyTarget`.
+    /// @param paramsData The `abi.encode`d `RegistryBeaconProxyParams`.
     /// @return The address the factory deployed the proxy to.
-    function registryBeaconProxyDeployStep(Vm vm, string memory network, address deployer, bytes memory targetData)
+    function registryBeaconProxyDeployStep(Vm vm, string memory network, address deployer, bytes memory paramsData)
         internal
         returns (address)
     {
-        RegistryBeaconProxyTarget memory target = abi.decode(targetData, (RegistryBeaconProxyTarget));
+        RegistryBeaconProxyParams memory params = abi.decode(paramsData, (RegistryBeaconProxyParams));
 
-        console2.log(" - Registry Beacon Proxy Factory:", target.factory);
-        checkBeacon(network, target);
-        address expectedAddress = registryBeaconProxyDeployedAddress(target);
-        address factoryPredictedAddress = ICloneableFactoryV7(target.factory)
+        console2.log(" - Registry Beacon Proxy Factory:", params.factory);
+        checkBeacon(network, params);
+        address expectedAddress = registryBeaconProxyDeployedAddress(params);
+        address factoryPredictedAddress = ICloneableFactoryV7(params.factory)
             .predictRegistryBeaconProxyAddress(
-                target.registry, target.authority, target.beaconName, target.data, target.salt
+                params.registry, params.authority, params.beaconName, params.data, params.salt
             );
         if (factoryPredictedAddress != expectedAddress) {
             revert RegistryBeaconProxyFactoryPredictionMismatch(
-                network, target.factory, expectedAddress, factoryPredictedAddress
+                network, params.factory, expectedAddress, factoryPredictedAddress
             );
         }
 
         vm.startBroadcast(deployer);
-        address proxy = ICloneableFactoryV7(target.factory)
-            .registryBeaconProxy(target.registry, target.authority, target.beaconName, target.data, target.salt);
+        address proxy = ICloneableFactoryV7(params.factory)
+            .registryBeaconProxy(params.registry, params.authority, params.beaconName, params.data, params.salt);
         vm.stopBroadcast();
 
         // slither-disable-next-line low-level-calls
