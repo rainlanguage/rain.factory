@@ -19,7 +19,7 @@ import {
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {
     LibRainDeployCloneMechanism,
@@ -215,13 +215,13 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
     }
 
     function registryBeaconProxySuite() internal returns (DeploySuite memory) {
-        RegistryBeaconProxyTarget memory target = LibRegistryBeaconProxyTest.live(
+        RegistryBeaconProxyParams memory params = LibRegistryBeaconProxyTest.live(
             vm, address(new MockCloneableV2()), address(this), hex"deadbeef", bytes32(uint256(7))
         );
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
             LibRegistryBeaconProxyTest.declared(
-                "registry-beacon-proxy", target, LibRegistryBeaconProxyTest.runtimeOf(vm, target)
+                "registry-beacon-proxy", params, LibRegistryBeaconProxyTest.runtimeOf(vm, params)
             )
         )
         .snapshot;
@@ -287,13 +287,13 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
             vm.contains(
                 record,
                 "/// @dev The registry beacon proxy factory call this release was cut with: the\n"
-                "/// tagged `abi.encode`d `RegistryBeaconProxyTarget` a released suite carries\n"
+                "/// tagged `abi.encode`d `RegistryBeaconProxyParams` a released suite carries\n"
                 "/// as its `mechanismData`.\n"
             )
         );
         assertFalse(vm.contains(record, "EIP-1167"));
         assertFalse(vm.contains(record, "clone factory"));
-        assertFalse(vm.contains(record, "`CloneTarget`"));
+        assertFalse(vm.contains(record, "`CloneParams`"));
         assertFalse(vm.contains(record, "`CloneNetworks`"));
         assertFalse(vm.contains(record, "factory's beacon-proxy open salt"));
 
@@ -305,7 +305,7 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         assertEq(
             addresses[0],
             LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(
-                LibRainDeployCloneMechanism.registryBeaconProxyTarget(suite)
+                LibRainDeployCloneMechanism.registryBeaconProxyParams(suite)
             )
         );
         assertEq(recordedBytes(path, record, "RUNTIME_CODE"), suite.storedRuntimeCode);

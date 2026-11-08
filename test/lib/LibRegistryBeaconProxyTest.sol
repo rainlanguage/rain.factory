@@ -11,7 +11,7 @@ import {TestCloneFactory} from "../../src/test/TestCloneFactory.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     RegistryBeaconProxyDeploy,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 
 /// @title LibRegistryBeaconProxyTest
@@ -40,12 +40,12 @@ library LibRegistryBeaconProxyTest {
     /// @return The factory call.
     function live(Vm vm, address implementation, address beaconOwner, bytes memory data, bytes32 salt)
         internal
-        returns (RegistryBeaconProxyTarget memory)
+        returns (RegistryBeaconProxyParams memory)
     {
         address registry = address(new ConfigRegistry());
         address beacon = address(new UpgradeableBeacon(implementation, beaconOwner));
         bind(vm, registry, beacon);
-        return RegistryBeaconProxyTarget({
+        return RegistryBeaconProxyParams({
             factory: address(new TestCloneFactory()),
             registry: registry,
             authority: AUTHORITY,
@@ -56,43 +56,43 @@ library LibRegistryBeaconProxyTest {
         });
     }
 
-    /// `target` declared, its factory, registry and beacon its dependencies with the code they hold now.
+    /// `params` declared, its factory, registry and beacon its dependencies with the code they hold now.
     /// @param suite The suite key.
-    /// @param target The factory call.
+    /// @param params The factory call.
     /// @param runtimeCode The proxy's declared runtime code.
     /// @return The declaration.
-    function declared(string memory suite, RegistryBeaconProxyTarget memory target, bytes memory runtimeCode)
+    function declared(string memory suite, RegistryBeaconProxyParams memory params, bytes memory runtimeCode)
         internal
         view
         returns (RegistryBeaconProxyDeploy memory)
     {
         DeployDependency[] memory dependencies = new DeployDependency[](3);
-        dependencies[0] = DeployDependency({deployedAddress: target.factory, runtimeCode: target.factory.code});
-        dependencies[1] = DeployDependency({deployedAddress: target.registry, runtimeCode: target.registry.code});
-        dependencies[2] = DeployDependency({deployedAddress: target.beacon, runtimeCode: target.beacon.code});
+        dependencies[0] = DeployDependency({deployedAddress: params.factory, runtimeCode: params.factory.code});
+        dependencies[1] = DeployDependency({deployedAddress: params.registry, runtimeCode: params.registry.code});
+        dependencies[2] = DeployDependency({deployedAddress: params.beacon, runtimeCode: params.beacon.code});
         return RegistryBeaconProxyDeploy({
             suite: suite,
-            factory: target.factory,
-            registry: target.registry,
-            authority: target.authority,
-            beaconName: target.beaconName,
-            beacon: target.beacon,
-            data: target.data,
-            salt: target.salt,
+            factory: params.factory,
+            registry: params.registry,
+            authority: params.authority,
+            beaconName: params.beaconName,
+            beacon: params.beacon,
+            data: params.data,
+            salt: params.salt,
             dependencies: dependencies,
             runtimeCode: runtimeCode
         });
     }
 
-    /// The generated runtime code of `target`'s proxy, its beacon serving the implementation the real beacon at
-    /// `target.beacon` serves.
+    /// The generated runtime code of `params`'s proxy, its beacon serving the implementation the real beacon at
+    /// `params.beacon` serves.
     /// @param vm The Vm instance to generate with.
-    /// @param target The factory call, a real beacon at its `beacon`.
+    /// @param params The factory call, a real beacon at its `beacon`.
     /// @return The proxy's runtime code.
-    function runtimeOf(Vm vm, RegistryBeaconProxyTarget memory target) internal returns (bytes memory) {
-        address implementation = UpgradeableBeacon(target.beacon).implementation();
+    function runtimeOf(Vm vm, RegistryBeaconProxyParams memory params) internal returns (bytes memory) {
+        address implementation = UpgradeableBeacon(params.beacon).implementation();
         return LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-            vm, target, implementation, implementation.code
+            vm, params, implementation, implementation.code
         );
     }
 }

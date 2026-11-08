@@ -6,7 +6,7 @@ import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRai
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
-    CloneTarget,
+    CloneParams,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -55,12 +55,12 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(sDeploy));
     }
 
-    function localClone(address factory, address implementation) internal pure returns (CloneTarget memory) {
-        return CloneTarget({factory: factory, implementation: implementation, data: TEST_DATA, salt: TEST_SALT});
+    function localClone(address factory, address implementation) internal pure returns (CloneParams memory) {
+        return CloneParams({factory: factory, implementation: implementation, data: TEST_DATA, salt: TEST_SALT});
     }
 
     function cloneSuite(
-        CloneTarget memory clone,
+        CloneParams memory clone,
         address recordedAddress,
         bytes32 codeHash,
         DeployDependency[] memory dependencies
@@ -91,7 +91,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         clones.networks[1] = ChainDeploy({chainId: 137, data: abi.encode(uint256(137)), deployedAddress: address(0)});
         for (uint256 i = 0; i < clones.networks.length; i++) {
             clones.networks[i].deployedAddress =
-                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
+                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, i));
         }
         return clones;
     }
@@ -142,7 +142,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     function testCloneBroadcastPrintsNoVerifyCommand() external {
         address factory = LibRainDeploy.etchAndDeployZoltu(vm, type(MockCloneFactory).creationCode);
         address implementation = LibRainDeploy.etchAndDeployZoltu(vm, type(MockCloneable).creationCode);
-        CloneTarget memory clone = localClone(factory, implementation);
+        CloneParams memory clone = localClone(factory, implementation);
         address expected = LibRainDeployClone.cloneDeployedAddress(clone);
         DeploySuite memory suite = cloneSuite(
             clone, expected, LibRainDeployClone.cloneDeployedCodehash(implementation), exampleCloneDependencies()
@@ -246,7 +246,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         CloneNetworks memory declaredClones = exampleCloneNetworks();
         declaredClones.networks[1].data = extended[0].data;
         extended[0].deployedAddress =
-            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(declaredClones, 1));
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(declaredClones, 1));
         assertNotEq(extended[0].deployedAddress, candidate.networks[1].deployedAddress);
         DeploySuite memory frozen =
             LibRainDeployCloneMechanism.appendExtendedNetworks(perNetworkSuite(recorded), extended);
@@ -309,7 +309,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     /// Key zero has no wallet, so `NoNetworks` proves the list is refused before the key, and a
     /// stale recorded address proves it is refused before the address check.
     function testNoNetworksRevertsBeforeTheKeyAndTheAddress() external {
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         address stale = address(uint160(LibRainDeployClone.cloneDeployedAddress(clone)) + 1);
         DeploySuite memory staleClone = cloneSuite(clone, stale, bytes32(0), exampleCloneDependencies());
 
@@ -360,7 +360,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     function testCloneStaleRecordedAddressRevertsBeforeForking() external {
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         address derived = LibRainDeployClone.cloneDeployedAddress(clone);
         address stale = address(uint160(derived) + 1);
         DeploySuite memory suite = cloneSuite(clone, stale, bytes32(0), exampleCloneDependencies());
@@ -430,7 +430,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     function testCloneUndeclaredFactoryReverts() external {
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         DeployDependency[] memory dependencies = new DeployDependency[](1);
         dependencies[0] = exampleCloneDependencies()[1];
         DeploySuite memory suite =
@@ -441,7 +441,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     function testCloneUndeclaredImplementationReverts() external {
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         DeployDependency[] memory dependencies = new DeployDependency[](1);
         dependencies[0] = exampleCloneDependencies()[0];
         DeploySuite memory suite =
@@ -454,7 +454,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     function testCloneUndeclaredDependencyRefusedBeforeTheAddress() external {
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         address stale = address(uint160(LibRainDeployClone.cloneDeployedAddress(clone)) + 1);
         DeploySuite memory suite = cloneSuite(clone, stale, bytes32(0), new DeployDependency[](0));
 
@@ -471,7 +471,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         address implementation = zoltuDeployOrAdopt(type(MockCloneable).creationCode, type(MockCloneable).runtimeCode);
         vm.makePersistent(implementation);
 
-        CloneTarget memory clone = localClone(factory, implementation);
+        CloneParams memory clone = localClone(factory, implementation);
         DeployDependency[] memory dependencies = exampleCloneDependencies();
         dependencies[0].runtimeCode = type(MockCloneable).runtimeCode;
         DeploySuite memory suite = cloneSuite(
@@ -507,7 +507,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         assertEq(implementation, exampleCloneImplementation());
         vm.makePersistent(implementation);
 
-        CloneTarget memory clone = localClone(factory, implementation);
+        CloneParams memory clone = localClone(factory, implementation);
         address expected = LibRainDeployClone.cloneDeployedAddress(clone);
         bytes32 expectedCodeHash = LibRainDeployClone.cloneDeployedCodehash(implementation);
         DeploySuite memory suite = cloneSuite(clone, expected, expectedCodeHash, exampleCloneDependencies());
@@ -532,7 +532,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(this));
         string[] memory networks = arbitrumAndPolygon();
 
-        CloneTarget memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
+        CloneParams memory clone = localClone(exampleCloneFactory(), exampleCloneImplementation());
         address expected = LibRainDeployClone.cloneDeployedAddress(clone);
         bytes32 expectedCodeHash = LibRainDeployClone.cloneDeployedCodehash(exampleCloneImplementation());
 

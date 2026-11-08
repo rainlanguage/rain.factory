@@ -16,7 +16,7 @@ import {
     CLONE_ARTIFACT_PATH,
     CloneDeploy,
     CloneNetworks,
-    CloneTarget,
+    CloneParams,
     LibRainDeployClone
 } from "../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -112,13 +112,13 @@ function onlyFirstRecordedNetwork(DeploySuite memory release) pure returns (Depl
 }
 
 /// Where the `per-network-clone` release's factory, implementation and salt put a clone initialized
-/// with `data`, derived from a `CloneTarget` built here rather than through any per-network code.
+/// with `data`, derived from a `CloneParams` built here rather than through any per-network code.
 /// @param data The clone's init data.
 /// @return The clone address.
 function perNetworkCloneReleaseAddressAt(bytes memory data) pure returns (address) {
     CloneDeploy memory release = perNetworkCloneRelease();
     return LibRainDeployClone.cloneDeployedAddress(
-        CloneTarget({factory: release.factory, implementation: release.implementation, data: data, salt: release.salt})
+        CloneParams({factory: release.factory, implementation: release.implementation, data: data, salt: release.salt})
     );
 }
 

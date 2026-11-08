@@ -10,7 +10,7 @@ import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMe
 import {LibRainDeployCloneOnChainChecks} from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
@@ -30,18 +30,18 @@ contract LibRainDeployCloneOnChainChecksRegistryBeaconProxyTest is Test {
         );
     }
 
-    function liveSuite() internal returns (RegistryBeaconProxyTarget memory, DeploySuite memory) {
-        RegistryBeaconProxyTarget memory target = LibRegistryBeaconProxyTest.live(
+    function liveSuite() internal returns (RegistryBeaconProxyParams memory, DeploySuite memory) {
+        RegistryBeaconProxyParams memory params = LibRegistryBeaconProxyTest.live(
             vm, address(new MockCloneableV2()), address(this), hex"deadbeef", bytes32(uint256(5))
         );
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
             LibRegistryBeaconProxyTest.declared(
-                "registry-beacon-proxy@0_0_1", target, LibRegistryBeaconProxyTest.runtimeOf(vm, target)
+                "registry-beacon-proxy@0_0_1", params, LibRegistryBeaconProxyTest.runtimeOf(vm, params)
             )
         )
         .snapshot;
-        return (target, suite);
+        return (params, suite);
     }
 
     function testCheckOnChainPassesARegistryBeaconProxyWhoseBindingResolvesToItsDeclaredBeacon() external {
@@ -50,15 +50,15 @@ contract LibRainDeployCloneOnChainChecksRegistryBeaconProxyTest is Test {
     }
 
     function testCheckOnChainRefusesARegistryBeaconProxyWhoseBindingResolvesToAnotherBeacon() external {
-        (RegistryBeaconProxyTarget memory target, DeploySuite memory suite) = liveSuite();
+        (RegistryBeaconProxyParams memory params, DeploySuite memory suite) = liveSuite();
         address bound = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
         vm.warp(block.timestamp + 1);
-        LibRegistryBeaconProxyTest.bind(vm, target.registry, bound);
+        LibRegistryBeaconProxyTest.bind(vm, params.registry, bound);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyBeaconMismatch.selector,
                 LibRainDeploy.ARBITRUM_ONE,
-                target.beacon,
+                params.beacon,
                 bound
             )
         );

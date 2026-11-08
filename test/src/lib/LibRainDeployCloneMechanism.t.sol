@@ -23,7 +23,7 @@ import {
     CLONE_UNANCHORABLE_REASON,
     CloneDeploy,
     CloneNetworks,
-    CloneTarget,
+    CloneParams,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -140,12 +140,12 @@ contract LibRainDeployCloneMechanismTest is Test {
         });
     }
 
-    /// The target a clone declaration deploys.
+    /// The `CloneParams` of a clone declaration.
     /// @param clone The clone declaration.
-    /// @return The target.
-    function targetOf(CloneDeploy memory clone) internal pure returns (CloneTarget memory) {
+    /// @return The params.
+    function paramsOf(CloneDeploy memory clone) internal pure returns (CloneParams memory) {
         return
-            CloneTarget({
+            CloneParams({
                 factory: clone.factory, implementation: clone.implementation, data: clone.data, salt: clone.salt
             });
     }
@@ -175,23 +175,23 @@ contract LibRainDeployCloneMechanismTest is Test {
     }
 
     /// `cloneCandidate` MUST derive every field of the candidate from the clone, tag its mechanism data `CLONE_MECHANISM`
-    /// over the target, and MUST carry the standard unanchorable reason.
+    /// over the params, and MUST carry the standard unanchorable reason.
     function testCloneCandidateDerivesEveryField() external view {
         CloneDeploy memory clone = declaredClone(
             "local-clone", exampleCloneFactory(), exampleCloneImplementation(), exampleCloneDependencies()
         );
-        CloneTarget memory target = targetOf(clone);
+        CloneParams memory params = paramsOf(clone);
         DeployCandidate memory candidate = LibRainDeployCloneMechanism.cloneCandidate(clone, new uint256[](0));
 
         assertEq(candidate.snapshot.suite, clone.suite);
         assertEq(candidate.snapshot.creationCode, LibRainDeployClone.cloneCreationCode(clone.implementation));
-        assertEq(candidate.snapshot.storedDeployedAddress, LibRainDeployClone.cloneDeployedAddress(target));
+        assertEq(candidate.snapshot.storedDeployedAddress, LibRainDeployClone.cloneDeployedAddress(params));
         assertEq(candidate.snapshot.storedBytecodeHash, LibRainDeployClone.cloneDeployedCodehash(clone.implementation));
         assertEq(candidate.snapshot.storedRuntimeCode, LibRainDeployClone.cloneRuntimeCode(clone.implementation));
         assertEq(candidate.snapshot.artifactPath, CLONE_ARTIFACT_PATH);
         assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
-        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(target)));
-        assertEq(LibRainDeployCloneMechanism.payload(candidate.snapshot), abi.encode(target));
+        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(params)));
+        assertEq(LibRainDeployCloneMechanism.payload(candidate.snapshot), abi.encode(params));
         assertEq(candidate.snapshot.dependencies.length, clone.dependencies.length);
         for (uint256 i = 0; i < clone.dependencies.length; i++) {
             assertEq(candidate.snapshot.dependencies[i].deployedAddress, clone.dependencies[i].deployedAddress);
@@ -377,7 +377,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         DeploySuite memory suite = exampleCloneSuite();
         assertEq(suite.dependencies[0].deployedAddress, exampleCloneFactory());
         suite.dependencies[0].runtimeCode = type(MockSaltShiftingCloneFactory).runtimeCode;
-        CloneTarget memory shifted = LibRainDeployCloneMechanism.cloneTarget(suite);
+        CloneParams memory shifted = LibRainDeployCloneMechanism.cloneParams(suite);
         shifted.salt ^= bytes32(uint256(1));
         address elsewhere = LibRainDeployClone.cloneDeployedAddress(shifted);
         vm.expectRevert(
@@ -439,13 +439,13 @@ contract LibRainDeployCloneMechanismTest is Test {
     }
 
     /// The address the example factory clones the example implementation to with the given init
-    /// data at `TEST_SALT`, derived from a `CloneTarget` built here rather than through the
+    /// data at `TEST_SALT`, derived from a `CloneParams` built here rather than through the
     /// per-network code under test.
     /// @param data The init data.
     /// @return The clone address.
     function exampleCloneAddress(bytes memory data) internal pure returns (address) {
         return LibRainDeployClone.cloneDeployedAddress(
-            CloneTarget({
+            CloneParams({
                 factory: exampleCloneFactory(),
                 implementation: exampleCloneImplementation(),
                 data: data,
@@ -720,12 +720,12 @@ contract LibRainDeployCloneMechanismTest is Test {
         chainIds[0] = 8453;
         DeployCandidate memory candidate = LibRainDeployCloneMechanism.cloneCandidate(clone, chainIds);
         assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
-        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(targetOf(clone))));
+        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(paramsOf(clone))));
 
         clone.initData = perNetworkCloneInitData;
         candidate = LibRainDeployCloneMechanism.cloneCandidate(clone, chainIds);
         assertEq(LibRainDeployCloneMechanism.mechanismTag(candidate.snapshot.mechanismData), CLONE_MECHANISM);
-        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(targetOf(clone))));
+        assertEq(candidate.snapshot.mechanismData, abi.encode(CLONE_MECHANISM, abi.encode(paramsOf(clone))));
     }
 
     /// A one-data clone's `noInitDataPerNetwork`, read because the declaration set
@@ -782,7 +782,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         bytes memory recordedData = abi.encode(address(0xc3c3c3c3c3c3c3c3c3C3C3c3C3C3C3c3C3C3c3c3));
         recorded.networks[0].data = recordedData;
         recorded.networks[0].deployedAddress = LibRainDeployClone.cloneDeployedAddress(
-            CloneTarget({
+            CloneParams({
                 factory: exampleCloneFactory(),
                 implementation: exampleCloneImplementation(),
                 data: recordedData,
@@ -806,7 +806,7 @@ contract LibRainDeployCloneMechanismTest is Test {
             chainId: 137,
             data: polygonData,
             deployedAddress: LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({
+                CloneParams({
                     factory: exampleCloneFactory(),
                     implementation: exampleCloneImplementation(),
                     data: polygonData,
@@ -1279,7 +1279,7 @@ contract LibRainDeployCloneMechanismTest is Test {
     function testCloneFactoryLandingOffTheFormulaAndReadingStorageIsADerivationMismatch() external {
         address source = address(new MockStorageSource());
         DeploySuite memory suite = storageCloneOver(address(new MockSaltShiftingCloneFactory()), source, SourceUse.Read);
-        CloneTarget memory shifted = LibRainDeployCloneMechanism.cloneTarget(suite);
+        CloneParams memory shifted = LibRainDeployCloneMechanism.cloneParams(suite);
         shifted.salt ^= bytes32(uint256(1));
         address elsewhere = LibRainDeployClone.cloneDeployedAddress(shifted);
         assertNotEq(elsewhere, suite.storedDeployedAddress);

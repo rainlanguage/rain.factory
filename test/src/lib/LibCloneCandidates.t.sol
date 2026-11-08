@@ -10,7 +10,7 @@ import {
 } from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
-import {CloneDeploy, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy, CloneNetworks, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,
     LibRainDeployCloneMechanism
@@ -33,7 +33,7 @@ import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
 import {
     RegistryBeaconProxyDeploy,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 
@@ -56,15 +56,15 @@ contract LibCloneCandidatesTest is Test {
     }
 
     function registryBeaconProxyDeploys() internal returns (RegistryBeaconProxyDeploy[] memory) {
-        RegistryBeaconProxyTarget memory target = LibRegistryBeaconProxyTest.live(
+        RegistryBeaconProxyParams memory params = LibRegistryBeaconProxyTest.live(
             vm, address(new MockCloneableV2()), address(this), hex"beef", bytes32(uint256(7))
         );
-        bytes memory runtimeCode = LibRegistryBeaconProxyTest.runtimeOf(vm, target);
+        bytes memory runtimeCode = LibRegistryBeaconProxyTest.runtimeOf(vm, params);
         RegistryBeaconProxyDeploy[] memory proxies = new RegistryBeaconProxyDeploy[](2);
-        proxies[0] = LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy", target, runtimeCode);
-        target.salt = bytes32(uint256(8));
+        proxies[0] = LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy", params, runtimeCode);
+        params.salt = bytes32(uint256(8));
         proxies[1] =
-            LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy-second-salt", target, runtimeCode);
+            LibRegistryBeaconProxyTest.declared("example-registry-beacon-proxy-second-salt", params, runtimeCode);
         return proxies;
     }
 
@@ -225,7 +225,7 @@ contract LibCloneCandidatesTest is Test {
             assertEq(
                 built.networks[i].deployedAddress,
                 LibRainDeployClone.cloneDeployedAddress(
-                    CloneTarget({
+                    CloneParams({
                         factory: exampleCloneFactory(),
                         implementation: exampleCloneImplementation(),
                         data: data,

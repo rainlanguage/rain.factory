@@ -95,8 +95,8 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
         CloneNetworks memory clones = chainGatedClones(abi.encode(uint256(8453)));
         DeploySuite memory suite = chainGatedSuite(clones);
         address arbitrumClone =
-            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 0));
-        address baseClone = LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 1));
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, 0));
+        address baseClone = LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, 1));
         assertNotEq(arbitrumClone, baseClone);
         uint256 chainId = block.chainid;
 
@@ -115,8 +115,8 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
     function testPerNetworkCloneSuiteSharingAnAddressIsRefusedByTheSharingNetworksInit() external {
         CloneNetworks memory clones = chainGatedClones(abi.encode(uint256(42161)));
         assertEq(
-            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 0)),
-            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 1))
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, 0)),
+            LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, 1))
         );
         DeploySuite memory suite = chainGatedSuite(clones);
         vm.expectRevert(abi.encodeWithSelector(MockChainGatedCloneableWrongChain.selector, 42161, 8453));
@@ -139,7 +139,7 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
     function testDerivationSkipsALeadingNetworkTheSuiteRecordsNoCloneOn() external {
         CloneNetworks memory clones = baseOnlyClones();
         DeploySuite memory suite = chainGatedSuite(clones);
-        address baseClone = LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, 0));
+        address baseClone = LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, 0));
 
         DerivedDeploy memory derived = this.externalDeriveDeployment(suite);
 

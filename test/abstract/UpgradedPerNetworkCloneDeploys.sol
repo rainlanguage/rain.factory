@@ -5,7 +5,7 @@ pragma solidity ^0.8.25;
 import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.30/src/lib/LibRainDeployDeclaration.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
-import {CloneDeploy, CloneTarget, LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy, CloneParams, LibRainDeployClone} from "../../src/lib/LibRainDeployClone.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../concrete/MockCloneFactory.sol";
 import {MockCloneableV2} from "../concrete/MockCloneableV2.sol";
@@ -58,7 +58,7 @@ function upgradedPerNetworkClone() pure returns (CloneDeploy memory) {
 function upgradedPerNetworkCloneAddress(uint256 chainId) pure returns (address) {
     CloneDeploy memory candidate = upgradedPerNetworkClone();
     return LibRainDeployClone.cloneDeployedAddress(
-        CloneTarget({
+        CloneParams({
             factory: candidate.factory,
             implementation: candidate.implementation,
             data: perNetworkCloneInitData(chainId),

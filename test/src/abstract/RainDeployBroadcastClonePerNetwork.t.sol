@@ -9,7 +9,7 @@ import {
     ExtendedNetworkUnfrozen,
     LibRainDeployCloneMechanism
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {CloneDeploy, CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy, CloneNetworks, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN,
@@ -352,7 +352,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         bytes memory declaredData = abi.encode(address(0xC4c4c4C4C4c4C4c4c4C4c4c4c4c4c4C4c4c4c4C4));
         CloneDeploy memory release = perNetworkCloneRelease();
         address declaredAddress = LibRainDeployClone.cloneDeployedAddress(
-            CloneTarget({
+            CloneParams({
                 factory: release.factory, implementation: release.implementation, data: declaredData, salt: release.salt
             })
         );

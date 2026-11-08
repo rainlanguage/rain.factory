@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
-import {CloneNetworks, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneNetworks, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
     exampleCloneDependencies,
@@ -39,7 +39,7 @@ contract LibRainDeployClonePerNetworkTest is Test {
             clones.networks[i] =
                 ChainDeploy({chainId: chainIds[i], data: abi.encode(chainIds[i]), deployedAddress: address(0)});
             clones.networks[i].deployedAddress =
-                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
+                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, i));
         }
         return clones;
     }
@@ -131,16 +131,16 @@ contract LibRainDeployClonePerNetworkTest is Test {
         this.externalCloneNetworkIndex(clones, 8453);
     }
 
-    /// An entry's target is the shared factory, implementation and salt with THAT entry's data, and
+    /// An entry's params are the shared factory, implementation and salt with THAT entry's data, and
     /// two entries with different data are at different addresses.
-    function testCloneNetworkTargetIsTheSharedCloneWithTheEntrysData() external pure {
+    function testCloneNetworkParamsIsTheSharedCloneWithTheEntrysData() external pure {
         CloneNetworks memory clones = exampleCloneNetworks();
         for (uint256 i = 0; i < clones.networks.length; i++) {
-            CloneTarget memory target = LibRainDeployClone.cloneNetworkTarget(clones, i);
-            assertEq(target.factory, clones.factory);
-            assertEq(target.implementation, clones.implementation);
-            assertEq(target.salt, clones.salt);
-            assertEq(target.data, clones.networks[i].data);
+            CloneParams memory params = LibRainDeployClone.cloneNetworkParams(clones, i);
+            assertEq(params.factory, clones.factory);
+            assertEq(params.implementation, clones.implementation);
+            assertEq(params.salt, clones.salt);
+            assertEq(params.data, clones.networks[i].data);
         }
         assertNotEq(clones.networks[0].deployedAddress, clones.networks[1].deployedAddress);
     }
