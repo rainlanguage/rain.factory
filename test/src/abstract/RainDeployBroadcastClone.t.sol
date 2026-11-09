@@ -9,7 +9,7 @@ import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRai
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
-    CloneTarget,
+    CloneParams,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -63,7 +63,7 @@ contract RainDeployBroadcastCloneTest is Test {
         clones.networks[1] = ChainDeploy({chainId: 8453, data: abi.encode(baseOwner), deployedAddress: address(0)});
         for (uint256 i = 0; i < clones.networks.length; i++) {
             clones.networks[i].deployedAddress =
-                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
+                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, i));
         }
         bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(implementation);
         return DeploySuite({
@@ -116,7 +116,7 @@ contract RainDeployBroadcastCloneTest is Test {
         DeploySuite memory release = onlyArbitrum(originOwnedCloneSuite(address(0xB0B), address(0xB0B)));
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         address seating = LibRainDeployClone.cloneDeployedAddress(
-            CloneTarget({
+            CloneParams({
                 factory: clones.factory,
                 implementation: clones.implementation,
                 data: abi.encode(address(0)),
@@ -163,7 +163,7 @@ contract RainDeployBroadcastCloneTest is Test {
         clones.networks[1].data = abi.encode(uint256(8453));
         for (uint256 i = 0; i < clones.networks.length; i++) {
             clones.networks[i].deployedAddress =
-                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkTarget(clones, i));
+                LibRainDeployClone.cloneDeployedAddress(LibRainDeployClone.cloneNetworkParams(clones, i));
         }
         suite = LibRainDeployCloneMechanism.withPayload(suite, abi.encode(clones));
         suite.creationCode = LibRainDeployClone.cloneCreationCode(implementation);
@@ -178,19 +178,19 @@ contract RainDeployBroadcastCloneTest is Test {
     /// when `named` is zero.
     function singleOriginOwnedCloneSuite(address named) internal pure returns (DeploySuite memory) {
         (address factory, address implementation, DeployDependency[] memory dependencies) = originOwnedCloneSetup();
-        CloneTarget memory target = CloneTarget({
+        CloneParams memory params = CloneParams({
             factory: factory, implementation: implementation, data: abi.encode(named), salt: bytes32(uint256(7))
         });
         bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(implementation);
         return DeploySuite({
             suite: "origin-owned-single-clone@0_0_1",
             creationCode: LibRainDeployClone.cloneCreationCode(implementation),
-            storedDeployedAddress: LibRainDeployClone.cloneDeployedAddress(target),
+            storedDeployedAddress: LibRainDeployClone.cloneDeployedAddress(params),
             storedBytecodeHash: keccak256(runtimeCode),
             storedRuntimeCode: runtimeCode,
             artifactPath: CLONE_ARTIFACT_PATH,
             dependencies: dependencies,
-            mechanismData: abi.encode(CLONE_MECHANISM, abi.encode(target)),
+            mechanismData: abi.encode(CLONE_MECHANISM, abi.encode(params)),
             networks: originOwnedCloneNetworks(),
             describedByMeta: ""
         });

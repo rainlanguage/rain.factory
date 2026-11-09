@@ -11,7 +11,7 @@ import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.so
 import {BEACON_PROXY_CREATION_CODE} from "../../../src/generated/BeaconProxy.sol";
 import {DelegatedBeacon} from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
-import {CloneTarget} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneParams} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {EXAMPLE_BEACON_PROXY_RUNTIME_CODE, LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
@@ -30,13 +30,13 @@ contract LibRainDeployBeaconProxyTest is Test {
 
     /// @param network The network name a refusal should carry.
     /// @param deployer The address to broadcast as.
-    /// @param targetData The `abi.encode`d `CloneTarget`.
+    /// @param paramsData The `abi.encode`d `CloneParams`.
     /// @return The address the step deployed to.
-    function externalBeaconProxyDeployStep(string memory network, address deployer, bytes memory targetData)
+    function externalBeaconProxyDeployStep(string memory network, address deployer, bytes memory paramsData)
         external
         returns (address)
     {
-        return LibRainDeployBeaconProxy.beaconProxyDeployStep(vm, network, deployer, targetData);
+        return LibRainDeployBeaconProxy.beaconProxyDeployStep(vm, network, deployer, paramsData);
     }
 
     /// A beacon serving a fresh `MockCloneableV2`, owned by this test.
@@ -92,48 +92,48 @@ contract LibRainDeployBeaconProxyTest is Test {
     function testBeaconProxyAddressMatchesARealFactory(bytes32 salt, bytes memory data) external {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = realBeacon();
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: beacon, data: data, salt: salt});
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: beacon, data: data, salt: salt});
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         assertEq(factory.predictBeaconProxyAddressOpenSalt(beacon, data, salt), expected);
         assertEq(factory.beaconProxyDeterministicOpenSalt(beacon, data, salt), expected);
     }
 
     /// The address moves with each of factory, beacon, salt and data.
-    function testBeaconProxyAddressMovesWithEveryInput(CloneTarget memory target, uint160 delta, bytes32 otherSalt)
+    function testBeaconProxyAddressMovesWithEveryInput(CloneParams memory params, uint160 delta, bytes32 otherSalt)
         external
         pure
     {
-        vm.assume(delta != 0 && otherSalt != target.salt);
-        address base = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
-        CloneTarget memory moved = CloneTarget(target.factory, target.implementation, target.data, target.salt);
+        vm.assume(delta != 0 && otherSalt != params.salt);
+        address base = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
+        CloneParams memory moved = CloneParams(params.factory, params.implementation, params.data, params.salt);
         unchecked {
-            moved.factory = address(uint160(target.factory) + delta);
+            moved.factory = address(uint160(params.factory) + delta);
         }
         assertNotEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(moved), base, "factory");
-        moved = CloneTarget(target.factory, target.implementation, target.data, target.salt);
+        moved = CloneParams(params.factory, params.implementation, params.data, params.salt);
         unchecked {
-            moved.implementation = address(uint160(target.implementation) + delta);
+            moved.implementation = address(uint160(params.implementation) + delta);
         }
         assertNotEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(moved), base, "beacon");
-        moved = CloneTarget(target.factory, target.implementation, target.data, otherSalt);
+        moved = CloneParams(params.factory, params.implementation, params.data, otherSalt);
         assertNotEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(moved), base, "salt");
-        moved = CloneTarget(target.factory, target.implementation, abi.encodePacked(target.data, hex"00"), target.salt);
+        moved = CloneParams(params.factory, params.implementation, abi.encodePacked(params.data, hex"00"), params.salt);
         assertNotEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(moved), base, "data");
     }
 
     /// The derived address is `CREATE2` from the factory over the V5 beacon-proxy open salt and the
     /// proxy's creation code with `abi.encode(beacon, "")`, built here from the domain string and
     /// held to the V5 creation code hash.
-    function testBeaconProxyAddressIsTheV5Formula(CloneTarget memory target) external pure {
+    function testBeaconProxyAddressIsTheV5Formula(CloneParams memory params) external pure {
         assertEq(keccak256(BEACON_PROXY_CREATION_CODE), ICLONEABLE_FACTORY_V5_BEACON_PROXY_CREATION_CODE_HASH);
         bytes32 salt =
-            keccak256(abi.encode(keccak256("rain.factory.beaconproxy.opensalt"), target.salt, keccak256(target.data)));
+            keccak256(abi.encode(keccak256("rain.factory.beaconproxy.opensalt"), params.salt, keccak256(params.data)));
         bytes32 initCodeHash =
-            keccak256(abi.encodePacked(BEACON_PROXY_CREATION_CODE, abi.encode(target.implementation, bytes(""))));
+            keccak256(abi.encodePacked(BEACON_PROXY_CREATION_CODE, abi.encode(params.implementation, bytes(""))));
         address expected =
-            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), target.factory, salt, initCodeHash)))));
-        assertEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target), expected);
+            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), params.factory, salt, initCodeHash)))));
+        assertEq(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params), expected);
     }
 
     /// The artifact path is a `<file>.sol:BeaconProxy` path that names nothing this build compiles.
@@ -149,16 +149,16 @@ contract LibRainDeployBeaconProxyTest is Test {
     /// The step deploys where the package derives, broadcast as the deployer.
     function testBeaconProxyDeployStepDeploysTheDerivedAddress() external {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
         address deployed =
-            this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(target));
-        assertEq(deployed, LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target));
-        address implementation = UpgradeableBeacon(target.implementation).implementation();
+            this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(params));
+        assertEq(deployed, LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params));
+        address implementation = UpgradeableBeacon(params.implementation).implementation();
         assertEq(
             deployed.code,
             LibRainDeployBeaconProxy.beaconProxyRuntimeCode(
-                vm, target.implementation, implementation, implementation.code
+                vm, params.implementation, implementation, implementation.code
             )
         );
     }
@@ -166,25 +166,25 @@ contract LibRainDeployBeaconProxyTest is Test {
     /// The step returns the address the factory's deploy call reports, not the address it derived.
     function testBeaconProxyDeployStepReturnsWhereTheFactoryDeployed() external {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
-        address elsewhere = address(uint160(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target)) + 1);
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
+        address elsewhere = address(uint160(LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params)) + 1);
         vm.mockCall(
             address(factory),
             abi.encodeWithSelector(ICloneableFactoryV7(address(factory)).beaconProxyDeterministicOpenSalt.selector),
             abi.encode(elsewhere)
         );
         address deployed =
-            this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(target));
+            this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(params));
         assertEq(deployed, elsewhere);
     }
 
     /// The step stops the broadcast it starts, so the caller can start the next one.
     function testBeaconProxyDeployStepStopsItsBroadcast() external {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(target));
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(params));
         vm.startBroadcast(address(0xD3910E8));
         vm.stopBroadcast();
     }
@@ -192,9 +192,9 @@ contract LibRainDeployBeaconProxyTest is Test {
     /// The step refuses a factory that predicts another address, before deploying.
     function testBeaconProxyDeployStepPredictionMismatchReverts() external {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: realBeacon(), data: TEST_DATA, salt: TEST_SALT});
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         address predicted = address(uint160(expected) + 1);
         vm.mockCall(
             address(factory),
@@ -210,7 +210,7 @@ contract LibRainDeployBeaconProxyTest is Test {
                 predicted
             )
         );
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(this), abi.encode(target));
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(this), abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 
@@ -219,16 +219,16 @@ contract LibRainDeployBeaconProxyTest is Test {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
         address deployer = address(0xD3910E8);
-        CloneTarget memory target = CloneTarget({
+        CloneParams memory params = CloneParams({
             factory: address(factory), implementation: beacon, data: abi.encode(address(0)), salt: TEST_SALT
         });
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployBeaconProxy.BeaconProxySeatsDeployKey.selector, LibRainDeploy.ARBITRUM_ONE, expected
             )
         );
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(target));
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(params));
     }
 
     /// A proxy owned by anyone but the deploy key passes.
@@ -237,9 +237,9 @@ contract LibRainDeployBeaconProxyTest is Test {
         vm.assume(owner != deployer && owner != address(0));
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: beacon, data: abi.encode(owner), salt: TEST_SALT});
-        address deployed = this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(target));
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: beacon, data: abi.encode(owner), salt: TEST_SALT});
+        address deployed = this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(params));
         assertEq(MockOriginOwnedCloneable(deployed).owner(), owner);
     }
 
@@ -249,10 +249,10 @@ contract LibRainDeployBeaconProxyTest is Test {
         address deployer = address(0xD3910E8);
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(new UpgradeableBeacon(address(new MockMisansweringOwnerCloneable()), address(this)));
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: beacon, data: abi.encode(short), salt: TEST_SALT});
-        address deployed = this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(target));
-        assertEq(deployed, LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target));
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: beacon, data: abi.encode(short), salt: TEST_SALT});
+        address deployed = this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(params));
+        assertEq(deployed, LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params));
         (bool answered, bytes memory owner) = deployed.staticcall(abi.encodeWithSignature("owner()"));
         assertEq(answered, short);
         assertEq(owner.length, short ? 0x1f : 0x20);
@@ -265,15 +265,15 @@ contract LibRainDeployBeaconProxyTest is Test {
         address deployer = address(0xD3910E8);
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(new UpgradeableBeacon(address(new MockDirtyOwnerCloneable()), address(this)));
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: beacon, data: abi.encode(high), salt: TEST_SALT});
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: beacon, data: abi.encode(high), salt: TEST_SALT});
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployBeaconProxy.BeaconProxySeatsDeployKey.selector, LibRainDeploy.ARBITRUM_ONE, expected
             )
         );
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(target));
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(params));
     }
 
     /// A proxy whose `owner()` answers more than a word, the deploy key in its first, is refused.
@@ -281,16 +281,16 @@ contract LibRainDeployBeaconProxyTest is Test {
         address deployer = address(0xD3910E8);
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(new UpgradeableBeacon(address(new MockLongOwnerCloneable()), address(this)));
-        CloneTarget memory target = CloneTarget({
+        CloneParams memory params = CloneParams({
             factory: address(factory), implementation: beacon, data: abi.encode(trailing), salt: TEST_SALT
         });
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployBeaconProxy.BeaconProxySeatsDeployKey.selector, LibRainDeploy.ARBITRUM_ONE, expected
             )
         );
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(target));
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, deployer, abi.encode(params));
     }
 
     /// The step refuses an EIP-7702 delegated beacon with the factory's `DelegatedBeacon`, deploying nothing.
@@ -298,11 +298,11 @@ contract LibRainDeployBeaconProxyTest is Test {
         MockBeaconProxyFactory factory = new MockBeaconProxyFactory();
         address beacon = address(0xBEAC0);
         vm.etch(beacon, abi.encodePacked(hex"ef0100", delegate));
-        CloneTarget memory target =
-            CloneTarget({factory: address(factory), implementation: beacon, data: TEST_DATA, salt: TEST_SALT});
-        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(target);
+        CloneParams memory params =
+            CloneParams({factory: address(factory), implementation: beacon, data: TEST_DATA, salt: TEST_SALT});
+        address expected = LibRainDeployBeaconProxy.beaconProxyDeployedAddress(params);
         vm.expectRevert(abi.encodeWithSelector(DelegatedBeacon.selector));
-        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(target));
+        this.externalBeaconProxyDeployStep(LibRainDeploy.ARBITRUM_ONE, address(0xD3910E8), abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 

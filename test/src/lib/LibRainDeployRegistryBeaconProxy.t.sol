@@ -14,7 +14,7 @@ import {IConfigRegistryV5} from "rain-deploy-0.1.30/src/interface/IConfigRegistr
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {RegistryBeaconProxy} from "../../../script/RegistryBeaconProxy.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
@@ -34,33 +34,33 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
 
     address constant DEPLOYER = address(0xD3910E8);
 
-    function externalDeployStep(string memory network, address deployer, bytes memory targetData)
+    function externalDeployStep(string memory network, address deployer, bytes memory paramsData)
         external
         returns (address)
     {
-        return LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployStep(vm, network, deployer, targetData);
+        return LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployStep(vm, network, deployer, paramsData);
     }
 
     function externalRuntimeCode(
-        RegistryBeaconProxyTarget memory target,
+        RegistryBeaconProxyParams memory params,
         address implementation,
         bytes memory implementationCode
     ) external returns (bytes memory) {
         return LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-            vm, target, implementation, implementationCode
+            vm, params, implementation, implementationCode
         );
     }
 
-    function externalCheckBeacon(string memory network, RegistryBeaconProxyTarget memory target) external view {
-        LibRainDeployRegistryBeaconProxy.checkBeacon(network, target);
+    function externalCheckBeacon(string memory network, RegistryBeaconProxyParams memory params) external view {
+        LibRainDeployRegistryBeaconProxy.checkBeacon(network, params);
     }
 
-    function liveTarget(address implementation, bytes memory data) internal returns (RegistryBeaconProxyTarget memory) {
+    function liveParams(address implementation, bytes memory data) internal returns (RegistryBeaconProxyParams memory) {
         return LibRegistryBeaconProxyTest.live(vm, implementation, address(this), data, TEST_SALT);
     }
 
-    function unlivedTarget() internal pure returns (RegistryBeaconProxyTarget memory) {
-        return RegistryBeaconProxyTarget({
+    function unlivedParams() internal pure returns (RegistryBeaconProxyParams memory) {
+        return RegistryBeaconProxyParams({
             factory: address(0xFAC7),
             registry: address(0x12E6),
             authority: LibRegistryBeaconProxyTest.AUTHORITY,
@@ -71,97 +71,97 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         });
     }
 
-    function copy(RegistryBeaconProxyTarget memory target) internal pure returns (RegistryBeaconProxyTarget memory) {
-        return RegistryBeaconProxyTarget({
-            factory: target.factory,
-            registry: target.registry,
-            authority: target.authority,
-            beaconName: target.beaconName,
-            beacon: target.beacon,
-            data: target.data,
-            salt: target.salt
+    function copy(RegistryBeaconProxyParams memory params) internal pure returns (RegistryBeaconProxyParams memory) {
+        return RegistryBeaconProxyParams({
+            factory: params.factory,
+            registry: params.registry,
+            authority: params.authority,
+            beaconName: params.beaconName,
+            beacon: params.beacon,
+            data: params.data,
+            salt: params.salt
         });
     }
 
-    function expectSeatsDeployKey(RegistryBeaconProxyTarget memory target) internal {
+    function expectSeatsDeployKey(RegistryBeaconProxyParams memory params) internal {
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxySeatsDeployKey.selector,
                 LibRainDeploy.ARBITRUM_ONE,
-                LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target)
+                LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params)
             )
         );
     }
 
-    function testRegistryBeaconProxyCreationCode(RegistryBeaconProxyTarget memory target) external pure {
-        bytes memory arguments = abi.encode(target.registry, target.authority, target.beaconName);
+    function testRegistryBeaconProxyCreationCode(RegistryBeaconProxyParams memory params) external pure {
+        bytes memory arguments = abi.encode(params.registry, params.authority, params.beaconName);
         assertEq(
-            LibRainDeployRegistryBeaconProxy.registryBeaconProxyCreationCode(target),
+            LibRainDeployRegistryBeaconProxy.registryBeaconProxyCreationCode(params),
             bytes.concat(REGISTRY_BEACON_PROXY_CREATION_CODE, arguments)
         );
     }
 
-    function testRegistryBeaconProxyAddressIsTheV7Formula(RegistryBeaconProxyTarget memory target) external pure {
+    function testRegistryBeaconProxyAddressIsTheV7Formula(RegistryBeaconProxyParams memory params) external pure {
         bytes32 salt =
-            keccak256(abi.encode(keccak256("rain.factory.registrybeaconproxy"), target.salt, keccak256(target.data)));
+            keccak256(abi.encode(keccak256("rain.factory.registrybeaconproxy"), params.salt, keccak256(params.data)));
         bytes32 initCodeHash = keccak256(
             bytes.concat(
-                type(RegistryBeaconProxy).creationCode, abi.encode(target.registry, target.authority, target.beaconName)
+                type(RegistryBeaconProxy).creationCode, abi.encode(params.registry, params.authority, params.beaconName)
             )
         );
         address expected =
-            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), target.factory, salt, initCodeHash)))));
-        assertEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target), expected);
+            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), params.factory, salt, initCodeHash)))));
+        assertEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params), expected);
     }
 
     function testRegistryBeaconProxyAddressMatchesARealFactory(bytes32 salt, bytes memory data) external {
-        RegistryBeaconProxyTarget memory target =
+        RegistryBeaconProxyParams memory params =
             LibRegistryBeaconProxyTest.live(vm, address(new MockCloneableV2()), address(this), data, salt);
-        ICloneableFactoryV7 factory = ICloneableFactoryV7(target.factory);
-        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
+        ICloneableFactoryV7 factory = ICloneableFactoryV7(params.factory);
+        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
         assertEq(
-            factory.predictRegistryBeaconProxyAddress(target.registry, target.authority, target.beaconName, data, salt),
+            factory.predictRegistryBeaconProxyAddress(params.registry, params.authority, params.beaconName, data, salt),
             expected
         );
         assertEq(
-            factory.registryBeaconProxy(target.registry, target.authority, target.beaconName, data, salt), expected
+            factory.registryBeaconProxy(params.registry, params.authority, params.beaconName, data, salt), expected
         );
     }
 
     function testRegistryBeaconProxyAddressMovesWithEveryCommittedInputButNotTheBeacon(
-        RegistryBeaconProxyTarget memory target,
+        RegistryBeaconProxyParams memory params,
         uint160 delta,
         bytes32 other
     ) external pure {
-        vm.assume(delta != 0 && other != target.salt && other != target.beaconName);
-        address base = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
-        RegistryBeaconProxyTarget memory moved = copy(target);
+        vm.assume(delta != 0 && other != params.salt && other != params.beaconName);
+        address base = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
+        RegistryBeaconProxyParams memory moved = copy(params);
         unchecked {
-            moved.factory = address(uint160(target.factory) + delta);
+            moved.factory = address(uint160(params.factory) + delta);
         }
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "factory");
-        moved = copy(target);
+        moved = copy(params);
         unchecked {
-            moved.registry = address(uint160(target.registry) + delta);
+            moved.registry = address(uint160(params.registry) + delta);
         }
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "registry");
-        moved = copy(target);
+        moved = copy(params);
         unchecked {
-            moved.authority = address(uint160(target.authority) + delta);
+            moved.authority = address(uint160(params.authority) + delta);
         }
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "authority");
-        moved = copy(target);
+        moved = copy(params);
         moved.beaconName = other;
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "beacon name");
-        moved = copy(target);
+        moved = copy(params);
         moved.salt = other;
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "salt");
-        moved = copy(target);
-        moved.data = abi.encodePacked(target.data, hex"00");
+        moved = copy(params);
+        moved.data = abi.encodePacked(params.data, hex"00");
         assertNotEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "data");
-        moved = copy(target);
+        moved = copy(params);
         unchecked {
-            moved.beacon = address(uint160(target.beacon) + delta);
+            moved.beacon = address(uint160(params.beacon) + delta);
         }
         assertEq(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(moved), base, "beacon");
     }
@@ -189,7 +189,7 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         TestCloneFactory factory = new TestCloneFactory();
         vm.assume(registryAt != address(implementation) && beaconAt != address(implementation));
         vm.assume(registryAt != address(factory) && beaconAt != address(factory));
-        RegistryBeaconProxyTarget memory target = RegistryBeaconProxyTarget({
+        RegistryBeaconProxyParams memory params = RegistryBeaconProxyParams({
             factory: address(factory),
             registry: registryAt,
             authority: LibRegistryBeaconProxyTest.AUTHORITY,
@@ -200,7 +200,7 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         });
 
         bytes memory generated = LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-            vm, target, address(implementation), address(implementation).code
+            vm, params, address(implementation), address(implementation).code
         );
         assertEq(registryAt.code.length, 0, "registry left behind");
         assertEq(beaconAt.code.length, 0, "beacon left behind");
@@ -213,14 +213,14 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         address proxy = factory.registryBeaconProxy(
             registryAt, LibRegistryBeaconProxyTest.AUTHORITY, LibRegistryBeaconProxyTest.BEACON_NAME, data, salt
         );
-        assertEq(proxy, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target));
+        assertEq(proxy, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params));
         assertEq(proxy.code, generated);
         assertEq(MockCloneableV2(proxy).version(), 2);
     }
 
     function testRegistryBeaconProxyRuntimeCodeCommitsToTheBeacon(uint160 delta) external {
         vm.assume(delta != 0);
-        RegistryBeaconProxyTarget memory target = RegistryBeaconProxyTarget({
+        RegistryBeaconProxyParams memory params = RegistryBeaconProxyParams({
             factory: address(0xFAC7),
             registry: address(0x12E6),
             authority: LibRegistryBeaconProxyTest.AUTHORITY,
@@ -231,14 +231,14 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         });
         MockCloneableV2 implementation = new MockCloneableV2();
         bytes memory base = LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-            vm, target, address(implementation), address(implementation).code
+            vm, params, address(implementation), address(implementation).code
         );
-        RegistryBeaconProxyTarget memory moved = copy(target);
+        RegistryBeaconProxyParams memory moved = copy(params);
         unchecked {
-            moved.beacon = address(uint160(target.beacon) + delta);
+            moved.beacon = address(uint160(params.beacon) + delta);
         }
         vm.assume(
-            uint160(moved.beacon) > 0xffff && moved.beacon != target.registry && moved.beacon != address(implementation)
+            uint160(moved.beacon) > 0xffff && moved.beacon != params.registry && moved.beacon != address(implementation)
                 && moved.beacon.code.length == 0
         );
         assumeNotForgeAddress(moved.beacon);
@@ -251,7 +251,7 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
     }
 
     function testRegistryBeaconProxyRuntimeCodeRefusesAnImplementationWithoutCode() external {
-        RegistryBeaconProxyTarget memory target = RegistryBeaconProxyTarget({
+        RegistryBeaconProxyParams memory params = RegistryBeaconProxyParams({
             factory: address(0xFAC7),
             registry: address(0x12E6),
             authority: LibRegistryBeaconProxyTest.AUTHORITY,
@@ -264,35 +264,35 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyBeaconConstructionFailed.selector,
-                target.beacon,
+                params.beacon,
                 implementation
             )
         );
-        this.externalRuntimeCode(target, implementation, "");
+        this.externalRuntimeCode(params, implementation, "");
     }
 
     function testRegistryBeaconProxyRuntimeCodeOutlastsABindingAfterTheClock(uint32 ahead) external {
         vm.assume(ahead != 0);
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        bytes memory expected = LibRegistryBeaconProxyTest.runtimeOf(vm, target);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        bytes memory expected = LibRegistryBeaconProxyTest.runtimeOf(vm, params);
         uint256 moment = block.timestamp;
         vm.warp(moment + ahead);
-        LibRegistryBeaconProxyTest.bind(vm, target.registry, target.beacon);
+        LibRegistryBeaconProxyTest.bind(vm, params.registry, params.beacon);
         vm.warp(moment);
-        assertEq(LibRegistryBeaconProxyTest.runtimeOf(vm, target), expected);
+        assertEq(LibRegistryBeaconProxyTest.runtimeOf(vm, params), expected);
         assertEq(block.timestamp, moment, "clock left moved");
     }
 
     function testRegistryBeaconProxyRuntimeCodeEtchesTheImplementationCodeItIsGiven() external {
-        RegistryBeaconProxyTarget memory target = unlivedTarget();
+        RegistryBeaconProxyParams memory params = unlivedParams();
         MockCloneableV2 deployed = new MockCloneableV2();
         bytes memory expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-            vm, target, address(deployed), address(deployed).code
+            vm, params, address(deployed), address(deployed).code
         );
         address implementation = address(0x1A9E);
         assertEq(
             LibRainDeployRegistryBeaconProxy.registryBeaconProxyRuntimeCode(
-                vm, target, implementation, address(deployed).code
+                vm, params, implementation, address(deployed).code
             ),
             expected
         );
@@ -300,34 +300,34 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
     }
 
     function testRegistryBeaconProxyRuntimeCodeRefusesAProxyThatCannotDeploy() external {
-        RegistryBeaconProxyTarget memory target = unlivedTarget();
+        RegistryBeaconProxyParams memory params = unlivedParams();
         MockCloneableV2 implementation = new MockCloneableV2();
         vm.mockCall(
-            target.beacon,
+            params.beacon,
             abi.encodeWithSelector(UpgradeableBeacon.implementation.selector),
             abi.encode(address(0x1A9E))
         );
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyLocalDeployFailed.selector,
-                target.registry,
-                target.authority,
-                target.beaconName
+                params.registry,
+                params.authority,
+                params.beaconName
             )
         );
-        this.externalRuntimeCode(target, address(implementation), address(implementation).code);
+        this.externalRuntimeCode(params, address(implementation), address(implementation).code);
     }
 
     function testCheckBeaconAcceptsTheBoundBeacon() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        this.externalCheckBeacon(LibRainDeploy.ARBITRUM_ONE, target);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        this.externalCheckBeacon(LibRainDeploy.ARBITRUM_ONE, params);
     }
 
     function testCheckBeaconRefusesAnotherBeacon(address declared) external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        vm.assume(declared != target.beacon);
-        address bound = target.beacon;
-        target.beacon = declared;
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        vm.assume(declared != params.beacon);
+        address bound = params.beacon;
+        params.beacon = declared;
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyBeaconMismatch.selector,
@@ -336,43 +336,43 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
                 bound
             )
         );
-        this.externalCheckBeacon(LibRainDeploy.ARBITRUM_ONE, target);
+        this.externalCheckBeacon(LibRainDeploy.ARBITRUM_ONE, params);
     }
 
     function testRegistryBeaconProxyDeployStepDeploysTheDerivedAddress() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
-        assertEq(deployed, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target));
-        assertEq(deployed.code, LibRegistryBeaconProxyTest.runtimeOf(vm, target));
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
+        assertEq(deployed, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params));
+        assertEq(deployed.code, LibRegistryBeaconProxyTest.runtimeOf(vm, params));
         assertEq(MockCloneableV2(deployed).sInitData(), TEST_DATA);
     }
 
     function testRegistryBeaconProxyDeployStepReturnsWhereTheFactoryDeployed() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
         address elsewhere =
-            address(uint160(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target)) + 1);
+            address(uint160(LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params)) + 1);
         vm.mockCall(
-            target.factory,
+            params.factory,
             abi.encodeWithSelector(ICloneableFactoryV7.registryBeaconProxy.selector),
             abi.encode(elsewhere)
         );
-        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(deployed, elsewhere);
     }
 
     function testRegistryBeaconProxyDeployStepStopsItsBroadcast() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         vm.startBroadcast(DEPLOYER);
         vm.stopBroadcast();
     }
 
     function testRegistryBeaconProxyDeployStepPredictionMismatchReverts() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
         address predicted = address(uint160(expected) + 1);
         vm.mockCall(
-            target.factory,
+            params.factory,
             abi.encodeWithSelector(ICloneableFactoryV7.predictRegistryBeaconProxyAddress.selector),
             abi.encode(predicted)
         );
@@ -380,81 +380,81 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyFactoryPredictionMismatch.selector,
                 LibRainDeploy.ARBITRUM_ONE,
-                target.factory,
+                params.factory,
                 expected,
                 predicted
             )
         );
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 
     function testRegistryBeaconProxyDeployStepRefusesABindingToAnotherBeacon() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
         address bound = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
         vm.warp(block.timestamp + 1);
-        LibRegistryBeaconProxyTest.bind(vm, target.registry, bound);
-        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
+        LibRegistryBeaconProxyTest.bind(vm, params.registry, bound);
+        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyBeaconMismatch.selector,
                 LibRainDeploy.ARBITRUM_ONE,
-                target.beacon,
+                params.beacon,
                 bound
             )
         );
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 
     function testRegistryBeaconProxyDeployStepRefusesABindingNotTypedAddress() external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
         vm.warp(block.timestamp + 1);
-        vm.prank(target.authority);
-        IConfigRegistryV5(target.registry)
-            .registerV5(target.authority, target.beaconName, "uint256", abi.encode(target.beacon), "");
-        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
+        vm.prank(params.authority);
+        IConfigRegistryV5(params.registry)
+            .registerV5(params.authority, params.beaconName, "uint256", abi.encode(params.beacon), "");
+        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
         vm.expectRevert(
             abi.encodeWithSelector(
                 BeaconBindingTypeMismatch.selector,
-                target.registry,
-                target.authority,
-                target.beaconName,
+                params.registry,
+                params.authority,
+                params.beaconName,
                 keccak256("uint256")
             )
         );
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 
     function testRegistryBeaconProxyDeployStepRefusesADelegatedBeacon(address delegate) external {
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockCloneableV2()), TEST_DATA);
-        vm.etch(target.beacon, abi.encodePacked(hex"ef0100", delegate));
-        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target);
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockCloneableV2()), TEST_DATA);
+        vm.etch(params.beacon, abi.encodePacked(hex"ef0100", delegate));
+        address expected = LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params);
         vm.expectRevert(abi.encodeWithSelector(DelegatedBeacon.selector));
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(expected.code.length, 0);
     }
 
     function testRegistryBeaconProxyDeployStepRefusesTheDeployKeySeated() external {
-        RegistryBeaconProxyTarget memory target =
-            liveTarget(address(new MockOriginOwnedCloneable()), abi.encode(address(0)));
-        expectSeatsDeployKey(target);
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        RegistryBeaconProxyParams memory params =
+            liveParams(address(new MockOriginOwnedCloneable()), abi.encode(address(0)));
+        expectSeatsDeployKey(params);
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
     }
 
     function testRegistryBeaconProxyDeployStepAcceptsAnotherOwner(address owner) external {
         vm.assume(owner != DEPLOYER && owner != address(0));
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockOriginOwnedCloneable()), abi.encode(owner));
-        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockOriginOwnedCloneable()), abi.encode(owner));
+        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
         assertEq(MockOriginOwnedCloneable(deployed).owner(), owner);
     }
 
     function testRegistryBeaconProxyDeployStepAcceptsAnOwnerThatDoesNotAnswer(bool short) external {
-        RegistryBeaconProxyTarget memory target =
-            liveTarget(address(new MockMisansweringOwnerCloneable()), abi.encode(short));
-        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
-        assertEq(deployed, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(target));
+        RegistryBeaconProxyParams memory params =
+            liveParams(address(new MockMisansweringOwnerCloneable()), abi.encode(short));
+        address deployed = this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
+        assertEq(deployed, LibRainDeployRegistryBeaconProxy.registryBeaconProxyDeployedAddress(params));
         (bool answered, bytes memory owner) = deployed.staticcall(abi.encodeWithSignature("owner()"));
         assertEq(answered, short);
         assertEq(owner.length, short ? 0x1f : 0x20);
@@ -463,15 +463,15 @@ contract LibRainDeployRegistryBeaconProxyTest is Test {
 
     function testRegistryBeaconProxyDeployStepRefusesTheDeployKeyUnderDirtyHighBits(uint96 high) external {
         vm.assume(high != 0);
-        RegistryBeaconProxyTarget memory target = liveTarget(address(new MockDirtyOwnerCloneable()), abi.encode(high));
-        expectSeatsDeployKey(target);
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        RegistryBeaconProxyParams memory params = liveParams(address(new MockDirtyOwnerCloneable()), abi.encode(high));
+        expectSeatsDeployKey(params);
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
     }
 
     function testRegistryBeaconProxyDeployStepRefusesTheDeployKeyInALongerAnswer(bytes32 trailing) external {
-        RegistryBeaconProxyTarget memory target =
-            liveTarget(address(new MockLongOwnerCloneable()), abi.encode(trailing));
-        expectSeatsDeployKey(target);
-        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(target));
+        RegistryBeaconProxyParams memory params =
+            liveParams(address(new MockLongOwnerCloneable()), abi.encode(trailing));
+        expectSeatsDeployKey(params);
+        this.externalDeployStep(LibRainDeploy.ARBITRUM_ONE, DEPLOYER, abi.encode(params));
     }
 }

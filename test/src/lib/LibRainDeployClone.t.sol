@@ -12,7 +12,7 @@ import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
 import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
-    CloneTarget,
+    CloneParams,
     EIP1167_CREATION_CODE_PREFIX_LENGTH,
     LibRainDeployClone
 } from "../../../src/lib/LibRainDeployClone.sol";
@@ -38,13 +38,13 @@ contract LibRainDeployCloneTest is Test {
     /// @param factory The factory to clone through.
     /// @param implementation The implementation to clone.
     /// @return The clone declaration.
-    function localClone(address factory, address implementation) internal pure returns (CloneTarget memory) {
-        return CloneTarget({factory: factory, implementation: implementation, data: TEST_DATA, salt: TEST_SALT});
+    function localClone(address factory, address implementation) internal pure returns (CloneParams memory) {
+        return CloneParams({factory: factory, implementation: implementation, data: TEST_DATA, salt: TEST_SALT});
     }
 
     /// @param network The network name a refusal should carry.
     /// @param deployer The address to broadcast as.
-    /// @param cloneData The `abi.encode`d `CloneTarget`.
+    /// @param cloneData The `abi.encode`d `CloneParams`.
     /// @return The address the step deployed to.
     function externalCloneDeployStep(string memory network, address deployer, bytes memory cloneData)
         external
@@ -117,7 +117,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDerivationsMatchARealFactoryDeploy() external {
         MockCloneFactory factory = new MockCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
 
         address predicted = LibRainDeployClone.cloneDeployedAddress(clone);
         assertEq(predicted.code.length, 0, "nothing at the predicted address before the deploy");
@@ -136,8 +136,8 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployedAddressMatchesTheFactoryPrediction(bytes32 salt, bytes memory data) external {
         MockCloneFactory factory = new MockCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone =
-            CloneTarget({factory: address(factory), implementation: address(implementation), data: data, salt: salt});
+        CloneParams memory clone =
+            CloneParams({factory: address(factory), implementation: address(implementation), data: data, salt: salt});
         assertEq(
             LibRainDeployClone.cloneDeployedAddress(clone),
             factory.predictDeterministicAddressOpenSalt(address(implementation), data, salt)
@@ -161,33 +161,33 @@ contract LibRainDeployCloneTest is Test {
         vm.assume(keccak256(data) != keccak256(otherData));
 
         address base = LibRainDeployClone.cloneDeployedAddress(
-            CloneTarget({factory: factory, implementation: implementation, data: data, salt: salt})
+            CloneParams({factory: factory, implementation: implementation, data: data, salt: salt})
         );
 
         assertNotEq(
             LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({factory: otherFactory, implementation: implementation, data: data, salt: salt})
+                CloneParams({factory: otherFactory, implementation: implementation, data: data, salt: salt})
             ),
             base,
             "factory"
         );
         assertNotEq(
             LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({factory: factory, implementation: otherImplementation, data: data, salt: salt})
+                CloneParams({factory: factory, implementation: otherImplementation, data: data, salt: salt})
             ),
             base,
             "implementation"
         );
         assertNotEq(
             LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({factory: factory, implementation: implementation, data: data, salt: otherSalt})
+                CloneParams({factory: factory, implementation: implementation, data: data, salt: otherSalt})
             ),
             base,
             "salt"
         );
         assertNotEq(
             LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({factory: factory, implementation: implementation, data: otherData, salt: salt})
+                CloneParams({factory: factory, implementation: implementation, data: otherData, salt: salt})
             ),
             base,
             "data"
@@ -219,7 +219,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployStepPredictionMismatchReverts() external {
         MockMispredictingCloneFactory factory = new MockMispredictingCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
 
         address expected = LibRainDeployClone.cloneDeployedAddress(clone);
         address predicted = factory.predictDeterministicAddressOpenSalt(clone.implementation, clone.data, clone.salt);
@@ -244,7 +244,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployStepAcceptsAnAgreeingFactory() external {
         MockCloneFactory factory = new MockCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
 
         address deployed = this.externalCloneDeployStep(LibRainDeploy.ARBITRUM_ONE, address(this), abi.encode(clone));
         assertEq(deployed, LibRainDeployClone.cloneDeployedAddress(clone));
@@ -256,7 +256,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployStepReturnsWhereTheFactoryCloned() external {
         MockCloneFactory factory = new MockCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
         address elsewhere = address(uint160(LibRainDeployClone.cloneDeployedAddress(clone)) + 1);
         vm.mockCall(
             address(factory),
@@ -273,7 +273,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployStepBroadcastsAsTheDeployer() external {
         MockCloneFactory factory = new MockCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
         address deployer = address(0xD3910E8);
 
         vm.startStateDiffRecording();
@@ -294,7 +294,7 @@ contract LibRainDeployCloneTest is Test {
     function testCloneDeployStepRefusesThePredictionBeforeBroadcasting() external {
         MockUncloneableMispredictingCloneFactory factory = new MockUncloneableMispredictingCloneFactory();
         MockCloneable implementation = new MockCloneable();
-        CloneTarget memory clone = localClone(address(factory), address(implementation));
+        CloneParams memory clone = localClone(address(factory), address(implementation));
 
         address expected = LibRainDeployClone.cloneDeployedAddress(clone);
         address predicted = factory.predictDeterministicAddressOpenSalt(clone.implementation, clone.data, clone.salt);
@@ -356,7 +356,7 @@ contract LibRainDeployCloneTest is Test {
         vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
         MockUncloneableMispredictingCloneFactory factory = new MockUncloneableMispredictingCloneFactory();
         vm.makePersistent(address(factory));
-        CloneTarget memory target = CloneTarget({
+        CloneParams memory params = CloneParams({
             factory: address(factory), implementation: address(new MockCloneable()), data: hex"01", salt: bytes32(0)
         });
 
@@ -367,8 +367,8 @@ contract LibRainDeployCloneTest is Test {
         );
         this.externalDeployStepToNetworksThroughCloneStep(
             misboundArbitrum(),
-            abi.encode(target),
-            LibRainDeployClone.cloneDeployedAddress(target),
+            abi.encode(params),
+            LibRainDeployClone.cloneDeployedAddress(params),
             bytes32(0),
             new DeployDependency[](0)
         );

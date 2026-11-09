@@ -9,7 +9,7 @@ import {LibRainDeploy} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
-    RegistryBeaconProxyTarget
+    RegistryBeaconProxyParams
 } from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
@@ -27,7 +27,7 @@ import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.s
 contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVerifyChain {
     string constant PROXY_SUITE = "registry-beacon-proxy@0_0_1";
 
-    RegistryBeaconProxyTarget internal sTarget;
+    RegistryBeaconProxyParams internal sParams;
 
     /// Puts the per-network clone release and the beacon at its Polygon clone on every fork, as
     /// `RainDeployVerifyChainBeaconProxyTest` does, plus a factory and a registry binding the beacon.
@@ -44,18 +44,18 @@ contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVe
             vm.etch(addresses[i], release.storedRuntimeCode);
             vm.makePersistent(addresses[i]);
         }
-        sTarget = LibRegistryBeaconProxyTest.live(vm, addresses[1], OWNER, hex"deadbeef", bytes32(uint256(5)));
-        sBeacon = sTarget.beacon;
-        vm.makePersistent(sTarget.factory);
-        vm.makePersistent(sTarget.registry);
+        sParams = LibRegistryBeaconProxyTest.live(vm, addresses[1], OWNER, hex"deadbeef", bytes32(uint256(5)));
+        sBeacon = sParams.beacon;
+        vm.makePersistent(sParams.factory);
+        vm.makePersistent(sParams.registry);
         vm.makePersistent(sBeacon);
     }
 
     function liveProxySuite() internal returns (DeploySuite memory) {
-        RegistryBeaconProxyTarget memory target = sTarget;
+        RegistryBeaconProxyParams memory params = sParams;
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
-            LibRegistryBeaconProxyTest.declared(PROXY_SUITE, target, LibRegistryBeaconProxyTest.runtimeOf(vm, target))
+            LibRegistryBeaconProxyTest.declared(PROXY_SUITE, params, LibRegistryBeaconProxyTest.runtimeOf(vm, params))
         )
         .snapshot;
         vm.etch(suite.storedDeployedAddress, suite.storedRuntimeCode);
@@ -86,7 +86,7 @@ contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVe
             address(new UpgradeableBeacon(perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID), OWNER));
         vm.makePersistent(other);
         vm.warp(block.timestamp + 1);
-        LibRegistryBeaconProxyTest.bind(vm, sTarget.registry, other);
+        LibRegistryBeaconProxyTest.bind(vm, sParams.registry, other);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeployRegistryBeaconProxy.RegistryBeaconProxyBeaconMismatch.selector,
@@ -100,13 +100,13 @@ contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVe
 
     function testRegistryBeaconProxyWithAChangedFactoryIsRefusedNamingNetworkAndDependency() external {
         DeploySuite memory suite = liveProxySuite();
-        bytes32 declared = sTarget.factory.codehash;
-        vm.etch(sTarget.factory, type(MockCloneFactory).runtimeCode);
+        bytes32 declared = sParams.factory.codehash;
+        vm.etch(sParams.factory, type(MockCloneFactory).runtimeCode);
         vm.expectRevert(
             abi.encodeWithSelector(
                 LibRainDeploy.DependencyChanged.selector,
                 LibRainDeploy.POLYGON,
-                sTarget.factory,
+                sParams.factory,
                 declared,
                 keccak256(type(MockCloneFactory).runtimeCode)
             )

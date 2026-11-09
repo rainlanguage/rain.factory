@@ -7,7 +7,7 @@ import {DeploySuite} from "rain-deploy-0.1.30/src/abstract/RainDeploySuitesBase.
 import {RainDeployVerifyChain} from "rain-deploy-0.1.30/src/abstract/RainDeployVerifyChain.sol";
 import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.30/src/lib/LibRainDeploy.sol";
 import {ExampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
-import {CloneTarget} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneParams} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 
@@ -54,7 +54,7 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
     /// A clone whose proxy code is right MUST still be refused when its implementation is missing.
     function testMatrixRefusesCloneWithMissingImplementation() external {
         address implementation =
-            abi.decode(LibRainDeployCloneMechanism.payload(declaration().released[0]), (CloneTarget)).implementation;
+            abi.decode(LibRainDeployCloneMechanism.payload(declaration().released[0]), (CloneParams)).implementation;
         LocalForkVm forkVm = new LocalForkVm();
         vm.etch(implementation, hex"");
         vm.expectRevert(

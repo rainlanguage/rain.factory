@@ -297,7 +297,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         assertTrue(
             vm.contains(
                 record,
-                "/// @dev The beacon proxy factory call this release was cut with: the\n/// tagged `abi.encode`d `CloneTarget`"
+                "/// @dev The beacon proxy factory call this release was cut with: the\n/// tagged `abi.encode`d `CloneParams`"
             )
         );
         assertFalse(vm.contains(record, "EIP-1167"));

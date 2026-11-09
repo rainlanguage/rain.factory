@@ -17,7 +17,7 @@ import {
     LibRainDeployCloneOnChainChecks,
     RegistryBeaconOwnedByDeployKey
 } from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
-import {RegistryBeaconProxyTarget} from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
+import {RegistryBeaconProxyParams} from "../../../src/lib/LibRainDeployRegistryBeaconProxy.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 
@@ -84,20 +84,20 @@ contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
 
     function registrySuite(address beaconOwner)
         internal
-        returns (RegistryBeaconProxyTarget memory, DeploySuite memory)
+        returns (RegistryBeaconProxyParams memory, DeploySuite memory)
     {
-        RegistryBeaconProxyTarget memory target =
+        RegistryBeaconProxyParams memory params =
             LibRegistryBeaconProxyTest.live(
                 vm, address(new MockCloneableV2()), beaconOwner, hex"deadbeef", bytes32(uint256(5))
             );
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
             LibRegistryBeaconProxyTest.declared(
-                "registry-beacon-proxy@0_0_1", target, LibRegistryBeaconProxyTest.runtimeOf(vm, target)
+                "registry-beacon-proxy@0_0_1", params, LibRegistryBeaconProxyTest.runtimeOf(vm, params)
             )
         )
         .snapshot;
-        return (target, suite);
+        return (params, suite);
     }
 
     function testBroadcastSeatRefusesTheDeployKeyOwningTheLastStateOfTheLastBeacon() external {
@@ -119,8 +119,8 @@ contract LibRainDeployCloneOnChainChecksBroadcastSeatTest is Test {
     }
 
     function testBroadcastSeatRefusesARegistryBeaconProxyWhoseDeclaredBeaconTheDeployKeyOwns() external {
-        (RegistryBeaconProxyTarget memory target, DeploySuite memory suite) = registrySuite(DEPLOYER);
-        vm.expectRevert(abi.encodeWithSelector(RegistryBeaconOwnedByDeployKey.selector, 42161, target.beacon));
+        (RegistryBeaconProxyParams memory params, DeploySuite memory suite) = registrySuite(DEPLOYER);
+        vm.expectRevert(abi.encodeWithSelector(RegistryBeaconOwnedByDeployKey.selector, 42161, params.beacon));
         this.checkRegistryBroadcastSeat(suite, OWNER);
     }
 

@@ -9,7 +9,7 @@ import {
     RAIN_COPYRIGHT_TEXT,
     RAIN_SPDX_LICENSE_IDENTIFIER
 } from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {CloneDeploy, CloneTarget, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
+import {CloneDeploy, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_MECHANISM,
     CLONE_PER_NETWORK_MECHANISM,
@@ -322,7 +322,7 @@ contract BuildScriptCloneTest is Test {
             chainId: chainId,
             data: data,
             deployedAddress: LibRainDeployClone.cloneDeployedAddress(
-                CloneTarget({
+                CloneParams({
                     factory: release.factory, implementation: release.implementation, data: data, salt: release.salt
                 })
             )
