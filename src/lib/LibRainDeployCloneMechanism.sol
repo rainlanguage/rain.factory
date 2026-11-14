@@ -39,6 +39,7 @@ import {
     LibRainDeployRegistryBeaconProxy
 } from "./LibRainDeployRegistryBeaconProxy.sol";
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
+import {ConfigRegistry} from "rain-deploy-0.1.32/src/concrete/ConfigRegistry.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
 import {LibRainDeployBeaconResolution, ResolvedBeacon} from "./LibRainDeployBeaconResolution.sol";
@@ -130,7 +131,8 @@ error ExtendedNetworkAddressMismatch(string suite, uint256 chainId, address deri
 error ExtendedNetworkUnfrozen(string suite, string network, address deployedAddress);
 
 /// Thrown when a storage slot of any account but the clone and the accounts created under it is read while the clone
-/// is deployed locally: the factory call and the clone's `initialize`. A full-slot write is not refused; a write to
+/// is deployed locally: the factory call and the clone's `initialize`. A `ConfigRegistry` read is allowed only on a
+/// fork of the clone's own network, whose registry holds that network's state. A full-slot write is not refused; a write to
 /// part of a slot reads the slot first and is refused like a read.
 /// A beacon proxy is not deployed locally, so this never applies to one.
 /// @param suite The suite being deployed.
@@ -345,7 +347,7 @@ library LibRainDeployCloneMechanism {
             if (inPlay[i] && deployedEarlier(deployed, inPlay, i)) {
                 uint256 snapshotId = vm.snapshotState();
                 vm.chainId(chainIds[i]);
-                deployParams(vm, suite, chainIds[i], deployed[i]);
+                deployParams(vm, suite, chainIds[i], deployed[i], false);
                 if (!vm.revertToStateAndDelete(snapshotId)) {
                     revert CloneSnapshotRevertFailed(suite.suite, snapshotId);
                 }
@@ -354,7 +356,7 @@ library LibRainDeployCloneMechanism {
         for (uint256 i = 0; i < chainIds.length; i++) {
             if (inPlay[i] && !deployedEarlier(deployed, inPlay, i)) {
                 vm.chainId(chainIds[i]);
-                deployParams(vm, suite, chainIds[i], deployed[i]);
+                deployParams(vm, suite, chainIds[i], deployed[i], false);
             }
         }
         vm.chainId(callerChainId);
@@ -388,7 +390,7 @@ library LibRainDeployCloneMechanism {
     /// Deploys the suite's clone, beacon proxy or registry beacon proxy on `block.chainid` alone.
     function deployLocallyOnChain(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal {
         LibRainDeploy.etchDependencies(vm, suite.dependencies);
-        deployParams(vm, suite, block.chainid, deployedAddress(d, suite, block.chainid));
+        deployParams(vm, suite, block.chainid, deployedAddress(d, suite, block.chainid), true);
     }
 
     function addUnrecordedNetworks(
@@ -732,7 +734,10 @@ library LibRainDeployCloneMechanism {
     /// @param suite The suite.
     /// @param chainId The network's chain id.
     /// @param expected The address its params derive there.
-    function deployParams(Vm vm, DeploySuite memory suite, uint256 chainId, address expected) internal {
+    /// @param onChain Whether this runs on a fork of the network, so its `ConfigRegistry` may be read.
+    function deployParams(Vm vm, DeploySuite memory suite, uint256 chainId, address expected, bool onChain)
+        internal
+    {
         if (isRegistryBeaconProxy(suite)) {
             checkRegistryBeaconProxyCreationCode(suite);
             vm.etch(expected, suite.storedRuntimeCode);
@@ -746,7 +751,7 @@ library LibRainDeployCloneMechanism {
             // clean` job, so it is placed rather than derived here.
             vm.etch(expected, suite.storedRuntimeCode);
         } else {
-            deployCloneParams(vm, suite.suite, beaconProxy, params, expected);
+            deployCloneParams(vm, suite.suite, beaconProxy, params, expected, onChain);
         }
     }
 
@@ -787,12 +792,14 @@ library LibRainDeployCloneMechanism {
     /// @param beaconProxy Whether the call deploys a beacon proxy.
     /// @param params The factory call.
     /// @param expected Its derived address.
+    /// @param onChain Whether this runs on a fork of the network, so its `ConfigRegistry` may be read.
     function deployCloneParams(
         Vm vm,
         string memory suite,
         bool beaconProxy,
         CloneParams memory params,
-        address expected
+        address expected,
+        bool onChain
     ) internal {
         vm.etch(expected, hex"");
         vm.resetNonce(expected);
@@ -815,7 +822,7 @@ library LibRainDeployCloneMechanism {
                 revert CloneDerivationMismatch(suite, expected, cloneAddress);
             }
         }
-        checkReadsOwnStorageOnly(suite, expected, accesses);
+        checkReadsOwnStorageOnly(suite, expected, accesses, onChain);
         if (!success) {
             assembly ("memory-safe") {
                 revert(add(result, 0x20), mload(result))
@@ -823,18 +830,26 @@ library LibRainDeployCloneMechanism {
         }
     }
 
-    /// Refuses `CloneInitializeReadsStorage` for a read of storage of an account not created under `clone`.
+    /// Refuses `CloneInitializeReadsStorage` for a read of storage of an account not created under `clone`, unless
+    /// `onChain` and the account runs `ConfigRegistry`.
     /// @param suite The suite key.
     /// @param clone The clone.
     /// @param accesses The recorded state diff.
-    function checkReadsOwnStorageOnly(string memory suite, address clone, Vm.AccountAccess[] memory accesses)
-        internal
-        pure
-    {
+    /// @param onChain Whether this runs on a fork of the network, so its `ConfigRegistry` may be read.
+    function checkReadsOwnStorageOnly(
+        string memory suite,
+        address clone,
+        Vm.AccountAccess[] memory accesses,
+        bool onChain
+    ) internal view {
+        bytes32 registryCodeHash = keccak256(type(ConfigRegistry).runtimeCode);
         for (uint256 i = 0; i < accesses.length; i++) {
             for (uint256 j = 0; j < accesses[i].storageAccesses.length; j++) {
                 Vm.StorageAccess memory access = accesses[i].storageAccesses[j];
-                if (!access.isWrite && !createdUnder(access.account, clone, accesses)) {
+                if (
+                    !access.isWrite && !createdUnder(access.account, clone, accesses)
+                        && !(onChain && access.account.codehash == registryCodeHash)
+                ) {
                     revert CloneInitializeReadsStorage(suite, access.account, access.slot);
                 }
             }
