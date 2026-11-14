@@ -14,17 +14,17 @@ integrity = "fa706c8a7caf3426c90f75e6aafa3224b0a6c899b490800cf6944e4ec42f9344"
 
 [[dependencies]]
 name = "rain-deploy"
-version = "0.1.30"
-url = "https://soldeer-revisions.s3.amazonaws.com/rain-deploy/0_1_30_03-11-2026_16:49:01_rain.zip"
-checksum = "dde77ee2624341aeb24efbda511a61bf300c698f147408ec5f22257f96b612cd"
-integrity = "012942e051f11beea12b66a0d76d832516dd9b6fb2934f0a5302cbc9df78d99a"
+version = "0.1.32"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-deploy/0_1_32_14-11-2026_22:36:02_rain.zip"
+checksum = "e64c52fdbcdabb68db4753cbe096288bb8445b2ffa560bb6f434784fdaa2425a"
+integrity = "31709632844197e8ecc7d69c8e61a3ac94e9efc184aa6a3466a7d932e4d6aa54"
 
 [[dependencies]]
 name = "rain-metadata"
-version = "0.1.45"
-url = "https://soldeer-revisions.s3.amazonaws.com/rain-metadata/0_1_45_01-11-2026_15:46:56_rain.zip"
-checksum = "61d1e21c68091ff62caeab545db8f37512e88d2f0ad90e147aded9fd35221b1a"
-integrity = "7d5b3baeccfc070115d7428d0bf44e0c8e21f09878ce40e7759660ea1b631782"
+version = "0.1.46"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-metadata/0_1_46_13-11-2026_17:38:39_rain.zip"
+checksum = "e4ecacef3173b6b541759ccc14ddec8bb390127afabc05d00d5210281360fbea"
+integrity = "eb5751111d55047ebc779aa38342d2274da76c27dd61d2c61f8f74a566b86d9e"
 
 [[dependencies]]
 name = "rain-sol-codegen"
