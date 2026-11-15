@@ -128,7 +128,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
         }
     }
 
-    /// On the fork, a read of an account that does not run `ConfigRegistry` is refused.
+    /// On the fork, a read of an account that is not the deployed `ConfigRegistry` is refused.
     function testCloneInitializeReadingAnotherAccountOnItsForkIsRefused() external {
         vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
         address source = address(new MockStorageSource());
@@ -154,6 +154,24 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
 
         bind(REGISTRY, "arbitrum binding");
         vm.etch(REGISTRY, bytes.concat(REGISTRY.code, hex"00"));
+        assertOnChainReadRefused(REGISTRY);
+    }
+
+    /// On the fork, an exact copy of the deployed `ConfigRegistry`'s code at another address is refused.
+    function testCloneInitializeReadingAConfigRegistryCopyOnItsForkIsRefused() external {
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        address copy = makeAddr("config registry copy");
+        vm.etch(copy, REGISTRY.code);
+        assertEq(copy.codehash, LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_CODEHASH);
+        bind(copy, "copy binding");
+        assertOnChainReadRefused(copy);
+    }
+
+    /// On the fork, the deployed `ConfigRegistry`'s address running other code is refused.
+    function testCloneInitializeReadingOtherCodeAtTheConfigRegistryOnItsForkIsRefused() external {
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.etch(REGISTRY, type(TestRegistryBeaconSource).runtimeCode);
+        TestRegistryBeaconSource(REGISTRY).bind(AUTHORITY, NAME, "bytes", "other code binding");
         assertOnChainReadRefused(REGISTRY);
     }
 }
