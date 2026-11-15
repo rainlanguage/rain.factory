@@ -735,9 +735,7 @@ library LibRainDeployCloneMechanism {
     /// @param chainId The network's chain id.
     /// @param expected The address its params derive there.
     /// @param onChain Whether this runs on a fork of the network, so its `ConfigRegistry` may be read.
-    function deployParams(Vm vm, DeploySuite memory suite, uint256 chainId, address expected, bool onChain)
-        internal
-    {
+    function deployParams(Vm vm, DeploySuite memory suite, uint256 chainId, address expected, bool onChain) internal {
         if (isRegistryBeaconProxy(suite)) {
             checkRegistryBeaconProxyCreationCode(suite);
             vm.etch(expected, suite.storedRuntimeCode);
@@ -842,6 +840,7 @@ library LibRainDeployCloneMechanism {
         Vm.AccountAccess[] memory accesses,
         bool onChain
     ) internal view {
+        // slither-disable-next-line too-many-digits
         bytes32 registryCodeHash = keccak256(type(ConfigRegistry).runtimeCode);
         for (uint256 i = 0; i < accesses.length; i++) {
             for (uint256 j = 0; j < accesses[i].storageAccesses.length; j++) {
