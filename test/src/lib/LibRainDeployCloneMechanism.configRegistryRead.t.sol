@@ -26,6 +26,10 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
         address(uint160(uint256(keccak256("rain.factory.test.config-registry-read.authority"))));
     bytes32 constant NAME = keccak256("rain.factory.test.config-registry-read.name");
     address constant REGISTRY = LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_ADDRESS;
+    /// The block at which `ConfigRegistry` first has its code on Arbitrum One.
+    uint256 constant CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK = 519115682;
+    /// The block at which `ConfigRegistry` first has its code on Polygon.
+    uint256 constant CONFIG_REGISTRY_POLYGON_DEPLOY_BLOCK = 96336285;
 
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
         DeployDeclaration memory d;
@@ -105,11 +109,11 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
     function testCloneInitializeReadingTheConfigRegistryOnItsForkDeploys() external {
         DeploySuite memory suite = registryReadingSuite(REGISTRY, 0);
 
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
         bind(REGISTRY, "arbitrum binding");
         deployOnChainHolding(suite, "arbitrum binding");
 
-        vm.createSelectFork(LibRainDeploy.POLYGON);
+        vm.createSelectFork(LibRainDeploy.POLYGON, CONFIG_REGISTRY_POLYGON_DEPLOY_BLOCK);
         bind(REGISTRY, "polygon binding");
         deployOnChainHolding(suite, "polygon binding");
     }
@@ -117,7 +121,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
     /// Deployed locally on the same fork, the clone is refused whichever of its networks reads the registry: the one
     /// deployed in a reverted snapshot, the one left deployed, or both.
     function testCloneInitializeReadingTheConfigRegistryLocallyIsRefused() external {
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
         bind(REGISTRY, "arbitrum binding");
         bytes32 slot = firstSlotRead(REGISTRY);
         uint256[3] memory readOn = [uint256(0), 137, 42161];
@@ -130,7 +134,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
 
     /// On the fork, a read of an account that is not the deployed `ConfigRegistry` is refused.
     function testCloneInitializeReadingAnotherAccountOnItsForkIsRefused() external {
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
         address source = address(new MockStorageSource());
         DeploySuite memory suite = cloneSuite(
             LibRainDeploy.zoltuAddress(type(MockStorageReadingCloneable).creationCode),
@@ -146,7 +150,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
     /// On the fork, an account answering `getV5` whose code is not exactly `ConfigRegistry`'s is refused: a stand-in,
     /// and the deployed registry's own address and bindings under its code with one byte appended.
     function testCloneInitializeReadingRegistryLikeCodeOnItsForkIsRefused() external {
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
 
         TestRegistryBeaconSource standIn = new TestRegistryBeaconSource();
         standIn.bind(AUTHORITY, NAME, "bytes", "stand-in binding");
@@ -159,7 +163,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
 
     /// On the fork, an exact copy of the deployed `ConfigRegistry`'s code at another address is refused.
     function testCloneInitializeReadingAConfigRegistryCopyOnItsForkIsRefused() external {
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
         address copy = makeAddr("config registry copy");
         vm.etch(copy, REGISTRY.code);
         assertEq(copy.codehash, LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_CODEHASH);
@@ -169,7 +173,7 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
 
     /// On the fork, the deployed `ConfigRegistry`'s address running other code is refused.
     function testCloneInitializeReadingOtherCodeAtTheConfigRegistryOnItsForkIsRefused() external {
-        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE);
+        vm.createSelectFork(LibRainDeploy.ARBITRUM_ONE, CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK);
         vm.etch(REGISTRY, type(TestRegistryBeaconSource).runtimeCode);
         TestRegistryBeaconSource(REGISTRY).bind(AUTHORITY, NAME, "bytes", "other code binding");
         assertOnChainReadRefused(REGISTRY);
