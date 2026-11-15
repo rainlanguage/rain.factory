@@ -829,7 +829,7 @@ library LibRainDeployCloneMechanism {
     }
 
     /// Refuses `CloneInitializeReadsStorage` for a read of storage of an account not created under `clone`, unless
-    /// `onChain` and the account runs `ConfigRegistry`.
+    /// `onChain` and the account is the deployed `ConfigRegistry`: its address with its codehash.
     /// @param suite The suite key.
     /// @param clone The clone.
     /// @param accesses The recorded state diff.
@@ -840,13 +840,14 @@ library LibRainDeployCloneMechanism {
         Vm.AccountAccess[] memory accesses,
         bool onChain
     ) internal view {
+        address registry = LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_ADDRESS;
         bytes32 registryCodeHash = LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_CODEHASH;
         for (uint256 i = 0; i < accesses.length; i++) {
             for (uint256 j = 0; j < accesses[i].storageAccesses.length; j++) {
                 Vm.StorageAccess memory access = accesses[i].storageAccesses[j];
                 if (
                     !access.isWrite && !createdUnder(access.account, clone, accesses)
-                        && !(onChain && access.account.codehash == registryCodeHash)
+                        && !(onChain && access.account == registry && access.account.codehash == registryCodeHash)
                 ) {
                     revert CloneInitializeReadsStorage(suite, access.account, access.slot);
                 }
