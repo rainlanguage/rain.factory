@@ -19,7 +19,7 @@ enum SourceUse {
 /// @notice A cloneable whose `initialize` reads a `MockStorageSource`, or reverts, as its data says.
 contract MockStorageReadingCloneable is ICloneableV2 {
     /// @inheritdoc ICloneableV2
-    function initialize(bytes calldata data) external returns (bytes32) {
+    function initialize(bytes calldata data) external view returns (bytes32) {
         (MockStorageSource source, SourceUse use) = abi.decode(data, (MockStorageSource, SourceUse));
         if (use == SourceUse.Refuse) {
             revert MockInitializeRefused();
