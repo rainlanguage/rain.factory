@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
+import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
 import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.sol";
 
@@ -128,15 +128,6 @@ error ExtendedNetworkAddressMismatch(string suite, uint256 chainId, address deri
 /// @param network The network.
 /// @param deployedAddress The address checked or to be broadcast there.
 error ExtendedNetworkUnfrozen(string suite, string network, address deployedAddress);
-
-/// Thrown when a storage slot of any account but the clone, the accounts created under it and the suite's declared
-/// dependencies is read while the clone is deployed locally: the factory call and the clone's `initialize`. A full-slot
-/// write is not refused; a write to part of a slot reads the slot first and is refused like a read.
-/// A beacon proxy is not deployed locally, so this never applies to one.
-/// @param suite The suite being deployed.
-/// @param account The account whose storage was read.
-/// @param slot The slot read.
-error CloneInitializeReadsStorage(string suite, address account, bytes32 slot);
 
 /// Thrown when the snapshot a shared network's local deploy runs in fails to restore.
 /// @param suite The suite deployed.
@@ -746,7 +737,7 @@ library LibRainDeployCloneMechanism {
             // clean` job, so it is placed rather than derived here.
             vm.etch(expected, suite.storedRuntimeCode);
         } else {
-            deployCloneParams(vm, suite, beaconProxy, params, expected);
+            deployCloneParams(vm, suite.suite, beaconProxy, params, expected);
         }
     }
 
@@ -781,16 +772,15 @@ library LibRainDeployCloneMechanism {
         }
     }
 
-    /// Deploys one factory call locally, refusing a derivation mismatch and any read of storage not under the clone or
-    /// a declared dependency.
-    /// @param vm The Vm instance to record with.
-    /// @param suite The suite.
+    /// Deploys one factory call locally, refusing a derivation mismatch.
+    /// @param vm The Vm instance to deploy with.
+    /// @param suite The suite key.
     /// @param beaconProxy Whether the call deploys a beacon proxy.
     /// @param params The factory call.
     /// @param expected Its derived address.
     function deployCloneParams(
         Vm vm,
-        DeploySuite memory suite,
+        string memory suite,
         bool beaconProxy,
         CloneParams memory params,
         address expected
@@ -806,79 +796,19 @@ library LibRainDeployCloneMechanism {
                 ICloneableFactoryV6(params.factory).cloneDeterministicOpenSalt,
                 (params.implementation, params.data, params.salt)
             );
-        vm.startStateDiffRecording();
         // slither-disable-next-line low-level-calls
         (bool success, bytes memory result) = params.factory.call(factoryCall);
-        Vm.AccountAccess[] memory accesses = vm.stopAndReturnStateDiff();
         if (success) {
             address cloneAddress = abi.decode(result, (address));
             if (cloneAddress != expected) {
-                revert CloneDerivationMismatch(suite.suite, expected, cloneAddress);
+                revert CloneDerivationMismatch(suite, expected, cloneAddress);
             }
         }
-        checkReadsOwnStorageOnly(suite, expected, accesses);
         if (!success) {
             assembly ("memory-safe") {
                 revert(add(result, 0x20), mload(result))
             }
         }
-    }
-
-    /// Refuses `CloneInitializeReadsStorage` for a read of storage of an account neither created under `clone` nor
-    /// one of `suite`'s declared dependencies.
-    /// @param suite The suite.
-    /// @param clone The clone.
-    /// @param accesses The recorded state diff.
-    function checkReadsOwnStorageOnly(DeploySuite memory suite, address clone, Vm.AccountAccess[] memory accesses)
-        internal
-        pure
-    {
-        for (uint256 i = 0; i < accesses.length; i++) {
-            for (uint256 j = 0; j < accesses[i].storageAccesses.length; j++) {
-                Vm.StorageAccess memory access = accesses[i].storageAccesses[j];
-                if (
-                    !access.isWrite && !createdUnder(access.account, clone, accesses)
-                        && !LibRainDeployClone.isDependencyDeclared(access.account, suite.dependencies)
-                ) {
-                    revert CloneInitializeReadsStorage(suite.suite, access.account, access.slot);
-                }
-            }
-        }
-    }
-
-    /// @param account The account.
-    /// @param clone The clone.
-    /// @param accesses The recorded state diff.
-    /// @return Whether `account` is `clone` or was created, at any depth, by it.
-    function createdUnder(address account, address clone, Vm.AccountAccess[] memory accesses)
-        internal
-        pure
-        returns (bool)
-    {
-        for (uint256 hops = 0; hops <= accesses.length; hops++) {
-            if (account == clone) {
-                return true;
-            }
-            (bool created, address creator) = creatorIn(account, accesses);
-            if (!created) {
-                return false;
-            }
-            account = creator;
-        }
-        return false;
-    }
-
-    /// @param account The account.
-    /// @param accesses The recorded state diff.
-    /// @return Whether `accesses` creates `account`, and its creator if so.
-    function creatorIn(address account, Vm.AccountAccess[] memory accesses) internal pure returns (bool, address) {
-        bool created = false;
-        address creator = address(0);
-        for (uint256 k = 0; k < accesses.length && !created; k++) {
-            created = accesses[k].kind == VmSafe.AccountAccessKind.Create && accesses[k].account == account;
-            creator = created ? accesses[k].accessor : address(0);
-        }
-        return (created, creator);
     }
 
     /// @param clone The clone declaration.

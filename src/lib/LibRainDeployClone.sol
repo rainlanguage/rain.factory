@@ -172,23 +172,12 @@ library LibRainDeployClone {
     /// @param dependency The address required.
     /// @param dependencies The dependencies declared.
     function checkDependencyDeclared(address dependency, DeployDependency[] memory dependencies) internal pure {
-        if (!isDependencyDeclared(dependency, dependencies)) {
-            revert CloneDependencyUndeclared(dependency);
-        }
-    }
-
-    /// @return Whether `dependency` is the address of one of `dependencies`.
-    function isDependencyDeclared(address dependency, DeployDependency[] memory dependencies)
-        internal
-        pure
-        returns (bool)
-    {
         for (uint256 i = 0; i < dependencies.length; i++) {
             if (dependencies[i].deployedAddress == dependency) {
-                return true;
+                return;
             }
         }
-        return false;
+        revert CloneDependencyUndeclared(dependency);
     }
 
     /// Requires a per-network clone or beacon proxy to name at least one network, no chain id twice, and its
