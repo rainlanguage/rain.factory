@@ -39,7 +39,7 @@ import {
     LibRainDeployRegistryBeaconProxy
 } from "./LibRainDeployRegistryBeaconProxy.sol";
 import {LibRainDeployCloneSnapshot} from "./LibRainDeployCloneSnapshot.sol";
-import {ConfigRegistry} from "rain-deploy-0.1.32/src/concrete/ConfigRegistry.sol";
+import {LibConfigRegistryDeploy} from "rain-deploy-0.1.32/src/lib/LibConfigRegistryDeploy.sol";
 import {LibRainDeployCloneOnChainChecks} from "./LibRainDeployCloneOnChainChecks.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "./LibRainDeployBeaconDeclarationChecks.sol";
 import {LibRainDeployBeaconResolution, ResolvedBeacon} from "./LibRainDeployBeaconResolution.sol";
@@ -840,8 +840,7 @@ library LibRainDeployCloneMechanism {
         Vm.AccountAccess[] memory accesses,
         bool onChain
     ) internal view {
-        // slither-disable-next-line too-many-digits
-        bytes32 registryCodeHash = keccak256(type(ConfigRegistry).runtimeCode);
+        bytes32 registryCodeHash = LibConfigRegistryDeploy.CONFIG_REGISTRY_DEPLOYED_CODEHASH;
         for (uint256 i = 0; i < accesses.length; i++) {
             for (uint256 j = 0; j < accesses[i].storageAccesses.length; j++) {
                 Vm.StorageAccess memory access = accesses[i].storageAccesses[j];
