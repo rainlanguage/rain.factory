@@ -5,13 +5,13 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.32/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.33/src/abstract/RainDeploySuitesBase.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.32/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.33/src/lib/LibRainDeploySnapshot.sol";
 import {CloneNetworks} from "./LibRainDeployClone.sol";
 import {
     BEACON_PROXY_MECHANISM,
@@ -416,18 +416,17 @@ library LibRainDeployCloneSnapshot {
     /// Refuses `FrozenSnapshotMechanismDataMissing` for a record with no `MECHANISM_DATA`.
     /// @return The expression of the released suite's `mechanismData`: the record's `MECHANISM_DATA` tagged by its
     /// markers for a legacy record, verbatim for a tagged one.
-    function releasedMechanismData(DeployDeclaration memory, Vm vm, string memory path, string memory prefix)
-        internal
-        view
-        returns (string memory)
-    {
-        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
-        // Only whether the record declares `MECHANISM_DATA` is needed.
-        // slither-disable-next-line unused-return
-        (bool mechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path, lines);
-        if (!mechanismData) {
+    function releasedMechanismData(
+        DeployDeclaration memory,
+        Vm vm,
+        string memory path,
+        bool declaresMechanismData,
+        string memory prefix
+    ) internal view returns (string memory) {
+        if (!declaresMechanismData) {
             revert FrozenSnapshotMechanismDataMissing(path);
         }
+        string[] memory lines = LibRainDeploySnapshot.recordLines(vm, path, vm.readFile(path));
         if (isLegacyRecord(vm, path, lines)) {
             return releasedMechanismDataExpression(recordedMechanismTag(vm, path, lines), prefix);
         }
