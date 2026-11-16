@@ -8,9 +8,9 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.32/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.32/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.32/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.33/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.33/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.33/src/lib/LibRainDeploySnapshot.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
 /// @title ExternalDeploySuites
@@ -203,8 +203,10 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
         returns (string memory)
     {
         DeployDeclaration memory d = declaration();
+        // slither-disable-next-line unused-return
+        (bool declaresMechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(fileVm, path);
         return LibRainDeployDeclaration.mechanismById(
                 d, LibRainDeploySnapshot.recordedMechanismId(d, fileVm, path), path
-            ).releasedMechanismData(d, fileVm, path, prefix);
+            ).releasedMechanismData(d, fileVm, path, declaresMechanismData, prefix);
     }
 }

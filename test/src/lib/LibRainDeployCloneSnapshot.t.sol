@@ -9,13 +9,14 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.32/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.33/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.32/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.33/src/lib/LibRainDeploy.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.33/src/lib/LibRainDeploySnapshot.sol";
 import {
     FrozenSnapshotMechanismDataMissing,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.32/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.33/src/lib/LibRainDeploySnapshot.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,
@@ -305,7 +306,11 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     }
 
     function externalReleasedMechanismData(string memory path) external view returns (string memory) {
-        return LibRainDeployCloneSnapshot.releasedMechanismData(declaration(), vm, path, "Record_0_0_1");
+        // slither-disable-next-line unused-return
+        (bool declaresMechanismData,) = LibRainDeploySnapshot.recordedMechanismShape(vm, path);
+        return LibRainDeployCloneSnapshot.releasedMechanismData(
+            declaration(), vm, path, declaresMechanismData, "Record_0_0_1"
+        );
     }
 
     /// A suite on no network, and a per-network suite on no network its payload carries, deploy nothing to record.
