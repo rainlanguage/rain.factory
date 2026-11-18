@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {DeploySuite} from "rain-deploy-0.1.33/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.33/src/abstract/RainDeployVerifyChain.sol";
-import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.33/src/lib/LibRainDeploy.sol";
+import {DeploySuite} from "rain-deploy-0.1.34/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.34/src/abstract/RainDeployVerifyChain.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.34/src/lib/LibRainDeploy.sol";
 import {ExampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
 import {CloneParams} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";

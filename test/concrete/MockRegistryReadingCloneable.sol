@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "../../src/interface/ICloneableV2.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.33/src/interface/IConfigRegistryV5.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.34/src/interface/IConfigRegistryV5.sol";
 
 /// @title MockRegistryReadingCloneable
 /// @notice A cloneable whose `initialize` keeps the value a registry binds to a name.

@@ -9,7 +9,7 @@ import {
 } from "../../../src/lib/LibICloneableFactoryV5.sol";
 import {ICloneableFactoryV4} from "../../../src/interface/deprecated/ICloneableFactoryV4.sol";
 import {Vm, VmSafe} from "forge-std-1.17.0/src/Vm.sol";
-import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.33/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.34/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneParams,
