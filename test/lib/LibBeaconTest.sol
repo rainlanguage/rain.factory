@@ -4,12 +4,12 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployDependency, DeploySuite} from "rain-deploy-0.1.33/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.33/src/lib/LibRainDeploy.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.33/src/lib/LibRainDeployZoltuMechanism.sol";
-import {LibMigrationRegistry} from "rain-deploy-0.1.33/src/lib/LibMigrationRegistry.sol";
-import {LibMigrationRegistryDeploy} from "rain-deploy-0.1.33/src/lib/LibMigrationRegistryDeploy.sol";
-import {IMigrationRegistryV5, Prerequisite} from "rain-deploy-0.1.33/src/interface/IMigrationRegistryV5.sol";
+import {DeployDependency, DeploySuite} from "rain-deploy-0.1.34/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.34/src/lib/LibRainDeploy.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.34/src/lib/LibRainDeployZoltuMechanism.sol";
+import {LibMigrationRegistry} from "rain-deploy-0.1.34/src/lib/LibMigrationRegistry.sol";
+import {LibMigrationRegistryDeploy} from "rain-deploy-0.1.34/src/lib/LibMigrationRegistryDeploy.sol";
+import {IMigrationRegistryV5, Prerequisite} from "rain-deploy-0.1.34/src/interface/IMigrationRegistryV5.sol";
 
 /// @title LibBeaconTest
 /// @notice The fixtures and assertions the beacon tests share.
