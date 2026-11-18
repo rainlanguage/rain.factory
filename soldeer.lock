@@ -20,6 +20,13 @@ checksum = "af83f2cde1c9805c37f7e31da584546e41ef878cad4d45968cb0ac3710f18f4c"
 integrity = "150713e72bc4982c37d056fea507bd0b1549b1957ae52146a356a71ab54b1e24"
 
 [[dependencies]]
+name = "rain-extrospection"
+version = "0.1.19"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-extrospection/0_1_19_15-11-2026_16:48:26_rain.zip"
+checksum = "b706f641b16b4426d0454bb954bf500893beebd1ff6c3055b6d02350525030b1"
+integrity = "329a9a7a78f0b2fbb74c6a9dfd81cc3b45c0d50f94f163af4e4e0c31a7a26b7c"
+
+[[dependencies]]
 name = "rain-metadata"
 version = "0.1.46"
 url = "https://soldeer-revisions.s3.amazonaws.com/rain-metadata/0_1_46_13-11-2026_17:38:39_rain.zip"
