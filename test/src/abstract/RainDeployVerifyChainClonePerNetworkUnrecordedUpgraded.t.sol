@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.34/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.34/src/abstract/RainDeployVerifyChain.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.34/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.35/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.35/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.35/src/lib/LibRainDeploy.sol";
 import {ExtendedNetworkUnfrozen, LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {CloneDeploy, CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {
