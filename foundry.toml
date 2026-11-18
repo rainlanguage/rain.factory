@@ -55,6 +55,8 @@ rain-sol-codegen = "0.1.39"
 rain-deploy = "0.1.34"
 # rain-deploy imports it by path.
 rain-extrospection = "0.1.19"
+# rain-extrospection imports it by path.
+rain-solmem = "0.1.28"
 rain-metadata = "0.1.46"
 rain-string = "0.3.11"
 safe-global-safe-smart-account = "1.4.1-3"
