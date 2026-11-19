@@ -15,7 +15,7 @@ import {
     ExtendedNetworksUnrecorded,
     LibRainDeployExtendedNetworks
 } from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {InvalidRecordRoot} from "rain-deploy-0.1.37/src/lib/LibRainDeploySnapshot.sol";
+import {InvalidRecordRoot} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
 import {LibExtendedNetworksFixture} from "../../lib/LibExtendedNetworksFixture.sol";
 
 /// @title LibRainDeployExtendedNetworksTest
