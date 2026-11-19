@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {SuiteSeatsDeployKey} from "rain-deploy-0.1.37/src/abstract/RainDeployBroadcast.sol";
-import {DeploySuite} from "rain-deploy-0.1.37/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.37/src/lib/LibRainDeploy.sol";
+import {SuiteSeatsDeployKey} from "rain-deploy-0.1.38/src/abstract/RainDeployBroadcast.sol";
+import {DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,

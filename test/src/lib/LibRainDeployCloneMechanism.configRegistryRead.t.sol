@@ -3,13 +3,13 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.37/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.37/src/lib/LibRainDeploy.sol";
-import {IConfigRegistryV5} from "rain-deploy-0.1.37/src/interface/IConfigRegistryV5.sol";
-import {LibConfigRegistryDeploy} from "rain-deploy-0.1.37/src/lib/LibConfigRegistryDeploy.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {IConfigRegistryV5} from "rain-deploy-0.1.38/src/interface/IConfigRegistryV5.sol";
+import {LibConfigRegistryDeploy} from "rain-deploy-0.1.38/src/lib/LibConfigRegistryDeploy.sol";
 import {
     RUNTIME_CODE as CONFIG_REGISTRY_RUNTIME_CODE
-} from "rain-deploy-0.1.37/src/generated/candidate/ConfigRegistry.sol";
+} from "rain-deploy-0.1.38/src/generated/candidate/ConfigRegistry.sol";
 import {CloneDeploy, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
