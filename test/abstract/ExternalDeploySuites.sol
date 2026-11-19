@@ -8,9 +8,9 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.36/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.36/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.36/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.37/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.37/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.37/src/lib/LibRainDeploySnapshot.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
 /// @title ExternalDeploySuites
