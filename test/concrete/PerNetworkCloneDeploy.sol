@@ -3,7 +3,11 @@
 pragma solidity =0.8.25;
 
 import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
-import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -11,6 +15,7 @@ import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../sr
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {
     PerNetworkCloneDeploys,
+    onlyFirstRecordedNetworkSuites,
     perNetworkCloneDeploys,
     perNetworkCloneNetworks,
     perNetworkCloneReleased
@@ -33,6 +38,9 @@ contract PerNetworkCloneDeploy is PerNetworkCloneDeploys, ExternalDeployBroadcas
     /// The record root the clone layer reads under once `declareExtendedNetworks` has run.
     string internal sExtendedRoot;
 
+    /// Whether the declared release records Arbitrum One alone.
+    bool internal sFirstNetworkOnly;
+
     function declaration()
         internal
         view
@@ -45,9 +53,20 @@ contract PerNetworkCloneDeploy is PerNetworkCloneDeploys, ExternalDeployBroadcas
         LibRainDeployZoltuMechanism.extend(d);
         extendCloneLayer(d);
         LibExternalDeployments.add(d, exampleCloneDependencies());
-        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
+        LibRainDeployDeclaration.addReleased(d, released());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;
+    }
+
+    /// @return The release, recording Arbitrum One alone once `recordFirstNetworkOnly` has run.
+    function released() internal view returns (DeploySuite[] memory) {
+        DeploySuite[] memory suites = perNetworkCloneReleased();
+        return sFirstNetworkOnly ? onlyFirstRecordedNetworkSuites(suites[0]) : suites;
+    }
+
+    /// Declares the release recording Arbitrum One alone, as one cut before the repo supported Polygon.
+    function recordFirstNetworkOnly() external {
+        sFirstNetworkOnly = true;
     }
 
     /// Extends `d` with the clone layer under the record root `declareExtendedNetworks` set, and its one declaration
