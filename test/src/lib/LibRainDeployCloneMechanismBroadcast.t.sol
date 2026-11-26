@@ -17,7 +17,11 @@ import {
     LibRainDeployCloneMechanism,
     UnexpectedStoredDeployedAddress
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {DeploySuite, UnexpectedMechanismData} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeploySuite,
+    UnexpectedMechanismData,
+    UnrecordedOnNetwork
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
@@ -268,7 +272,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         recorded.networks[0] = exampleCloneNetworks().networks[0];
         DeploySuite memory release = perNetworkSuite(recorded);
 
-        vm.expectRevert(abi.encodeWithSelector(LibRainDeployClone.CloneNetworkUndeclared.selector, 137));
+        vm.expectRevert(abi.encodeWithSelector(UnrecordedOnNetwork.selector, release.suite, 137));
         sDeploy.externalDeployAndBroadcast(vm, arbitrumAndPolygon(), 1, release, release);
         assertFalse(anyForkExists());
     }
