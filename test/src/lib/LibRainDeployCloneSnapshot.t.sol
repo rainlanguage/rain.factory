@@ -30,6 +30,7 @@ import {
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockSnapshotDeletingCloneable} from "../../concrete/MockSnapshotDeletingCloneable.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -52,7 +53,11 @@ import {
 /// @notice The clone and per-network clone record writers, and the released lib a per-network clone record yields.
 contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     function declaration() internal view override returns (DeployDeclaration memory) {
-        return perNetworkCloneLayers();
+        DeployDeclaration memory d = perNetworkCloneLayers();
+        DeployDependency[] memory implementation = new DeployDependency[](1);
+        implementation[0] = snapshotDeletingImplementation();
+        LibExternalDeployments.add(d, implementation);
+        return d;
     }
 
     /// The roots the writer tests produce into, one per test so tests running in parallel never share one.
@@ -327,12 +332,19 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         this.externalWriteSuiteSnapshot(NOTHING_DEPLOYED_ROOT, suite);
     }
 
-    /// @return A per-network clone on Arbitrum One of an implementation whose initialization deletes every state
-    /// snapshot.
+    /// @return An implementation whose initialization deletes every state snapshot.
+    function snapshotDeletingImplementation() internal pure returns (DeployDependency memory) {
+        return DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockSnapshotDeletingCloneable).creationCode),
+            runtimeCode: type(MockSnapshotDeletingCloneable).runtimeCode
+        });
+    }
+
+    /// @return A per-network clone on Arbitrum One of `snapshotDeletingImplementation()`.
     function snapshotDeletingSuite() internal pure returns (DeploySuite memory) {
         CloneNetworks memory clones = CloneNetworks({
             factory: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
-            implementation: LibRainDeploy.zoltuAddress(type(MockSnapshotDeletingCloneable).creationCode),
+            implementation: snapshotDeletingImplementation().deployedAddress,
             salt: bytes32(uint256(7)),
             networks: new ChainDeploy[](1)
         });
@@ -340,9 +352,7 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         DeployDependency[] memory dependencies = new DeployDependency[](2);
         dependencies[0] =
             DeployDependency({deployedAddress: clones.factory, runtimeCode: type(MockCloneFactory).runtimeCode});
-        dependencies[1] = DeployDependency({
-            deployedAddress: clones.implementation, runtimeCode: type(MockSnapshotDeletingCloneable).runtimeCode
-        });
+        dependencies[1] = snapshotDeletingImplementation();
         string[] memory networks = new string[](1);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         bytes memory runtimeCode = LibRainDeployClone.cloneRuntimeCode(clones.implementation);
