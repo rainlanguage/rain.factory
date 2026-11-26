@@ -544,17 +544,20 @@ library LibRainDeployCloneMechanism {
 
     /// @param suite A clone or beacon proxy suite.
     /// @param chainId The network's chain id.
-    /// @return The address it records there.
+    /// @return Whether it records an address there; a per-network suite records only its own entries.
+    /// @return The address it records there, or zero when none.
     function recordedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId)
         internal
         pure
-        returns (address)
+        returns (bool, address)
     {
         if (isPerNetwork(suite)) {
             CloneNetworks memory clones = cloneNetworks(suite);
-            return clones.networks[LibRainDeployClone.cloneNetworkIndex(clones, chainId)].deployedAddress;
+            (bool found, uint256 index) = LibRainDeployClone.findCloneNetwork(clones, chainId);
+            return (found, found ? clones.networks[index].deployedAddress : address(0));
         }
-        return suite.storedDeployedAddress;
+        // forge-lint: disable-next-line(boolean-cst)
+        return (true, suite.storedDeployedAddress);
     }
 
     /// @param suite A clone or beacon proxy suite.

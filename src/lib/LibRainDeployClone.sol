@@ -203,12 +203,22 @@ library LibRainDeployClone {
     /// @param chainId The chain id to find.
     /// @return The index of its entry in `clones.networks`.
     function cloneNetworkIndex(CloneNetworks memory clones, uint256 chainId) internal pure returns (uint256) {
-        for (uint256 i = 0; i < clones.networks.length; i++) {
-            if (clones.networks[i].chainId == chainId) {
-                return i;
-            }
+        (bool found, uint256 index) = findCloneNetwork(clones, chainId);
+        if (!found) {
+            revert CloneNetworkUndeclared(chainId);
         }
-        revert CloneNetworkUndeclared(chainId);
+        return index;
+    }
+
+    /// @return Whether `clones.networks` has an entry for `chainId`.
+    /// @return Its index, or zero when none.
+    function findCloneNetwork(CloneNetworks memory clones, uint256 chainId) internal pure returns (bool, uint256) {
+        uint256 i = 0;
+        while (i < clones.networks.length && clones.networks[i].chainId != chainId) {
+            i++;
+        }
+        bool found = i < clones.networks.length;
+        return (found, found ? i : 0);
     }
 
     /// The `CloneParams` one entry of a per-network clone describes.
