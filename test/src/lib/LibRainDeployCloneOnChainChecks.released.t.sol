@@ -8,6 +8,7 @@ import {
     DeployDeclaration,
     DeploySuite
 } from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
@@ -29,8 +30,8 @@ import {
 import {LibExtendedNetworksFixture} from "../../lib/LibExtendedNetworksFixture.sol";
 
 /// @title LibRainDeployCloneOnChainChecksReleasedTest
-/// @notice `released` returns the release with its extended networks record and its candidate's networks among the
-/// declaration's appended, leaving `d.released` unchanged.
+/// @notice `released` returns the release with its candidate's networks among the declaration's appended, leaving
+/// `d.released` unchanged.
 contract LibRainDeployCloneOnChainChecksReleasedTest is Test {
     string constant KEY = "per-network-clone@0_0_1";
 
@@ -61,8 +62,8 @@ contract LibRainDeployCloneOnChainChecksReleasedTest is Test {
         assertEq(d.released[0].mechanismData, releasedData);
     }
 
-    function testReleasedTakesItsExtendedNetworkRecordOverTheCandidatesData() external {
-        DeployDeclaration memory d = declaration("released-extended-network");
+    /// Records Polygon as an extended network of the release, at init data the candidate does not use.
+    function writePolygonRecord(DeployDeclaration memory d) internal returns (bytes memory) {
         bytes memory data = abi.encode(address(0xc3c3c3c3c3c3c3c3c3C3C3c3C3C3C3c3C3C3c3c3));
         ChainDeploy[] memory extended = new ChainDeploy[](1);
         extended[0] = ChainDeploy({
@@ -73,11 +74,30 @@ contract LibRainDeployCloneOnChainChecksReleasedTest is Test {
         LibRainDeployExtendedNetworks.writeExtendedNetworks(
             vm, LibRainDeployCloneMechanism.layerConfig(d).extendedNetworksRoot, KEY, extended
         );
+        return data;
+    }
+
+    function testReleasedKeepsTheExtendedNetworkAddReleasedRecorded() external {
+        DeployDeclaration memory d = declaration("released-extended-network");
+        bytes memory data = writePolygonRecord(d);
+        d.released = new DeploySuite[](0);
+        LibRainDeployDeclaration.addReleased(d, onlyFirstRecordedNetworkSuites(perNetworkCloneReleased()[0]));
         ChainDeploy[] memory networks = networksOf(LibRainDeployCloneOnChainChecks.released(d, KEY));
         assertEq(networks.length, 2);
         assertEq(networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         assertEq(networks[1].data, data);
         assertEq(networks[1].deployedAddress, perNetworkCloneReleaseAddressAt(data));
+    }
+
+    /// `addReleased` records the release's networks once; `released` does not read the record again.
+    function testReleasedDoesNotAddTheRecordedNetworks() external {
+        DeployDeclaration memory d = declaration("released-no-recorded-networks");
+        writePolygonRecord(d);
+        ChainDeploy[] memory networks = networksOf(LibRainDeployCloneOnChainChecks.released(d, KEY));
+        assertEq(networks.length, 2);
+        assertEq(networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
+        assertEq(networks[1].data, perNetworkCloneInitData(PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
+        assertEq(networks[1].deployedAddress, perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID));
     }
 
     function externalReleased(string memory key) external returns (DeploySuite memory) {

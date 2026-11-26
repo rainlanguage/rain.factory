@@ -46,7 +46,6 @@ contract RainDeployVerifyChainClonePerNetworkUnrecordedUpgradedTest is
     function testUnrecordedNetworkTakesTheCandidatesDataUnderTheReleasesImplementation() external view {
         DeployDeclaration memory d = declaration();
         DeploySuite memory suite = onlyFirstRecordedNetwork(d.released[0]);
-        addRecordedNetworks(d, suite);
         addCandidateNetworks(d, suite, LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(d.networks)));
         CloneNetworks memory extended = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         assertEq(extended.networks.length, 2);

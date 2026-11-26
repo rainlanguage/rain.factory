@@ -493,7 +493,12 @@ contract LibRainDeployCloneMechanismTest is Test {
         chainIds[1] = 137;
         suite.networks = perNetworkCloneNetworks();
         assertEq(sDeploy.externalDeployedAddresses(suite), addresses);
-        assertEq(sDeploy.externalRecordedAddresses(suite), addresses);
+        (bool[] memory recorded, address[] memory recordedAt) = sDeploy.externalRecordedAddresses(suite);
+        bool[] memory everyNetwork = new bool[](2);
+        everyNetwork[0] = true;
+        everyNetwork[1] = true;
+        assertEq(recorded, everyNetwork);
+        assertEq(recordedAt, addresses);
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite), chainIds);
         assertEq(sDeploy.externalDeployedAddress(suite, 42161), arbitrumAddress);
         assertEq(sDeploy.externalDeployedAddress(suite, 137), polygonAddress);

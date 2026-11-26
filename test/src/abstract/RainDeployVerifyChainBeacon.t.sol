@@ -567,7 +567,6 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         DeployDeclaration memory d = declaration();
         LibRainDeployBeaconResolution.resolveBeacons(d, networks);
         candidate.networks = LibRainDeploy.networkNames(networks);
-        addRecordedNetworks(d, candidate);
         addCandidateNetworks(d, candidate, LibRainDeploy.networkChainIds(networks));
         return deriveDeployment(d, candidate);
     }

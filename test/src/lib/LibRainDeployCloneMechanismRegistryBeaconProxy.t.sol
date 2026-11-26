@@ -162,11 +162,12 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         }
 
         address[] memory deployed = sDeploy.externalDeployedAddresses(suite);
-        address[] memory recorded = sDeploy.externalRecordedAddresses(suite);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(suite);
         assertEq(deployed.length, 2);
         assertEq(recorded.length, 2);
         for (uint256 i = 0; i < deployed.length; i++) {
             assertEq(deployed[i], expected);
+            assertTrue(isRecorded[i]);
             assertEq(recorded[i], expected);
         }
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite).length, 0);

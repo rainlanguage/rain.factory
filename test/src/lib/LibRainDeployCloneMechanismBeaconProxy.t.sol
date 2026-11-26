@@ -381,10 +381,12 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         uint256[] memory chainIds = perNetworkCloneChainIds();
         DeploySuite memory suite = suiteOf(proxy, chainIds);
 
-        address[] memory recorded = sDeploy.externalRecordedAddresses(suite);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(suite);
+        assertEq(isRecorded.length, 2);
         assertEq(recorded.length, 2);
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite), chainIds);
         for (uint256 i = 0; i < chainIds.length; i++) {
+            assertTrue(isRecorded[i]);
             assertEq(recorded[i], beaconProxyAddressOn(proxy, chainIds[i]));
             assertEq(sDeploy.externalRecordedAddress(suite, chainIds[i]), beaconProxyAddressOn(proxy, chainIds[i]));
         }
@@ -429,7 +431,10 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         });
 
         DeploySuite memory frozen = this.externalWithExtendedNetworks(release, extended);
-        assertEq(sDeploy.externalRecordedAddresses(frozen).length, 2);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(frozen);
+        assertEq(recorded.length, 2);
+        assertTrue(isRecorded[0]);
+        assertTrue(isRecorded[1]);
         assertEq(sDeploy.externalRecordedAddress(frozen, chainIds[1]), beaconProxyAddressOn(proxy, chainIds[1]));
     }
 

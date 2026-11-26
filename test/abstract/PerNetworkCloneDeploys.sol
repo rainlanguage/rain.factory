@@ -6,6 +6,7 @@ import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMecha
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {
     DeployDeclaration,
@@ -203,6 +204,7 @@ function perNetworkCloneLayers() view returns (DeployDeclaration memory) {
     LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
     LibRainDeployZoltuMechanism.extend(d);
     LibRainDeployCloneMechanism.extend(d);
+    LibExternalDeployments.add(d, exampleCloneDependencies());
     return d;
 }
 

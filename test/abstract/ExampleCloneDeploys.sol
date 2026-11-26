@@ -15,6 +15,7 @@ import {CLONE_ARTIFACT_PATH, CloneDeploy, LibRainDeployClone} from "../../src/li
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../concrete/MockCloneFactory.sol";
 import {MockCloneable} from "../concrete/MockCloneable.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {
     BYTECODE_HASH as EXAMPLE_CLONE_BYTECODE_HASH,
     CREATION_CODE as EXAMPLE_CLONE_CREATION_CODE,
@@ -127,6 +128,7 @@ abstract contract ExampleCloneDeploys is RainDeploySuitesBase {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         addExampleClone(d);
         return d;
     }
