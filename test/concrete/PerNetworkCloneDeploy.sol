@@ -17,6 +17,8 @@ import {
 } from "../abstract/PerNetworkCloneDeploys.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {LibExtendedNetworksFixture} from "../lib/LibExtendedNetworksFixture.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
+import {exampleCloneDependencies} from "../abstract/ExampleCloneDeploys.sol";
 
 /// @title PerNetworkCloneDeploy
 /// @notice `PerNetworkCloneDeploys` as a broadcast script whose clone layer declares the extended networks a test
@@ -42,6 +44,7 @@ contract PerNetworkCloneDeploy is PerNetworkCloneDeploys, ExternalDeployBroadcas
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
         extendCloneLayer(d);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;

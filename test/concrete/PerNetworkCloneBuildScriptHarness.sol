@@ -13,6 +13,8 @@ import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
+import {exampleCloneDependencies} from "../abstract/ExampleCloneDeploys.sol";
 import {
     PER_NETWORK_CLONE_RECORD_CONTRACT,
     perNetworkCloneChainIds,
@@ -65,6 +67,7 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
         LibRainDeployCloneMechanism.setExtendedNetworks(d, extended());
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         LibRainDeployDeclaration.addReleased(d, released());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;

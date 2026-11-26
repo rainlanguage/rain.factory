@@ -10,6 +10,8 @@ import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDep
 import {BeaconState, ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
+import {exampleCloneDependencies} from "./ExampleCloneDeploys.sol";
 import {
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
     perNetworkCloneDeploys,
@@ -62,6 +64,7 @@ abstract contract PerNetworkCloneBeaconVerifyChain is RainDeployVerifyChain {
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setBeacons(d, beacons());
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, extendedNetworksRoot());
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         LibRainDeployDeclaration.addReleased(d, released());
         LibCloneCandidates.addClones(d, perNetworkCloneDeploys());
         return d;

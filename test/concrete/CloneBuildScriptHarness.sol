@@ -14,8 +14,10 @@ import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../sr
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
+    exampleCloneDependencies,
     exampleCloneDeploys,
     exampleCloneRelease,
     exampleCloneReleased
@@ -51,6 +53,7 @@ contract CloneBuildScriptHarness is BuildScript {
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sRoot);
         LibRainDeployCloneMechanism.setExtendedNetworks(d, extended);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         LibRainDeployDeclaration.addReleased(d, exampleCloneReleased());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = exampleCloneDeploys()[0];

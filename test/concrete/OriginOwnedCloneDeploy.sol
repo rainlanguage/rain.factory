@@ -10,6 +10,7 @@ import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {MockCloneFactory} from "./MockCloneFactory.sol";
 import {MockOriginOwnedCloneable} from "./MockOriginOwnedCloneable.sol";
 
@@ -70,6 +71,8 @@ contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
         LibRainDeployDeclaration.setNetworks(d, originOwnedCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        (,, DeployDependency[] memory dependencies) = originOwnedCloneSetup();
+        LibExternalDeployments.add(d, dependencies);
         LibCloneCandidates.addClones(d, originOwnedCloneDeploys());
         return d;
     }

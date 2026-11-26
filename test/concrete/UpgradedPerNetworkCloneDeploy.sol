@@ -11,9 +11,15 @@ import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../src/lib/LibRainD
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {perNetworkCloneNetworks, perNetworkCloneReleased} from "../abstract/PerNetworkCloneDeploys.sol";
-import {UpgradedPerNetworkCloneDeploys, upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
+import {
+    UpgradedPerNetworkCloneDeploys,
+    upgradedCloneDependencies,
+    upgradedPerNetworkClone
+} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {LibExtendedNetworksFixture} from "../lib/LibExtendedNetworksFixture.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
+import {exampleCloneDependencies} from "../abstract/ExampleCloneDeploys.sol";
 
 /// @title UpgradedPerNetworkCloneDeploy
 /// @notice `UpgradedPerNetworkCloneDeploys` as a broadcast script whose clone layer declares the extended networks a
@@ -39,6 +45,8 @@ contract UpgradedPerNetworkCloneDeploy is UpgradedPerNetworkCloneDeploys, Extern
         LibRainDeployDeclaration.setNetworks(d, perNetworkCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
         extendCloneLayer(d);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
+        LibExternalDeployments.add(d, upgradedCloneDependencies());
         LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = upgradedPerNetworkClone();
