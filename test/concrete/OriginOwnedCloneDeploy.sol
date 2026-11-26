@@ -63,8 +63,15 @@ function originOwnedCloneDeploys() pure returns (CloneDeploy[] memory) {
 
 /// @title OriginOwnedCloneDeploy
 /// @notice A per-network clone repo on Arbitrum One and Base whose candidate's Base clone seats the deploy key,
-/// with `broadcastSuite` exposed.
+/// with `broadcastSuite` exposed, also declaring each external deployment its caller adds.
 contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
+    DeployDependency[] internal sExternalDeployments;
+
+    /// Declares `deployment` an external deployment of every later `declaration()`.
+    function addExternalDeployment(DeployDependency memory deployment) external {
+        sExternalDeployments.push(deployment);
+    }
+
     function declaration() internal view override returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
@@ -73,6 +80,7 @@ contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
         LibRainDeployCloneMechanism.extend(d);
         (,, DeployDependency[] memory dependencies) = originOwnedCloneSetup();
         LibExternalDeployments.add(d, dependencies);
+        LibExternalDeployments.add(d, sExternalDeployments);
         LibCloneCandidates.addClones(d, originOwnedCloneDeploys());
         return d;
     }

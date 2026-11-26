@@ -34,6 +34,7 @@ import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneChainIds, perNetworkCloneNetworks} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneMechanismRegistryBeaconProxyTest
 /// @notice The REGISTRY_BEACON_PROXY mechanism as `LibRainDeployCloneMechanism` reads it, through the example clone
@@ -51,8 +52,14 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         sDeploy = new ExampleCloneDeploy();
     }
 
+    /// `LibRegistryBeaconProxyTest.live`, its factory, registry and beacon declared external deployments of `sDeploy`.
     function liveParams() internal returns (RegistryBeaconProxyParams memory) {
-        return LibRegistryBeaconProxyTest.live(vm, address(new MockCloneableV2()), address(this), TEST_DATA, TEST_SALT);
+        RegistryBeaconProxyParams memory params =
+            LibRegistryBeaconProxyTest.live(vm, address(new MockCloneableV2()), address(this), TEST_DATA, TEST_SALT);
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.factory));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.registry));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.beacon));
+        return params;
     }
 
     function suiteOf(RegistryBeaconProxyParams memory params) internal returns (DeploySuite memory) {

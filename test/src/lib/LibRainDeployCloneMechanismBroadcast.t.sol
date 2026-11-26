@@ -31,6 +31,7 @@ import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/Upgr
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockOriginOwnedCloneable} from "../../concrete/MockOriginOwnedCloneable.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 import {perNetworkCloneChainIds} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {
     exampleCloneDependencies,
@@ -165,16 +166,19 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     /// A beacon proxy suite over a fresh factory and a beacon of `MockOriginOwnedCloneable`, seating `owner`, on
-    /// Arbitrum One and Polygon.
+    /// Arbitrum One and Polygon, the factory and beacon declared external deployments of `sDeploy`.
     /// @param owner The owner the proxy's init data names.
     /// @return The suite.
     function ownedBeaconProxySuite(address owner) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(beacon));
+        address factory = address(new MockBeaconProxyFactory());
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(factory));
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "owned-beacon-proxy",
-                address(new MockBeaconProxyFactory()),
+                factory,
                 beacon,
                 abi.encode(owner),
                 false,

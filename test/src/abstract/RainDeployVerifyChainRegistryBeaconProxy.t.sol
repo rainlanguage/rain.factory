@@ -20,6 +20,7 @@ import {PerNetworkCloneBeaconVerifyChain} from "../../abstract/PerNetworkCloneBe
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title RainDeployVerifyChainRegistryBeaconProxyTest
 /// @notice The chain matrix, on local forks, over a registry beacon proxy suite whose binding resolves to the beacon
@@ -49,6 +50,9 @@ contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVe
         vm.makePersistent(sParams.factory);
         vm.makePersistent(sParams.registry);
         vm.makePersistent(sBeacon);
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sParams.factory));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sParams.registry));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sBeacon));
     }
 
     function liveProxySuite() internal returns (DeploySuite memory) {
