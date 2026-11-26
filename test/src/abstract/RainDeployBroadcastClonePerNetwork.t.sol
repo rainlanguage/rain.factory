@@ -161,19 +161,22 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// broadcast to Arbitrum One and Polygon, lands on each at its own address.
     function testBroadcastsADeclaredExtendedNetworkAtItsDeclaredAddress() external {
         PerNetworkCloneDeploy deploy = new PerNetworkCloneDeploy();
+        deploy.recordFirstNetworkOnly();
         deploy.setExtendedNetworks(
             "testBroadcastsADeclaredExtendedNetworkAtItsDeclaredAddress", "per-network-clone@0_0_1", declaredPolygon()
         );
         vm.makePersistent(address(this));
         vm.makePersistent(address(deploy));
 
-        DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
+        DeploySuite memory release = deploy.externalSuiteByName("per-network-clone@0_0_1");
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
-        assertEq(clones.networks.length, 1);
+        assertEq(clones.networks.length, 2);
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        assertEq(clones.networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         address arbitrumAddress = clones.networks[0].deployedAddress;
         address polygonAddress = perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         assertEq(arbitrumAddress, perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID));
+        assertEq(clones.networks[1].deployedAddress, polygonAddress);
         assertNotEq(arbitrumAddress, polygonAddress);
 
         string[] memory networks = bothNetworks();
@@ -211,6 +214,7 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// clone at its declared address, under the RELEASE's factory, implementation and salt.
     function testBroadcastsADeclaredExtendedNetworkUnderTheReleasesFactoryAndImplementation() external {
         UpgradedPerNetworkCloneDeploy deploy = new UpgradedPerNetworkCloneDeploy();
+        deploy.recordFirstNetworkOnly();
         deploy.setExtendedNetworks(
             "testBroadcastsADeclaredExtendedNetworkUnderTheReleasesFactoryAndImplementation",
             "per-network-clone@0_0_1",
@@ -219,10 +223,11 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         vm.makePersistent(address(this));
         vm.makePersistent(address(deploy));
 
-        DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
+        DeploySuite memory release = deploy.externalSuiteByName("per-network-clone@0_0_1");
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
-        assertEq(clones.networks.length, 1);
+        assertEq(clones.networks.length, 2);
         assertEq(clones.networks[0].chainId, PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        assertEq(clones.networks[1].chainId, PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
         CloneDeploy memory candidate = upgradedPerNetworkClone();
         assertNotEq(candidate.factory, clones.factory);
         assertNotEq(candidate.implementation, clones.implementation);
@@ -261,12 +266,13 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// recorded Arbitrum One address refused before any network is forked.
     function testBroadcastRefusesAStaleRecordedAddressBesideAnUnrecordedNetworkBeforeAnyFork() external {
         PerNetworkCloneDeploy deploy = new PerNetworkCloneDeploy();
+        deploy.recordFirstNetworkOnly();
         deploy.setExtendedNetworks(
             "testBroadcastRefusesAStaleRecordedAddressBesideAnUnrecordedNetworkBeforeAnyFork",
             "per-network-clone@0_0_1",
             declaredPolygon()
         );
-        DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
+        DeploySuite memory release = deploy.externalSuiteByName("per-network-clone@0_0_1");
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(release), (CloneNetworks));
         address derived = clones.networks[0].deployedAddress;
         address stale = address(uint160(derived) + 1);
@@ -282,13 +288,14 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
     /// refused before any network is forked, naming both addresses.
     function testBroadcastRefusesAMisdeclaredExtendedNetworkBeforeAnyFork() external {
         PerNetworkCloneDeploy deploy = new PerNetworkCloneDeploy();
+        deploy.recordFirstNetworkOnly();
+        DeploySuite memory release = deploy.externalSuiteByName("per-network-clone@0_0_1");
         ChainDeploy[] memory declared = declaredPolygon();
         address derived = declared[0].deployedAddress;
         declared[0].deployedAddress = address(0xdead);
         deploy.setExtendedNetworks(
             "testBroadcastRefusesAMisdeclaredExtendedNetworkBeforeAnyFork", "per-network-clone@0_0_1", declared
         );
-        DeploySuite memory release = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -362,13 +369,14 @@ contract RainDeployBroadcastClonePerNetworkTest is ZoltuDeployOrAdopt {
         declared[0] = ChainDeploy({
             chainId: PER_NETWORK_CLONE_POLYGON_CHAIN_ID, data: declaredData, deployedAddress: declaredAddress
         });
+        deploy.recordFirstNetworkOnly();
         deploy.setExtendedNetworks(
             "testBroadcastsAnExtendedNetworkAtItsDeclaredData", "per-network-clone@0_0_1", declared
         );
         vm.makePersistent(address(this));
         vm.makePersistent(address(deploy));
 
-        DeploySuite memory suite = onlyFirstRecordedNetwork(deploy.externalSuiteByName("per-network-clone@0_0_1"));
+        DeploySuite memory suite = deploy.externalSuiteByName("per-network-clone@0_0_1");
 
         string[] memory networks = bothNetworks();
         for (uint256 i = 0; i < networks.length; i++) {

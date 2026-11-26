@@ -3,14 +3,22 @@
 pragma solidity =0.8.25;
 
 import {StdConstants} from "forge-std-1.17.0/src/StdConstants.sol";
-import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
-import {perNetworkCloneNetworks, perNetworkCloneReleased} from "../abstract/PerNetworkCloneDeploys.sol";
+import {
+    onlyFirstRecordedNetworkSuites,
+    perNetworkCloneNetworks,
+    perNetworkCloneReleased
+} from "../abstract/PerNetworkCloneDeploys.sol";
 import {
     UpgradedPerNetworkCloneDeploys,
     upgradedCloneDependencies,
@@ -34,6 +42,9 @@ contract UpgradedPerNetworkCloneDeploy is UpgradedPerNetworkCloneDeploys, Extern
     /// The record root the clone layer reads under once `declareExtendedNetworks` has run.
     string internal sExtendedRoot;
 
+    /// Whether the declared release records Arbitrum One alone.
+    bool internal sFirstNetworkOnly;
+
     function declaration()
         internal
         view
@@ -47,11 +58,22 @@ contract UpgradedPerNetworkCloneDeploy is UpgradedPerNetworkCloneDeploys, Extern
         extendCloneLayer(d);
         LibExternalDeployments.add(d, exampleCloneDependencies());
         LibExternalDeployments.add(d, upgradedCloneDependencies());
-        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
+        LibRainDeployDeclaration.addReleased(d, released());
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = upgradedPerNetworkClone();
         LibCloneCandidates.addClones(d, clones);
         return d;
+    }
+
+    /// @return The release, recording Arbitrum One alone once `recordFirstNetworkOnly` has run.
+    function released() internal view returns (DeploySuite[] memory) {
+        DeploySuite[] memory suites = perNetworkCloneReleased();
+        return sFirstNetworkOnly ? onlyFirstRecordedNetworkSuites(suites[0]) : suites;
+    }
+
+    /// Declares the release recording Arbitrum One alone, as one cut before the repo supported Polygon.
+    function recordFirstNetworkOnly() external {
+        sFirstNetworkOnly = true;
     }
 
     /// Extends `d` with the clone layer under the record root `declareExtendedNetworks` set, and its one declaration

@@ -72,8 +72,12 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
     /// another.
     string internal sExtendedRoot = "fixture-lib/extended-networks/verify-extended-none";
 
-    /// The per-network clone layers reading extended networks under `sExtendedRoot`, the committed release and the
-    /// candidate with Polygon's init data moved.
+    /// Whether the declared release records Arbitrum One alone, as each test here sets; the inherited matrix tests
+    /// check the committed release.
+    bool internal sFirstNetworkOnly;
+
+    /// The per-network clone layers reading extended networks under `sExtendedRoot`, the committed release, recording
+    /// Arbitrum One alone once `sFirstNetworkOnly` is set, and the candidate with Polygon's init data moved.
     function declaration()
         internal
         view
@@ -86,7 +90,10 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sExtendedRoot);
-        LibRainDeployDeclaration.addReleased(d, perNetworkCloneReleased());
+        DeploySuite[] memory released = perNetworkCloneReleased();
+        LibRainDeployDeclaration.addReleased(
+            d, sFirstNetworkOnly ? onlyFirstRecordedNetworkSuites(released[0]) : released
+        );
         CloneDeploy[] memory clones = new CloneDeploy[](1);
         clones[0] = perNetworkClone("per-network-clone", bytes32(uint256(4)));
         clones[0].initData = movedInitData;
@@ -128,16 +135,16 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         sForkVm = new LocalForkVm();
     }
 
-    /// The matrix on local forks, over the release recording Arbitrum One alone.
+    /// The matrix on local forks, over the declared release.
     function externalCheckOnLocalForks() external {
         DeployDeclaration memory d = declaration();
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(d.released[0]);
-        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(d.networks), suites);
+        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(d.networks), d.released);
     }
 
     /// Unfrozen, Polygon takes the candidate's moved init data and is refused as unfrozen, naming the address, whether
     /// or not a clone is live there: nothing is at the moved address while the release is live at its broadcast one.
     function testUnfrozenNetworkLiveAtTheCandidatesDataIsRefused() external {
+        sFirstNetworkOnly = true;
         address moved = movedReleaseAddress();
         assertNotEq(moved, sFrozenAddress);
         assertEq(moved.code.length, 0);
@@ -157,18 +164,18 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         this.externalCheckOnLocalForks();
     }
 
-    /// The matrix on local forks over Polygon alone, over the release recording Arbitrum One alone.
+    /// The matrix on local forks over Polygon alone, over the declared release.
     function externalCheckPolygonOnLocalForks() external {
         DeployDeclaration memory d = declaration();
-        DeploySuite[] memory suites = onlyFirstRecordedNetworkSuites(d.released[0]);
         string[] memory networks = new string[](1);
         networks[0] = LibRainDeploy.POLYGON;
-        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), suites);
+        checkDeployedOnNetworks(d, Vm(address(sForkVm)), LibRainDeploy.declaredNetworkConfigs(networks), d.released);
     }
 
     /// Unfrozen, Polygon is refused as unfrozen even when a dependency is missing there: what the network lacks is a
     /// declaration, and the dependency check would describe a release the matrix cannot place on it.
     function testUnfrozenNetworkMissingADependencyIsRefusedAsUnfrozen() external {
+        sFirstNetworkOnly = true;
         DeploySuite memory release = declaration().released[0];
         assertGt(release.dependencies.length, 0);
         vm.etch(release.dependencies[0].deployedAddress, hex"");
@@ -185,6 +192,7 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
 
     /// Frozen, Polygon is checked at the address it was broadcast to, whatever the candidate's init data now is.
     function testFrozenNetworkIsCheckedAtItsFrozenAddress() external {
+        sFirstNetworkOnly = true;
         sFrozen = true;
         record("verify-extended-frozen");
         this.externalCheckOnLocalForks();
@@ -201,6 +209,7 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
     /// check reads the record alone, so Polygon takes the candidate's moved init data and is refused before any
     /// fork.
     function testDeclaredNetworkWithoutARecordIsRefused() external {
+        sFirstNetworkOnly = true;
         sFrozen = true;
         vm.expectCall(address(sForkVm), abi.encodeWithSelector(LocalForkVm.createFork.selector), 0);
         vm.expectRevert(
@@ -216,6 +225,7 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
 
     /// A frozen network whose address its init data does not derive is refused before any fork.
     function testFrozenNetworkAtAnotherAddressIsRefused() external {
+        sFirstNetworkOnly = true;
         sFrozen = true;
         address derived = sFrozenAddress;
         sFrozenAddress = movedReleaseAddress();
