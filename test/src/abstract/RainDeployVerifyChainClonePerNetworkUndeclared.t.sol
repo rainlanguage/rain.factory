@@ -6,10 +6,10 @@ import {
     DeployDeclaration,
     DeploySuite,
     RainDeploySuitesBase
-} from "rain-deploy-0.1.40/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.40/src/abstract/RainDeployVerifyChain.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.40/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.40/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {LibCloneCandidates} from "../../../src/lib/LibCloneCandidates.sol";
 import {
     NoPerNetworkCloneAdmin,
