@@ -14,6 +14,7 @@ import {CloneDeploy, LibRainDeployClone} from "../../../src/lib/LibRainDeployClo
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockRegistryReadingCloneable} from "../../concrete/MockRegistryReadingCloneable.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneMechanismConfigRegistryReadTest
 /// @notice A clone whose `initialize` reads the deployed `ConfigRegistry` deploys holding the network's binding.
@@ -26,26 +27,40 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
     uint256 constant CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK = 519115682;
 
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
-        DeployDeclaration memory d;
-        return LibRainDeployCloneMechanism.deployLocally(d, vm, suite);
+        return LibRainDeployCloneMechanism.deployLocally(declaration(), vm, suite);
     }
 
     function externalDeployLocallyOnChain(DeploySuite memory suite) external {
+        LibRainDeployCloneMechanism.deployLocallyOnChain(declaration(), vm, suite);
+    }
+
+    function declaration() internal pure returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
-        LibRainDeployCloneMechanism.deployLocallyOnChain(d, vm, suite);
+        LibExternalDeployments.add(d, registryReadingDependencies());
+        return d;
+    }
+
+    /// @return The clone's factory, its implementation and the registry.
+    function registryReadingDependencies() internal pure returns (DeployDependency[] memory) {
+        DeployDependency[] memory dependencies = new DeployDependency[](3);
+        dependencies[0] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
+            runtimeCode: type(MockCloneFactory).runtimeCode
+        });
+        dependencies[1] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockRegistryReadingCloneable).creationCode),
+            runtimeCode: type(MockRegistryReadingCloneable).runtimeCode
+        });
+        dependencies[2] = DeployDependency({deployedAddress: REGISTRY, runtimeCode: CONFIG_REGISTRY_RUNTIME_CODE});
+        return dependencies;
     }
 
     /// A clone of `MockRegistryReadingCloneable` on Arbitrum One reading `NAME` from the deployed `ConfigRegistry`,
-    /// declaring its factory, its implementation and the registry.
+    /// declaring `registryReadingDependencies()`.
     function registryReadingSuite() internal view returns (DeploySuite memory) {
-        address factory = LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode);
-        address implementation = LibRainDeploy.zoltuAddress(type(MockRegistryReadingCloneable).creationCode);
-        DeployDependency[] memory dependencies = new DeployDependency[](3);
-        dependencies[0] = DeployDependency({deployedAddress: factory, runtimeCode: type(MockCloneFactory).runtimeCode});
-        dependencies[1] = DeployDependency({
-            deployedAddress: implementation, runtimeCode: type(MockRegistryReadingCloneable).runtimeCode
-        });
-        dependencies[2] = DeployDependency({deployedAddress: REGISTRY, runtimeCode: CONFIG_REGISTRY_RUNTIME_CODE});
+        DeployDependency[] memory dependencies = registryReadingDependencies();
+        address factory = dependencies[0].deployedAddress;
+        address implementation = dependencies[1].deployedAddress;
         CloneDeploy memory clone = CloneDeploy({
             suite: "config-registry-read",
             factory: factory,

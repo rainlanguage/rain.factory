@@ -18,30 +18,40 @@ import {
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockSnapshotDeletingCloneable} from "../../concrete/MockSnapshotDeletingCloneable.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneMechanismDeployLocallyTest
 /// @notice `LibRainDeployCloneMechanism.deployLocally` of a per-network clone whose networks share an address.
 contract LibRainDeployCloneMechanismDeployLocallyTest is Test {
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
         DeployDeclaration memory d;
+        LibExternalDeployments.add(d, snapshotDeletingDependencies());
         return LibRainDeployCloneMechanism.deployLocally(d, vm, suite);
     }
 
+    function snapshotDeletingDependencies() internal pure returns (DeployDependency[] memory) {
+        DeployDependency[] memory dependencies = new DeployDependency[](2);
+        dependencies[0] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
+            runtimeCode: type(MockCloneFactory).runtimeCode
+        });
+        dependencies[1] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockSnapshotDeletingCloneable).creationCode),
+            runtimeCode: type(MockSnapshotDeletingCloneable).runtimeCode
+        });
+        return dependencies;
+    }
+
     function sharedSnapshotDeletingSuite() internal pure returns (DeploySuite memory) {
+        DeployDependency[] memory dependencies = snapshotDeletingDependencies();
         CloneNetworks memory clones = CloneNetworks({
-            factory: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
-            implementation: LibRainDeploy.zoltuAddress(type(MockSnapshotDeletingCloneable).creationCode),
+            factory: dependencies[0].deployedAddress,
+            implementation: dependencies[1].deployedAddress,
             salt: bytes32(uint256(7)),
             networks: new ChainDeploy[](2)
         });
         clones.networks[0] = ChainDeploy({chainId: 42161, data: hex"01", deployedAddress: address(0)});
         clones.networks[1] = ChainDeploy({chainId: 8453, data: hex"01", deployedAddress: address(0)});
-        DeployDependency[] memory dependencies = new DeployDependency[](2);
-        dependencies[0] =
-            DeployDependency({deployedAddress: clones.factory, runtimeCode: type(MockCloneFactory).runtimeCode});
-        dependencies[1] = DeployDependency({
-            deployedAddress: clones.implementation, runtimeCode: type(MockSnapshotDeletingCloneable).runtimeCode
-        });
         string[] memory networks = new string[](2);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         networks[1] = LibRainDeploy.BASE;
