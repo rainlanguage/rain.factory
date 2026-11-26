@@ -21,6 +21,7 @@ import {MigrationRegistry} from "rain-deploy-0.1.41/src/concrete/MigrationRegist
 import {MockDeployable} from "../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../concrete/MockDeployableV2.sol";
 import {LibBeaconTest} from "../lib/LibBeaconTest.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 
 /// @title BeaconVerifyFixture
 /// @notice Released implementation, upgrade and beacon suites live locally, a beacon at the implementation, and the
@@ -68,9 +69,18 @@ abstract contract BeaconVerifyFixture is RainDeployVerifyBase {
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setBeacons(d, beacons());
+        LibExternalDeployments.add(d, externalDependencies());
         LibRainDeployDeclaration.addReleased(d, releasedSuites());
         LibRainDeployDeclaration.addCandidates(d, candidateSuites());
         return d;
+    }
+
+    /// @return `DEPENDENCY` then `BEACON_DEPENDENCY`, which no suite deploys.
+    function externalDependencies() internal pure returns (DeployDependency[] memory) {
+        DeployDependency[] memory dependencies = new DeployDependency[](2);
+        dependencies[0] = DeployDependency({deployedAddress: DEPENDENCY, runtimeCode: DEPENDENCY_CODE});
+        dependencies[1] = DeployDependency({deployedAddress: BEACON_DEPENDENCY, runtimeCode: BEACON_DEPENDENCY_CODE});
+        return dependencies;
     }
 
     /// @return The released suites `declaration()` carries.

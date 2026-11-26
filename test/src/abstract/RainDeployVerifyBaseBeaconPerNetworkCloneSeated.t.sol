@@ -4,7 +4,11 @@ pragma solidity =0.8.25;
 
 import {CLONE_PER_NETWORK_MECHANISM} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibRainDeployBeaconDeclarationChecks} from "../../../src/lib/LibRainDeployBeaconDeclarationChecks.sol";
-import {DeployDependency, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeployDeclaration,
+    DeployDependency,
+    DeploySuite
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
@@ -13,12 +17,32 @@ import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockChainRefusingCloneable} from "../../concrete/MockChainRefusingCloneable.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
 import {BeaconVerifyFixture} from "../../abstract/BeaconVerifyFixture.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest
 /// @notice `LibRainDeployBeaconResolution.checkSeatedState` deploys only the beacon network's own clone of a
 /// per-network clone beacon suite.
 contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixture {
     using LibBeaconDeclarations for ChainBeacon[];
+
+    function declaration() internal view override returns (DeployDeclaration memory) {
+        DeployDeclaration memory d = super.declaration();
+        LibExternalDeployments.add(d, chainRefusingDependencies());
+        return d;
+    }
+
+    function chainRefusingDependencies() internal pure returns (DeployDependency[] memory) {
+        DeployDependency[] memory dependencies = new DeployDependency[](2);
+        dependencies[0] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode),
+            runtimeCode: type(MockCloneFactory).runtimeCode
+        });
+        dependencies[1] = DeployDependency({
+            deployedAddress: LibRainDeploy.zoltuAddress(type(MockChainRefusingCloneable).creationCode),
+            runtimeCode: type(MockChainRefusingCloneable).runtimeCode
+        });
+        return dependencies;
+    }
 
     /// @inheritdoc BeaconVerifyFixture
     function releasedSuites() internal pure override returns (DeploySuite[] memory) {
@@ -27,13 +51,9 @@ contract RainDeployVerifyBaseBeaconPerNetworkCloneSeatedTest is BeaconVerifyFixt
         for (uint256 i = 0; i < fixture.length; i++) {
             released[i] = fixture[i];
         }
-        address factory = LibRainDeploy.zoltuAddress(type(MockCloneFactory).creationCode);
-        address implementation = LibRainDeploy.zoltuAddress(type(MockChainRefusingCloneable).creationCode);
-        DeployDependency[] memory dependencies = new DeployDependency[](2);
-        dependencies[0] = DeployDependency({deployedAddress: factory, runtimeCode: type(MockCloneFactory).runtimeCode});
-        dependencies[1] = DeployDependency({
-            deployedAddress: implementation, runtimeCode: type(MockChainRefusingCloneable).runtimeCode
-        });
+        DeployDependency[] memory dependencies = chainRefusingDependencies();
+        address factory = dependencies[0].deployedAddress;
+        address implementation = dependencies[1].deployedAddress;
         CloneNetworks memory clones = CloneNetworks({
             factory: factory, implementation: implementation, salt: bytes32(uint256(7)), networks: new ChainDeploy[](2)
         });
