@@ -7,6 +7,7 @@ import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {exampleCloneDependencies} from "../abstract/ExampleCloneDeploys.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {perNetworkCloneChainIds, perNetworkCloneNetworks} from "../abstract/PerNetworkCloneDeploys.sol";
 import {upgradedCloneDependencies, upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
@@ -24,6 +25,7 @@ contract WideCandidatePerNetworkCloneDeploy is ExternalDeployBroadcast {
         LibRainDeployDeclaration.setNetworks(d, networks);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         LibExternalDeployments.add(d, upgradedCloneDependencies());
         DeployCandidate[] memory candidates = new DeployCandidate[](1);
         candidates[0] = LibRainDeployCloneMechanism.cloneCandidate(upgradedPerNetworkClone(), perNetworkCloneChainIds());

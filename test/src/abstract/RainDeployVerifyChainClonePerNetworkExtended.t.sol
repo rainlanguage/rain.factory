@@ -35,6 +35,8 @@ import {
 import {LibCloneCandidates} from "../../../src/lib/LibCloneCandidates.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {LibExtendedNetworksFixture} from "../../lib/LibExtendedNetworksFixture.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
+import {exampleCloneDependencies} from "../../abstract/ExampleCloneDeploys.sol";
 
 /// @dev Polygon's admin after the candidate moved it.
 address constant MOVED_POLYGON_ADMIN = address(0xC4c4c4C4C4c4C4c4c4C4c4c4c4c4c4C4c4c4c4C4);
@@ -90,6 +92,7 @@ contract RainDeployVerifyChainClonePerNetworkExtendedTest is PerNetworkCloneDepl
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
         LibRainDeployCloneMechanism.setExtendedNetworksRoot(d, sExtendedRoot);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         DeploySuite[] memory released = perNetworkCloneReleased();
         LibRainDeployDeclaration.addReleased(
             d, sFirstNetworkOnly ? onlyFirstRecordedNetworkSuites(released[0]) : released
