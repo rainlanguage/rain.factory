@@ -85,8 +85,7 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
     /// @param initDataPerNetwork Whether the init data is per network.
     /// @return The declaration.
     function declaredBeaconProxy(bool initDataPerNetwork) internal returns (BeaconProxyDeploy memory) {
-        address beacon =
-            declareExternal(address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this))));
+        address beacon = declareExternal(address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this))));
         return LibBeaconProxyTest.declared(
             "beacon-proxy",
             declareExternal(address(new MockBeaconProxyFactory())),

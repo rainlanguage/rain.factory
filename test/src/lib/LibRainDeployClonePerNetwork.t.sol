@@ -152,8 +152,7 @@ contract LibRainDeployClonePerNetworkTest is Test {
         assertFalse(found);
         assertEq(index, 0);
 
-        CloneNetworks memory none =
-            cloneNetworks(exampleCloneFactory(), exampleCloneImplementation(), new uint256[](0));
+        CloneNetworks memory none = cloneNetworks(exampleCloneFactory(), exampleCloneImplementation(), new uint256[](0));
         (found, index) = LibRainDeployClone.findCloneNetwork(none, chainId);
         assertFalse(found);
         assertEq(index, 0);
