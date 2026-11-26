@@ -8,14 +8,14 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.40/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.40/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.40/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,

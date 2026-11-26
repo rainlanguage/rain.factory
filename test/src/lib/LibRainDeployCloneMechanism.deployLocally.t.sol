@@ -7,8 +7,8 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.40/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.40/src/lib/LibRainDeploy.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,

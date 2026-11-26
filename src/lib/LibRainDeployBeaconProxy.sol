@@ -10,7 +10,7 @@ import {ICloneableFactoryV6} from "../interface/deprecated/ICloneableFactoryV6.s
 import {BEACON_PROXY_CREATION_CODE} from "../generated/BeaconProxy.sol";
 import {LibICloneableFactoryV5} from "./LibICloneableFactoryV5.sol";
 
-import {DeployDependency} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDependency} from "rain-deploy-0.1.40/src/lib/LibRainDeploy.sol";
 import {CloneParams} from "./LibRainDeployClone.sol";
 
 /// @dev The artifact path a beacon proxy suite carries. It names no compiled source here: see
