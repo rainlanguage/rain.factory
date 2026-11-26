@@ -153,8 +153,8 @@ contract RainDeployBroadcastCloneTest is Test {
     }
 
     /// The origin-owned per-network suite over `MockChainGatedCloneable`, each network's init data naming its own
-    /// chain id.
-    function chainGatedCloneSuite() internal pure returns (DeploySuite memory) {
+    /// chain id, the implementation declared an external deployment of `sDeploy`.
+    function chainGatedCloneSuite() internal returns (DeploySuite memory) {
         DeploySuite memory suite = originOwnedCloneSuite(address(0xB0B), address(0xB0B));
         CloneNetworks memory clones = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         address implementation = LibRainDeploy.zoltuAddress(type(MockChainGatedCloneable).creationCode);
@@ -169,8 +169,10 @@ contract RainDeployBroadcastCloneTest is Test {
         suite.creationCode = LibRainDeployClone.cloneCreationCode(implementation);
         suite.storedRuntimeCode = LibRainDeployClone.cloneRuntimeCode(implementation);
         suite.storedBytecodeHash = keccak256(suite.storedRuntimeCode);
-        suite.dependencies[1] =
+        DeployDependency memory chainGated =
             DeployDependency({deployedAddress: implementation, runtimeCode: type(MockChainGatedCloneable).runtimeCode});
+        suite.dependencies[1] = chainGated;
+        sDeploy.addExternalDeployment(chainGated);
         return suite;
     }
 

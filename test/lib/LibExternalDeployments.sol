@@ -27,4 +27,10 @@ library LibExternalDeployments {
         }
         d.externalDeployments = externals;
     }
+
+    /// @param deployed An address.
+    /// @return `deployed` with the code it holds now.
+    function deployedNow(address deployed) internal view returns (DeployDependency memory) {
+        return DeployDependency({deployedAddress: deployed, runtimeCode: deployed.code});
+    }
 }
