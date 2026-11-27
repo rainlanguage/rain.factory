@@ -274,7 +274,7 @@ library LibRainDeployBeaconResolution {
     {
         Vm vm = StdConstants.VM;
         uint256 snapshotId = vm.snapshotState();
-        address[] memory deployedAddresses = LibRainDeployDeclaration.mechanismOf(d, suite).deployLocally(d, vm, suite);
+        address[] memory deployedAddresses = LibRainDeployDeclaration.mechanismOf(d, suite).deployLocally(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
         uint256 deployed = 0;
         while (deployed < deployedAddresses.length && deployedAddresses[deployed] == address(0)) {
             deployed++;

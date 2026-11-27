@@ -396,7 +396,7 @@ library LibRainDeployCloneSnapshot {
         returns (string memory)
     {
         uint256 snapshotId = vm.snapshotState();
-        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(d, vm, suite);
+        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
         writeCloneSnapshotFile(
             vm,
             LibRainDeploySnapshot.dirForSnapshot(file.root, file.dir),

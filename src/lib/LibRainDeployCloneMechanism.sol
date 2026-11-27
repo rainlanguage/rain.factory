@@ -13,7 +13,7 @@ import {
     DeploySuite
 } from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
+import {DeploySuiteIndex, LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ChainBeacon} from "./LibRainDeployBeacon.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.42/src/lib/LibRainDeploySnapshot.sol";
@@ -313,7 +313,7 @@ library LibRainDeployCloneMechanism {
     /// @return The suite's address on each of its `networks`, positionally: a one-data suite's one address repeated, a
     /// per-network suite's own clone there, or zero on a network it records no clone on. Every address is left
     /// deployed, once, under the chain id of its first network.
-    function deployLocally(DeployDeclaration memory d, Vm vm, DeploySuite memory suite)
+    function deployLocally(DeployDeclaration memory d, DeploySuiteIndex memory index, Vm vm, DeploySuite memory suite)
         internal
         returns (address[] memory)
     {
@@ -330,7 +330,7 @@ library LibRainDeployCloneMechanism {
                 deployed[i] = deployedAddress(d, suite, chainIds[i]);
             }
         }
-        LibRainDeployDeclaration.etchDependencyClosure(d, vm, suite, inPlayAddresses(deployed, inPlay));
+        LibRainDeployDeclaration.etchDependencyClosure(d, index, vm, suite, inPlayAddresses(deployed, inPlay));
         // Before any address is left deployed, so a shared network deploys onto a fresh address as its broadcast does.
         for (uint256 i = 0; i < chainIds.length; i++) {
             if (inPlay[i] && deployedEarlier(deployed, inPlay, i)) {
@@ -399,10 +399,12 @@ library LibRainDeployCloneMechanism {
     }
 
     /// Deploys the suite's clone, beacon proxy or registry beacon proxy on `block.chainid` alone.
-    function deployLocallyOnChain(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal {
+    function deployLocallyOnChain(DeployDeclaration memory d, DeploySuiteIndex memory index, Vm vm, DeploySuite memory suite)
+        internal
+    {
         address[] memory own = new address[](1);
         own[0] = deployedAddress(d, suite, block.chainid);
-        LibRainDeployDeclaration.etchDependencyClosure(d, vm, suite, own);
+        LibRainDeployDeclaration.etchDependencyClosure(d, index, vm, suite, own);
         deployParams(vm, suite, block.chainid, own[0]);
     }
 

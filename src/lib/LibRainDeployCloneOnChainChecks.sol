@@ -122,7 +122,7 @@ library LibRainDeployCloneOnChainChecks {
         Vm vm = StdConstants.VM;
         uint256 snapshotId = vm.snapshotState();
         vm.chainId(chainId);
-        handlerOf(d, suite).deployLocallyOnChain(d, vm, suite);
+        handlerOf(d, suite).deployLocallyOnChain(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
         // slither-disable-next-line low-level-calls
         (bool ownerAnswered, bytes memory owner) = beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
         // slither-disable-next-line low-level-calls
