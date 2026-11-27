@@ -399,9 +399,12 @@ library LibRainDeployCloneMechanism {
     }
 
     /// Deploys the suite's clone, beacon proxy or registry beacon proxy on `block.chainid` alone.
-    function deployLocallyOnChain(DeployDeclaration memory d, DeploySuiteIndex memory index, Vm vm, DeploySuite memory suite)
-        internal
-    {
+    function deployLocallyOnChain(
+        DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
+        Vm vm,
+        DeploySuite memory suite
+    ) internal {
         address[] memory own = new address[](1);
         own[0] = deployedAddress(d, suite, block.chainid);
         LibRainDeployDeclaration.etchDependencyClosure(d, index, vm, suite, own);
