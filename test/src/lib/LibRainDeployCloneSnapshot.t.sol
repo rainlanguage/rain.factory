@@ -12,7 +12,7 @@ import {
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {DeploySuiteIndex, LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {
     FrozenSnapshotMechanismDataMissing,
@@ -32,6 +32,7 @@ import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockSnapshotDeletingCloneable} from "../../concrete/MockSnapshotDeletingCloneable.sol";
 import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
+import {LibSuiteIndexPointers} from "../../lib/LibSuiteIndexPointers.sol";
 import {
     EXAMPLE_CLONE_RECORD_CONTRACT,
     EXAMPLE_CLONE_RECORD_ROOT,
@@ -53,6 +54,9 @@ import {
 /// @title LibRainDeployCloneSnapshotTest
 /// @notice The clone and per-network clone record writers, and the released lib a per-network clone record yields.
 contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
+    using LibSuiteIndexPointers for DeploySuite[];
+    using LibSuiteIndexPointers for address[][];
+
     function declaration() internal view override returns (DeployDeclaration memory) {
         DeployDeclaration memory d = perNetworkCloneLayers();
         DeployDependency[] memory implementation = new DeployDependency[](1);
@@ -161,6 +165,46 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         vm.removeDir(PER_NETWORK_RECORD_DEPLOY_NOT_CLAIMS_ROOT, true);
 
         assertEq(reproduced, vm.readFile(perNetworkRecordPaths()[0]));
+    }
+
+    string constant SHARED_INDEX_ROOT = "fixture-lib/snapshot-clone/shared-index";
+
+    /// The writer's local deploy reaches the clone's dependency closure through the caller's index, so writing several
+    /// records over one index builds it once.
+    function testCloneWriterBuildsTheCallersIndexOnce() external {
+        DeployDeclaration memory d = declaration();
+        DeploySuiteIndex memory index = LibRainDeployDeclaration.emptyIndex();
+        DeploySuite memory clone = exampleCloneReleaseSuite();
+        clone.networks = d.networks;
+        DeploySuite memory perNetwork =
+        LibRainDeployCloneMechanism.cloneCandidate(perNetworkCloneRelease(), perNetworkCloneChainIds()).snapshot;
+        perNetwork.networks = d.networks;
+
+        LibRainDeployCloneSnapshot.writeSuiteSnapshot(
+            d,
+            index,
+            vm,
+            SnapshotFile(SHARED_INDEX_ROOT, "0_0_1", "Clone", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+            clone
+        );
+        assertTrue(index.built);
+        uint256 builtSuites = index.suites.pointer();
+        uint256 builtRecorded = index.recorded.pointer();
+
+        LibRainDeployCloneSnapshot.writeSuiteSnapshot(
+            d,
+            index,
+            vm,
+            SnapshotFile(
+                SHARED_INDEX_ROOT, "0_0_1", "PerNetworkClone", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT
+            ),
+            perNetwork
+        );
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(SHARED_INDEX_ROOT, true);
+
+        assertEq(index.suites.pointer(), builtSuites);
+        assertEq(index.recorded.pointer(), builtRecorded);
     }
 
     /// The import a per-network clone release contributes to its released lib.

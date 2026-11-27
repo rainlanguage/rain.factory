@@ -11,7 +11,7 @@ import {
     ExternalDeployment
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {DeploySuiteIndex, LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
@@ -31,10 +31,15 @@ import {
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockCloneable} from "../../concrete/MockCloneable.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
+import {LibSuiteIndexPointers} from "../../lib/LibSuiteIndexPointers.sol";
 
 /// @title LibRainDeployCloneMechanismDependencyClosureTest
-/// @notice A clone's local deploys etch its dependencies' own dependencies, and refuse a closure reaching the clone.
+/// @notice A clone's local deploys etch its dependencies' own dependencies through the caller's index, and refuse a
+/// closure reaching the clone.
 contract LibRainDeployCloneMechanismDependencyClosureTest is Test {
+    using LibSuiteIndexPointers for DeploySuite[];
+    using LibSuiteIndexPointers for address[][];
+
     bytes32 constant SALT = bytes32(uint256(11));
 
     function externalDeployLocally(DeploySuite memory suite, DeployDependency memory reached)
@@ -186,6 +191,38 @@ contract LibRainDeployCloneMechanismDependencyClosureTest is Test {
             vm.expectRevert(abi.encodeWithSelector(DependencyCycle.selector, suite.suite));
             this.externalDeployLocally(suite, reached);
         }
+    }
+
+    function testCloneDeployLocallyBuildsTheCallersIndexOnce() external {
+        DeployDeclaration memory d = implementationReaching(mockDeployable());
+        DeploySuiteIndex memory index = LibRainDeployDeclaration.emptyIndex();
+
+        LibRainDeployCloneMechanism.deployLocally(d, index, vm, oneDataSuite());
+        assertTrue(index.built);
+        assertEq(index.suites.length, 1);
+        uint256 builtSuites = index.suites.pointer();
+        uint256 builtRecorded = index.recorded.pointer();
+
+        LibRainDeployCloneMechanism.deployLocally(d, index, vm, perNetworkSuite());
+        assertEq(index.suites.pointer(), builtSuites);
+        assertEq(index.recorded.pointer(), builtRecorded);
+    }
+
+    function testCloneDeployLocallyOnChainBuildsTheCallersIndexOnce() external {
+        DeployDeclaration memory d = implementationReaching(mockDeployable());
+        DeploySuiteIndex memory index = LibRainDeployDeclaration.emptyIndex();
+
+        vm.chainId(PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(d, index, vm, oneDataSuite());
+        assertTrue(index.built);
+        assertEq(index.suites.length, 1);
+        uint256 builtSuites = index.suites.pointer();
+        uint256 builtRecorded = index.recorded.pointer();
+
+        vm.chainId(PER_NETWORK_CLONE_POLYGON_CHAIN_ID);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(d, index, vm, perNetworkSuite());
+        assertEq(index.suites.pointer(), builtSuites);
+        assertEq(index.recorded.pointer(), builtRecorded);
     }
 
     function testPerNetworkCloneOnChainWhoseClosureReachesThatNetworksCloneIsACycle() external {
