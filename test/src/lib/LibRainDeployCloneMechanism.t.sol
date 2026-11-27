@@ -13,6 +13,7 @@ import {
     UnexpectedMechanismData
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployZoltuMechanism,
@@ -632,7 +633,9 @@ contract LibRainDeployCloneMechanismTest is Test {
         address arbitrumAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN));
         address polygonAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));
         vm.chainId(137);
-        LibRainDeployCloneMechanism.deployLocallyOnChain(exampleExternalsOnly(), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(
+            exampleExternalsOnly(), LibRainDeployDeclaration.emptyIndex(), vm, suite
+        );
         assertEq(suite.mechanismData, mechanismData);
         assertEq(polygonAddress.code, suite.storedRuntimeCode);
         assertEq(MockCloneable(polygonAddress).sInitData(), abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));

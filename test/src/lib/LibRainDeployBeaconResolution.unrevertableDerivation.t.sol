@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {DeploySuite, DerivationSnapshotRevertFailed} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {DerivedDeploy} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {MockSnapshotDeletingCreation} from "../../concrete/MockSnapshotDeletingCreation.sol";
 import {LibBeaconTest} from "../../lib/LibBeaconTest.sol";
@@ -14,7 +15,8 @@ import {BeaconVerifyFixture} from "../../abstract/BeaconVerifyFixture.sol";
 /// @notice A derivation whose state cannot be reverted is refused rather than left in place.
 contract LibRainDeployBeaconResolutionUnrevertableDerivationTest is BeaconVerifyFixture {
     function externalDeriveDeployment(DeploySuite memory suite) external returns (DerivedDeploy memory) {
-        return LibRainDeployBeaconResolution.deriveDeployment(declaration(), suite);
+        return
+            LibRainDeployBeaconResolution.deriveDeployment(declaration(), LibRainDeployDeclaration.emptyIndex(), suite);
     }
 
     function testDerivationThatCannotBeRevertedIsRefused() external {

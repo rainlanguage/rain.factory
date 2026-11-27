@@ -3,6 +3,7 @@
 pragma solidity =0.8.25;
 
 import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotNotReleased,
     FrozenSnapshotsOutnumberReleases,
@@ -38,7 +39,7 @@ contract RainDeployVerifySnapshotBaseClonePerNetworkTest is PerNetworkCloneDeplo
 
     /// @param suite The suite to check.
     function externalCheckInternallyConsistent(DeploySuite memory suite) external {
-        checkInternallyConsistent(declaration(), suite);
+        checkInternallyConsistent(declaration(), LibRainDeployDeclaration.emptyIndex(), suite);
     }
 
     /// @param path The record file, for the error only.

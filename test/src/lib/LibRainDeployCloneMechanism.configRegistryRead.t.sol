@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {IConfigRegistryV5} from "rain-deploy-0.1.43/src/interface/IConfigRegistryV5.sol";
 import {LibConfigRegistryDeploy} from "rain-deploy-0.1.43/src/lib/LibConfigRegistryDeploy.sol";
 import {
@@ -27,11 +28,14 @@ contract LibRainDeployCloneMechanismConfigRegistryReadTest is Test {
     uint256 constant CONFIG_REGISTRY_ARBITRUM_ONE_DEPLOY_BLOCK = 519115682;
 
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
-        return LibRainDeployCloneMechanism.deployLocally(declaration(), vm, suite);
+        return
+            LibRainDeployCloneMechanism.deployLocally(declaration(), LibRainDeployDeclaration.emptyIndex(), vm, suite);
     }
 
     function externalDeployLocallyOnChain(DeploySuite memory suite) external {
-        LibRainDeployCloneMechanism.deployLocallyOnChain(declaration(), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(
+            declaration(), LibRainDeployDeclaration.emptyIndex(), vm, suite
+        );
     }
 
     function declaration() internal pure returns (DeployDeclaration memory) {

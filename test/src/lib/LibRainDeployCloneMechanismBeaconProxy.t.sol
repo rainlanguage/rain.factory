@@ -11,6 +11,7 @@ import {
     DeploySuite
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {
     CLONE_ARTIFACT_PATH,
@@ -493,7 +494,9 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         bytes memory mechanismData = suite.mechanismData;
 
         vm.chainId(chainIds[1]);
-        LibRainDeployCloneMechanism.deployLocallyOnChain(externalsOnly(), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(
+            externalsOnly(), LibRainDeployDeclaration.emptyIndex(), vm, suite
+        );
         assertEq(suite.mechanismData, mechanismData);
         assertEq(beaconProxyAddressOn(proxy, chainIds[1]).code, suite.storedRuntimeCode);
         assertEq(beaconProxyAddressOn(proxy, chainIds[0]).code.length, 0);

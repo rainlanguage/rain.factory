@@ -265,6 +265,7 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         vm.createDir(string.concat(ROOT, "/0_0_1"), true);
         string memory path = writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, "0_0_1", "RegistryBeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite

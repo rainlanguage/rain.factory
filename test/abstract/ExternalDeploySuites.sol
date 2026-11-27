@@ -121,11 +121,11 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
     }
 
     function externalDeployLocally(Vm localVm, DeploySuite memory suite) external returns (address[] memory) {
-        return deployLocally(declaration(), localVm, suite);
+        return deployLocally(declaration(), LibRainDeployDeclaration.emptyIndex(), localVm, suite);
     }
 
     function externalDeployLocallyOnChain(Vm localVm, DeploySuite memory suite) external {
-        deployLocallyOnChain(declaration(), localVm, suite);
+        deployLocallyOnChain(declaration(), LibRainDeployDeclaration.emptyIndex(), localVm, suite);
     }
 
     /// @return `suite` as `addUnrecordedNetworks` leaves it.
@@ -196,7 +196,11 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
         DeploySuite memory suite
     ) external returns (string memory) {
         return writeSuiteSnapshot(
-            declaration(), fileVm, SnapshotFile(root, dir, contractName, spdxLicenseIdentifier, copyrightText), suite
+            declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
+            fileVm,
+            SnapshotFile(root, dir, contractName, spdxLicenseIdentifier, copyrightText),
+            suite
         );
     }
 

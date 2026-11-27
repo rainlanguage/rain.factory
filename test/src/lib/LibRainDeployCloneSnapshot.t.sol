@@ -12,6 +12,7 @@ import {
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {
     FrozenSnapshotMechanismDataMissing,
@@ -79,7 +80,11 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
         DeployDeclaration memory d = declaration();
         suite.networks = d.networks;
         return writeSuiteSnapshot(
-            d, vm, SnapshotFile(root, tag, contractName, RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT), suite
+            d,
+            LibRainDeployDeclaration.emptyIndex(),
+            vm,
+            SnapshotFile(root, tag, contractName, RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+            suite
         );
     }
 
@@ -304,6 +309,7 @@ contract LibRainDeployCloneSnapshotTest is Test, RainDeploySuitesBase {
     function externalWriteSuiteSnapshot(string memory root, DeploySuite memory suite) external returns (string memory) {
         return LibRainDeployCloneSnapshot.writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(root, "0_0_1", "Record", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite

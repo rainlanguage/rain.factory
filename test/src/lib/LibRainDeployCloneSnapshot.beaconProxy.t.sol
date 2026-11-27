@@ -267,6 +267,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         vm.createDir(string.concat(ROOT, "/", tag), true);
         return writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, tag, "BeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite
@@ -419,6 +420,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     function checkPerNetworkRecord(string memory tag, uint256[] memory chainIds, DeploySuite memory suite) internal {
         string memory path = LibRainDeployCloneSnapshot.writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, tag, "PerNetworkCloneRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite

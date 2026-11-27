@@ -41,11 +41,15 @@ contract LibRainDeployCloneMechanismDependencyClosureTest is Test {
         external
         returns (address[] memory)
     {
-        return LibRainDeployCloneMechanism.deployLocally(implementationReaching(reached), vm, suite);
+        return LibRainDeployCloneMechanism.deployLocally(
+            implementationReaching(reached), LibRainDeployDeclaration.emptyIndex(), vm, suite
+        );
     }
 
     function externalDeployLocallyOnChain(DeploySuite memory suite, DeployDependency memory reached) external {
-        LibRainDeployCloneMechanism.deployLocallyOnChain(implementationReaching(reached), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(
+            implementationReaching(reached), LibRainDeployDeclaration.emptyIndex(), vm, suite
+        );
     }
 
     /// The example factory as an external deployment and the example implementation as a Zoltu release that itself

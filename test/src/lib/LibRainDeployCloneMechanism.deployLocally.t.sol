@@ -9,6 +9,7 @@ import {
     DeploySuite
 } from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {
     CLONE_PER_NETWORK_MECHANISM,
@@ -26,7 +27,7 @@ contract LibRainDeployCloneMechanismDeployLocallyTest is Test {
     function externalDeployLocally(DeploySuite memory suite) external returns (address[] memory) {
         DeployDeclaration memory d;
         LibExternalDeployments.add(d, snapshotDeletingDependencies());
-        return LibRainDeployCloneMechanism.deployLocally(d, vm, suite);
+        return LibRainDeployCloneMechanism.deployLocally(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
     }
 
     function snapshotDeletingDependencies() internal pure returns (DeployDependency[] memory) {

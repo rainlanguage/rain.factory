@@ -23,7 +23,9 @@ contract LibRainDeployCloneOnChainChecksProbeBeaconTest is Test {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
-        return LibRainDeployCloneOnChainChecks.probeBeacon(d, suite, address(0xBEAC), 42161);
+        return LibRainDeployCloneOnChainChecks.probeBeacon(
+            d, LibRainDeployDeclaration.emptyIndex(), suite, address(0xBEAC), 42161
+        );
     }
 
     function testProbeBeaconWhoseDeployCannotBeRevertedIsRefused() external {

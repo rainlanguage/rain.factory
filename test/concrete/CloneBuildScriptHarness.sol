@@ -96,6 +96,7 @@ contract CloneBuildScriptHarness is BuildScript {
         snapshot.networks = d.networks;
         writeSuiteSnapshot(
             d,
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(
                 recordRoot(),
