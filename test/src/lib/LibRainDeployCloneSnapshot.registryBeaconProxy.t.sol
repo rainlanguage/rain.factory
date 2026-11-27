@@ -5,17 +5,18 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {
     DeployDeclaration,
+    DeployDependency,
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
@@ -33,11 +34,16 @@ import {
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneLayers} from "../../abstract/PerNetworkCloneDeploys.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneSnapshotRegistryBeaconProxyTest
 contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySuitesBase {
+    DeployDependency[] internal sExternalDeployments;
+
     function declaration() internal view override returns (DeployDeclaration memory) {
-        return perNetworkCloneLayers();
+        DeployDeclaration memory d = perNetworkCloneLayers();
+        LibExternalDeployments.add(d, sExternalDeployments);
+        return d;
     }
 
     string constant ROOT = "fixture-lib/snapshot-registry-beacon-proxy";
@@ -218,6 +224,9 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         RegistryBeaconProxyParams memory params = LibRegistryBeaconProxyTest.live(
             vm, address(new MockCloneableV2()), address(this), hex"deadbeef", bytes32(uint256(7))
         );
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(params.factory));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(params.registry));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(params.beacon));
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.registryBeaconProxyCandidate(
             LibRegistryBeaconProxyTest.declared(

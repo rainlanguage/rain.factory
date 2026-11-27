@@ -2,14 +2,16 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployCandidate, DeployDeclaration} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+import {DeployCandidate, DeployDeclaration} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
+import {exampleCloneDependencies} from "../abstract/ExampleCloneDeploys.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {perNetworkCloneChainIds, perNetworkCloneNetworks} from "../abstract/PerNetworkCloneDeploys.sol";
-import {upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
+import {upgradedCloneDependencies, upgradedPerNetworkClone} from "../abstract/UpgradedPerNetworkCloneDeploys.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 
 /// @title WideCandidatePerNetworkCloneDeploy
 /// @notice A broadcast whose hand-written candidate declares Arbitrum One and Polygon while the repo supports Arbitrum
@@ -23,6 +25,8 @@ contract WideCandidatePerNetworkCloneDeploy is ExternalDeployBroadcast {
         LibRainDeployDeclaration.setNetworks(d, networks);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        LibExternalDeployments.add(d, exampleCloneDependencies());
+        LibExternalDeployments.add(d, upgradedCloneDependencies());
         DeployCandidate[] memory candidates = new DeployCandidate[](1);
         candidates[0] = LibRainDeployCloneMechanism.cloneCandidate(upgradedPerNetworkClone(), perNetworkCloneChainIds());
         candidates[0].snapshot.networks = perNetworkCloneNetworks();

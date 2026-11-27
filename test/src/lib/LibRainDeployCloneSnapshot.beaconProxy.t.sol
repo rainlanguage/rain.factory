@@ -10,15 +10,15 @@ import {
     MechanismUnclaimed,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {
@@ -33,7 +33,7 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {exampleCloneImplementation} from "../../abstract/ExampleCloneDeploys.sol";
@@ -45,13 +45,18 @@ import {
     perNetworkCloneLayers
 } from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneSnapshotBeaconProxyTest
 /// @notice The beacon proxy record marker: what the writer emits, how `recordedMechanism` reads it,
 /// and the released lib entries it produces; and the chain id each per-network address is written under.
 contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase {
+    DeployDependency[] internal sExternalDeployments;
+
     function declaration() internal view override returns (DeployDeclaration memory) {
-        return perNetworkCloneLayers();
+        DeployDeclaration memory d = perNetworkCloneLayers();
+        LibExternalDeployments.add(d, sExternalDeployments);
+        return d;
     }
 
     string constant ROOT = "fixture-lib/snapshot-beacon-proxy";
@@ -226,16 +231,20 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         );
     }
 
-    /// A beacon proxy candidate over a fresh factory and beacon, both declared as its dependencies.
+    /// A beacon proxy candidate over a fresh factory and beacon, both declared as its dependencies and as external
+    /// deployments.
     /// @param initDataPerNetwork Whether the init data is per network.
     /// @return The candidate's suite.
     function beaconProxySuite(bool initDataPerNetwork) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(beacon));
+        address factory = address(new MockBeaconProxyFactory());
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(factory));
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "beacon-proxy",
-                address(new MockBeaconProxyFactory()),
+                factory,
                 beacon,
                 hex"deadbeef",
                 initDataPerNetwork,

@@ -8,9 +8,9 @@ import {
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {BeaconProxyBeaconUndeclared} from "../../../src/lib/LibRainDeployCloneOnChainChecks.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_CHAIN_ID,
     PER_NETWORK_CLONE_POLYGON_CHAIN_ID,
@@ -22,6 +22,7 @@ import {PerNetworkCloneBeaconVerifyChain} from "../../abstract/PerNetworkCloneBe
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title RainDeployVerifyChainBeaconProxyTest
 /// @notice The chain matrix, on local forks, over a beacon proxy suite whose beacon is the one declared on Polygon.
@@ -52,8 +53,10 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
         }
         sBeacon = address(new UpgradeableBeacon(addresses[1], OWNER));
         vm.makePersistent(sBeacon);
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sBeacon));
         sFactory = address(new MockBeaconProxyFactory());
         vm.makePersistent(sFactory);
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sFactory));
     }
 
     /// The one-data proxy suite over `beacon`, live at its derived address on every fork.
@@ -136,6 +139,7 @@ contract RainDeployVerifyChainBeaconProxyTest is PerNetworkCloneBeaconVerifyChai
         address other =
             address(new UpgradeableBeacon(perNetworkCloneReleaseAddress(PER_NETWORK_CLONE_POLYGON_CHAIN_ID), OWNER));
         vm.makePersistent(other);
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(other));
         DeploySuite memory suite = liveProxySuite(other);
         vm.expectRevert(
             abi.encodeWithSelector(BeaconProxyBeaconUndeclared.selector, PROXY_SUITE, LibRainDeploy.POLYGON, other)

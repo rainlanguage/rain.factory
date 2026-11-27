@@ -10,9 +10,9 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {ChainBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {
     BEACON_PROXY_MECHANISM,
@@ -86,13 +86,12 @@ library LibRainDeployCloneOnChainChecks {
         return LibRainDeployCloneMechanism.layerConfig(d).beacons;
     }
 
-    /// @return A copy of the release `name` keys with its recorded networks and the networks among `d.networks` its
-    /// candidate takes it to; `d.released` is not changed.
+    /// @return A copy of the release `name` keys with the networks among `d.networks` its candidate takes it to;
+    /// `d.released` is not changed.
     function released(DeployDeclaration memory d, string memory name) internal view returns (DeploySuite memory) {
         for (uint256 i = 0; i < d.released.length; i++) {
             if (keccak256(bytes(d.released[i].suite)) == keccak256(bytes(name))) {
                 DeploySuite memory copy = abi.decode(abi.encode(d.released[i]), (DeploySuite));
-                handlerOf(d, copy).addRecordedNetworks(d, copy);
                 LibRainDeployDeclaration.addCandidateNetworks(
                     d, copy, LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(d.networks))
                 );

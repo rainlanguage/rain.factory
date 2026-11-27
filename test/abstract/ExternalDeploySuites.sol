@@ -8,9 +8,9 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
 /// @title ExternalDeploySuites
@@ -98,7 +98,11 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
         return recordedAddress(declaration(), suite, chainId);
     }
 
-    function externalRecordedAddresses(DeploySuite memory suite) external view returns (address[] memory) {
+    function externalRecordedAddresses(DeploySuite memory suite)
+        external
+        view
+        returns (bool[] memory, address[] memory)
+    {
         return recordedAddresses(declaration(), suite);
     }
 

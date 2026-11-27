@@ -3,17 +3,35 @@
 pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.38/src/abstract/RainDeployVerifyChain.sol";
-import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {
+    DeployDeclaration,
+    DeploySuite,
+    RainDeploySuitesBase
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyChain.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {ExampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
 import {CloneParams} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title RainDeployVerifyChainCloneTest
 /// @notice The chain matrix over a clone deploy repo's frozen release.
 contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerifyChain {
+    DeployDependency[] internal sExternalDeployments;
+
+    function declaration()
+        internal
+        view
+        override(ExampleCloneDeploys, RainDeploySuitesBase)
+        returns (DeployDeclaration memory)
+    {
+        DeployDeclaration memory d = super.declaration();
+        LibExternalDeployments.add(d, sExternalDeployments);
+        return d;
+    }
+
     /// Puts the release's dependencies, and its clone at its address, on every fork.
     function setUp() external {
         DeploySuite memory release = declaration().released[0];
@@ -111,10 +129,12 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
         this.externalCheckOnLocalForks(forkVm);
     }
 
-    /// A dependency only the SECOND suite declares, with no code on the first network, is refused there naming it.
+    /// A dependency only the SECOND suite declares, an external deployment with no code on the first network, is
+    /// refused there naming it.
     function testMatrixRefusesALaterSuitesMissingDependency() external {
         address missing = address(0xdEaD);
         assertEq(missing.code.length, 0);
+        sExternalDeployments.push(DeployDependency({deployedAddress: missing, runtimeCode: hex"6001"}));
         DeploySuite[] memory suites = new DeploySuite[](2);
         suites[0] = declaration().released[0];
         suites[1] = declaration().released[0];
@@ -122,7 +142,7 @@ contract RainDeployVerifyChainCloneTest is ExampleCloneDeploys, RainDeployVerify
         for (uint256 i = 0; i < suites[1].dependencies.length; i++) {
             dependencies[i] = suites[1].dependencies[i];
         }
-        dependencies[dependencies.length - 1] = DeployDependency({deployedAddress: missing, runtimeCode: hex"6001"});
+        dependencies[dependencies.length - 1] = sExternalDeployments[0];
         suites[1].dependencies = dependencies;
         LocalForkVm forkVm = new LocalForkVm();
         vm.expectRevert(

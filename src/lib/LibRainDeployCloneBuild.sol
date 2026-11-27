@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {DeployDeclaration} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {CloneLayerConfig, LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 
@@ -30,13 +30,39 @@ library LibRainDeployCloneBuild {
         CloneLayerConfig memory config = LibRainDeployCloneMechanism.layerConfig(d);
         for (uint256 i = 0; i < d.released.length; i++) {
             ChainDeploy[] memory declared = LibRainDeployCloneMechanism.extendedNetworksOf(config, d.released[i].suite);
-            // Called for its refusals: `declared` is what is written, once each network derives its declared address.
+            ChainDeploy[] memory recorded = LibRainDeployExtendedNetworks.recordedExtendedNetworks(
+                vm, config.extendedNetworksRoot, d.released[i].suite
+            );
+            // Called for its refusals: the release already holds its record, so only what `declared` appends is new.
             // slither-disable-next-line unused-return
-            LibRainDeployCloneMechanism.appendExtendedNetworks(d.released[i], declared);
+            LibRainDeployCloneMechanism.appendExtendedNetworks(d.released[i], appendedTo(recorded, declared));
             LibRainDeployExtendedNetworks.writeExtendedNetworks(
                 vm, config.extendedNetworksRoot, d.released[i].suite, declared, spdxLicenseIdentifier, copyrightText
             );
         }
+    }
+
+    /// @param recorded A release's extended networks record.
+    /// @param declared The networks declared for it.
+    /// @return The networks `declared` appends to `recorded`, or none when it drops, changes or reorders one of them.
+    function appendedTo(ChainDeploy[] memory recorded, ChainDeploy[] memory declared)
+        internal
+        pure
+        returns (ChainDeploy[] memory)
+    {
+        if (declared.length < recorded.length) {
+            return new ChainDeploy[](0);
+        }
+        for (uint256 i = 0; i < recorded.length; i++) {
+            if (!LibRainDeployExtendedNetworks.sameNetwork(recorded[i], declared[i])) {
+                return new ChainDeploy[](0);
+            }
+        }
+        ChainDeploy[] memory appended = new ChainDeploy[](declared.length - recorded.length);
+        for (uint256 i = 0; i < appended.length; i++) {
+            appended[i] = declared[recorded.length + i];
+        }
+        return appended;
     }
 
     /// `regenerateExtendedNetworks` applied to `RAIN_SPDX_LICENSE_IDENTIFIER` and `RAIN_COPYRIGHT_TEXT`, for a repo

@@ -4,8 +4,8 @@ pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
@@ -20,6 +20,7 @@ import {PerNetworkCloneBeaconVerifyChain} from "../../abstract/PerNetworkCloneBe
 import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title RainDeployVerifyChainRegistryBeaconProxyTest
 /// @notice The chain matrix, on local forks, over a registry beacon proxy suite whose binding resolves to the beacon
@@ -49,6 +50,9 @@ contract RainDeployVerifyChainRegistryBeaconProxyTest is PerNetworkCloneBeaconVe
         vm.makePersistent(sParams.factory);
         vm.makePersistent(sParams.registry);
         vm.makePersistent(sBeacon);
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sParams.factory));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sParams.registry));
+        sExternalDeployments.push(LibExternalDeployments.deployedNow(sBeacon));
     }
 
     function liveProxySuite() internal returns (DeploySuite memory) {

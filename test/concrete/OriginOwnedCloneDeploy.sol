@@ -2,14 +2,15 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDeclaration} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+import {DeployDeclaration} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {CloneDeploy} from "../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
+import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {MockCloneFactory} from "./MockCloneFactory.sol";
 import {MockOriginOwnedCloneable} from "./MockOriginOwnedCloneable.sol";
 
@@ -62,14 +63,24 @@ function originOwnedCloneDeploys() pure returns (CloneDeploy[] memory) {
 
 /// @title OriginOwnedCloneDeploy
 /// @notice A per-network clone repo on Arbitrum One and Base whose candidate's Base clone seats the deploy key,
-/// with `broadcastSuite` exposed.
+/// with `broadcastSuite` exposed, also declaring each external deployment its caller adds.
 contract OriginOwnedCloneDeploy is ExternalDeployBroadcast {
+    DeployDependency[] internal sExternalDeployments;
+
+    /// Declares `deployment` an external deployment of every later `declaration()`.
+    function addExternalDeployment(DeployDependency memory deployment) external {
+        sExternalDeployments.push(deployment);
+    }
+
     function declaration() internal view override returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
         LibRainDeployDeclaration.extend(d);
         LibRainDeployDeclaration.setNetworks(d, originOwnedCloneNetworks());
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
+        (,, DeployDependency[] memory dependencies) = originOwnedCloneSetup();
+        LibExternalDeployments.add(d, dependencies);
+        LibExternalDeployments.add(d, sExternalDeployments);
         LibCloneCandidates.addClones(d, originOwnedCloneDeploys());
         return d;
     }

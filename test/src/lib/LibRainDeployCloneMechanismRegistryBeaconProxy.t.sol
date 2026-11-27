@@ -5,9 +5,9 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployCandidate, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+import {DeployCandidate, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {ICloneableFactoryV7} from "../../../src/interface/ICloneableFactoryV7.sol";
 import {CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
@@ -34,6 +34,7 @@ import {LocalForkVm} from "../../concrete/LocalForkVm.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {perNetworkCloneChainIds, perNetworkCloneNetworks} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibRegistryBeaconProxyTest} from "../../lib/LibRegistryBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneMechanismRegistryBeaconProxyTest
 /// @notice The REGISTRY_BEACON_PROXY mechanism as `LibRainDeployCloneMechanism` reads it, through the example clone
@@ -51,8 +52,14 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         sDeploy = new ExampleCloneDeploy();
     }
 
+    /// `LibRegistryBeaconProxyTest.live`, its factory, registry and beacon declared external deployments of `sDeploy`.
     function liveParams() internal returns (RegistryBeaconProxyParams memory) {
-        return LibRegistryBeaconProxyTest.live(vm, address(new MockCloneableV2()), address(this), TEST_DATA, TEST_SALT);
+        RegistryBeaconProxyParams memory params =
+            LibRegistryBeaconProxyTest.live(vm, address(new MockCloneableV2()), address(this), TEST_DATA, TEST_SALT);
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.factory));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.registry));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(params.beacon));
+        return params;
     }
 
     function suiteOf(RegistryBeaconProxyParams memory params) internal returns (DeploySuite memory) {
@@ -162,11 +169,12 @@ contract LibRainDeployCloneMechanismRegistryBeaconProxyTest is Test {
         }
 
         address[] memory deployed = sDeploy.externalDeployedAddresses(suite);
-        address[] memory recorded = sDeploy.externalRecordedAddresses(suite);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(suite);
         assertEq(deployed.length, 2);
         assertEq(recorded.length, 2);
         for (uint256 i = 0; i < deployed.length; i++) {
             assertEq(deployed[i], expected);
+            assertTrue(isRecorded[i]);
             assertEq(recorded[i], expected);
         }
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite).length, 0);

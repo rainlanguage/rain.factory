@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
@@ -17,16 +17,21 @@ import {
     LibRainDeployCloneMechanism,
     UnexpectedStoredDeployedAddress
 } from "../../../src/lib/LibRainDeployCloneMechanism.sol";
-import {DeploySuite, UnexpectedMechanismData} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
+import {
+    DeploySuite,
+    UnexpectedMechanismData,
+    UnrecordedOnNetwork
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
-} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibRainDeployBeaconProxy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockOriginOwnedCloneable} from "../../concrete/MockOriginOwnedCloneable.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 import {perNetworkCloneChainIds} from "../../abstract/PerNetworkCloneDeploys.sol";
 import {
     exampleCloneDependencies,
@@ -161,16 +166,19 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
     }
 
     /// A beacon proxy suite over a fresh factory and a beacon of `MockOriginOwnedCloneable`, seating `owner`, on
-    /// Arbitrum One and Polygon.
+    /// Arbitrum One and Polygon, the factory and beacon declared external deployments of `sDeploy`.
     /// @param owner The owner the proxy's init data names.
     /// @return The suite.
     function ownedBeaconProxySuite(address owner) internal returns (DeploySuite memory) {
         address beacon = address(new UpgradeableBeacon(address(new MockOriginOwnedCloneable()), address(this)));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(beacon));
+        address factory = address(new MockBeaconProxyFactory());
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(factory));
         DeploySuite memory suite =
         LibRainDeployCloneMechanism.beaconProxyCandidate(
             LibBeaconProxyTest.declared(
                 "owned-beacon-proxy",
-                address(new MockBeaconProxyFactory()),
+                factory,
                 beacon,
                 abi.encode(owner),
                 false,
@@ -268,7 +276,7 @@ contract LibRainDeployCloneMechanismBroadcastTest is ZoltuDeployOrAdopt {
         recorded.networks[0] = exampleCloneNetworks().networks[0];
         DeploySuite memory release = perNetworkSuite(recorded);
 
-        vm.expectRevert(abi.encodeWithSelector(LibRainDeployClone.CloneNetworkUndeclared.selector, 137));
+        vm.expectRevert(abi.encodeWithSelector(UnrecordedOnNetwork.selector, release.suite, 137));
         sDeploy.externalDeployAndBroadcast(vm, arbitrumAndPolygon(), 1, release, release);
         assertFalse(anyForkExists());
     }

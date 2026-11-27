@@ -9,9 +9,9 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeploySuite
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,
@@ -47,6 +47,7 @@ import {
     perNetworkCloneNetworks
 } from "../../abstract/PerNetworkCloneDeploys.sol";
 import {LibBeaconProxyTest} from "../../lib/LibBeaconProxyTest.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployCloneMechanismBeaconProxyTest
 /// @notice The BEACON_PROXY mechanisms as `LibRainDeployCloneMechanism` reads them, directly and through the
@@ -58,13 +59,25 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
 
     ExampleCloneDeploy internal sDeploy;
 
+    DeployDependency[] internal sExternalDeployments;
+
     function setUp() external {
         sDeploy = new ExampleCloneDeploy();
     }
 
-    /// @return An empty declaration, for the library's steps that read none of it.
-    function noDeclaration() internal pure returns (DeployDeclaration memory) {
+    /// Declares `deployed`, with the code it holds now, as an external deployment here and of `sDeploy`.
+    /// @return `deployed`.
+    function declareExternal(address deployed) internal returns (address) {
+        DeployDependency memory deployment = LibExternalDeployments.deployedNow(deployed);
+        sExternalDeployments.push(deployment);
+        sDeploy.addExternalDeployment(deployment);
+        return deployed;
+    }
+
+    /// @return A declaration of only the external deployments declared here.
+    function externalsOnly() internal view returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
+        LibExternalDeployments.add(d, sExternalDeployments);
         return d;
     }
 
@@ -72,10 +85,10 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
     /// @param initDataPerNetwork Whether the init data is per network.
     /// @return The declaration.
     function declaredBeaconProxy(bool initDataPerNetwork) internal returns (BeaconProxyDeploy memory) {
-        address beacon = address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this)));
+        address beacon = declareExternal(address(new UpgradeableBeacon(address(new MockCloneableV2()), address(this))));
         return LibBeaconProxyTest.declared(
             "beacon-proxy",
-            address(new MockBeaconProxyFactory()),
+            declareExternal(address(new MockBeaconProxyFactory())),
             beacon,
             TEST_DATA,
             initDataPerNetwork,
@@ -381,10 +394,12 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         uint256[] memory chainIds = perNetworkCloneChainIds();
         DeploySuite memory suite = suiteOf(proxy, chainIds);
 
-        address[] memory recorded = sDeploy.externalRecordedAddresses(suite);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(suite);
+        assertEq(isRecorded.length, 2);
         assertEq(recorded.length, 2);
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite), chainIds);
         for (uint256 i = 0; i < chainIds.length; i++) {
+            assertTrue(isRecorded[i]);
             assertEq(recorded[i], beaconProxyAddressOn(proxy, chainIds[i]));
             assertEq(sDeploy.externalRecordedAddress(suite, chainIds[i]), beaconProxyAddressOn(proxy, chainIds[i]));
         }
@@ -429,7 +444,10 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         });
 
         DeploySuite memory frozen = this.externalWithExtendedNetworks(release, extended);
-        assertEq(sDeploy.externalRecordedAddresses(frozen).length, 2);
+        (bool[] memory isRecorded, address[] memory recorded) = sDeploy.externalRecordedAddresses(frozen);
+        assertEq(recorded.length, 2);
+        assertTrue(isRecorded[0]);
+        assertTrue(isRecorded[1]);
         assertEq(sDeploy.externalRecordedAddress(frozen, chainIds[1]), beaconProxyAddressOn(proxy, chainIds[1]));
     }
 
@@ -475,7 +493,7 @@ contract LibRainDeployCloneMechanismBeaconProxyTest is Test {
         bytes memory mechanismData = suite.mechanismData;
 
         vm.chainId(chainIds[1]);
-        LibRainDeployCloneMechanism.deployLocallyOnChain(noDeclaration(), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(externalsOnly(), vm, suite);
         assertEq(suite.mechanismData, mechanismData);
         assertEq(beaconProxyAddressOn(proxy, chainIds[1]).code, suite.storedRuntimeCode);
         assertEq(beaconProxyAddressOn(proxy, chainIds[0]).code.length, 0);

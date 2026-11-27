@@ -11,13 +11,13 @@ import {
     DeploySuite,
     MechanismUnclaimed,
     UnexpectedMechanismData
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployZoltuMechanism,
     ZOLTU_MECHANISM_ID
-} from "rain-deploy-0.1.38/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -56,6 +56,7 @@ import {
     SourceUse
 } from "../../concrete/MockStorageReadingCloneable.sol";
 import {MockStorageSource} from "../../concrete/MockStorageSource.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 import {upgradedPerNetworkClone} from "../../abstract/UpgradedPerNetworkCloneDeploys.sol";
 import {
     PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN,
@@ -92,9 +93,10 @@ contract LibRainDeployCloneMechanismTest is Test {
         sDeploy = new ExampleCloneDeploy();
     }
 
-    /// @return An empty declaration, for the library's steps that read none of it.
-    function noDeclaration() internal pure returns (DeployDeclaration memory) {
+    /// @return A declaration of only the example clones' factory and implementation, as external deployments.
+    function exampleExternalsOnly() internal pure returns (DeployDeclaration memory) {
         DeployDeclaration memory d;
+        LibExternalDeployments.add(d, exampleCloneDependencies());
         return d;
     }
 
@@ -493,7 +495,12 @@ contract LibRainDeployCloneMechanismTest is Test {
         chainIds[1] = 137;
         suite.networks = perNetworkCloneNetworks();
         assertEq(sDeploy.externalDeployedAddresses(suite), addresses);
-        assertEq(sDeploy.externalRecordedAddresses(suite), addresses);
+        (bool[] memory recorded, address[] memory recordedAt) = sDeploy.externalRecordedAddresses(suite);
+        bool[] memory everyNetwork = new bool[](2);
+        everyNetwork[0] = true;
+        everyNetwork[1] = true;
+        assertEq(recorded, everyNetwork);
+        assertEq(recordedAt, addresses);
         assertEq(LibRainDeployCloneMechanism.addressChainIds(suite), chainIds);
         assertEq(sDeploy.externalDeployedAddress(suite, 42161), arbitrumAddress);
         assertEq(sDeploy.externalDeployedAddress(suite, 137), polygonAddress);
@@ -625,7 +632,7 @@ contract LibRainDeployCloneMechanismTest is Test {
         address arbitrumAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_ARBITRUM_ONE_ADMIN));
         address polygonAddress = exampleCloneAddress(abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));
         vm.chainId(137);
-        LibRainDeployCloneMechanism.deployLocallyOnChain(noDeclaration(), vm, suite);
+        LibRainDeployCloneMechanism.deployLocallyOnChain(exampleExternalsOnly(), vm, suite);
         assertEq(suite.mechanismData, mechanismData);
         assertEq(polygonAddress.code, suite.storedRuntimeCode);
         assertEq(MockCloneable(polygonAddress).sInitData(), abi.encode(PER_NETWORK_CLONE_POLYGON_ADMIN));
@@ -1236,13 +1243,17 @@ contract LibRainDeployCloneMechanismTest is Test {
         );
     }
 
-    /// A clone over a given factory and `MockStorageReadingCloneable`, initialized against a given source.
+    /// A clone over a given factory and `MockStorageReadingCloneable`, initialized against a given source, the
+    /// factory, implementation and source declared external deployments of `sDeploy`.
     /// @param factory The clone factory.
     /// @param source The account `initialize` treats as `use` says.
     /// @param use How `initialize` treats the source.
     /// @return The suite.
     function storageCloneOver(address factory, address source, SourceUse use) internal returns (DeploySuite memory) {
         MockStorageReadingCloneable implementation = new MockStorageReadingCloneable();
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(factory));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(address(implementation)));
+        sDeploy.addExternalDeployment(LibExternalDeployments.deployedNow(source));
         DeployDependency[] memory dependencies = new DeployDependency[](3);
         dependencies[0] = DeployDependency({deployedAddress: factory, runtimeCode: factory.code});
         dependencies[1] =

@@ -11,12 +11,12 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.38/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "./LibRainDeployExtendedNetworks.sol";
 import {ChainBeacon} from "./LibRainDeployBeacon.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CLONE_UNANCHORABLE_REASON,
@@ -323,7 +323,6 @@ library LibRainDeployCloneMechanism {
         // Empty for a one-data suite, which derives on every network.
         uint256[] memory recorded = addressChainIds(suite);
         uint256 callerChainId = block.chainid;
-        LibRainDeploy.etchDependencies(vm, suite.dependencies);
         for (uint256 i = 0; i < chainIds.length; i++) {
             // The matrix refuses an unrecorded network in play before deriving, so one here is out of play.
             inPlay[i] = recorded.length == 0 || contains(recorded, chainIds[i]);
@@ -331,6 +330,7 @@ library LibRainDeployCloneMechanism {
                 deployed[i] = deployedAddress(d, suite, chainIds[i]);
             }
         }
+        LibRainDeployDeclaration.etchDependencyClosure(d, vm, suite, inPlayAddresses(deployed, inPlay));
         // Before any address is left deployed, so a shared network deploys onto a fresh address as its broadcast does.
         for (uint256 i = 0; i < chainIds.length; i++) {
             if (inPlay[i] && deployedEarlier(deployed, inPlay, i)) {
@@ -362,6 +362,28 @@ library LibRainDeployCloneMechanism {
         return false;
     }
 
+    /// @return The entries of `addresses` that are in play.
+    function inPlayAddresses(address[] memory addresses, bool[] memory inPlay)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        uint256 count = 0;
+        for (uint256 i = 0; i < addresses.length; i++) {
+            if (inPlay[i]) {
+                count++;
+            }
+        }
+        address[] memory kept = new address[](count);
+        count = 0;
+        for (uint256 i = 0; i < addresses.length; i++) {
+            if (inPlay[i]) {
+                kept[count++] = addresses[i];
+            }
+        }
+        return kept;
+    }
+
     /// @return Whether an entry of `addresses` before `index` that is in play equals the one at `index`.
     function deployedEarlier(address[] memory addresses, bool[] memory inPlay, uint256 index)
         internal
@@ -378,8 +400,10 @@ library LibRainDeployCloneMechanism {
 
     /// Deploys the suite's clone, beacon proxy or registry beacon proxy on `block.chainid` alone.
     function deployLocallyOnChain(DeployDeclaration memory d, Vm vm, DeploySuite memory suite) internal {
-        LibRainDeploy.etchDependencies(vm, suite.dependencies);
-        deployParams(vm, suite, block.chainid, deployedAddress(d, suite, block.chainid));
+        address[] memory own = new address[](1);
+        own[0] = deployedAddress(d, suite, block.chainid);
+        LibRainDeployDeclaration.etchDependencyClosure(d, vm, suite, own);
+        deployParams(vm, suite, block.chainid, own[0]);
     }
 
     function addUnrecordedNetworks(
@@ -520,17 +544,20 @@ library LibRainDeployCloneMechanism {
 
     /// @param suite A clone or beacon proxy suite.
     /// @param chainId The network's chain id.
-    /// @return The address it records there.
+    /// @return Whether it records an address there; a per-network suite records only its own entries.
+    /// @return The address it records there, or zero when none.
     function recordedAddress(DeployDeclaration memory, DeploySuite memory suite, uint256 chainId)
         internal
         pure
-        returns (address)
+        returns (bool, address)
     {
         if (isPerNetwork(suite)) {
             CloneNetworks memory clones = cloneNetworks(suite);
-            return clones.networks[LibRainDeployClone.cloneNetworkIndex(clones, chainId)].deployedAddress;
+            (bool found, uint256 index) = LibRainDeployClone.findCloneNetwork(clones, chainId);
+            return (found, found ? clones.networks[index].deployedAddress : address(0));
         }
-        return suite.storedDeployedAddress;
+        // forge-lint: disable-next-line(boolean-cst)
+        return (true, suite.storedDeployedAddress);
     }
 
     /// @param suite A clone or beacon proxy suite.

@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {CloneNetworks, CloneParams, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {
@@ -129,6 +129,33 @@ contract LibRainDeployClonePerNetworkTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(LibRainDeployClone.CloneNetworkUndeclared.selector, 8453));
         this.externalCloneNetworkIndex(clones, 8453);
+    }
+
+    /// Every entry is found at its own index, the first and the last included.
+    function testFindCloneNetworkFindsEveryEntryAtItsIndex() external pure {
+        uint256[] memory chainIds = new uint256[](3);
+        chainIds[0] = 137;
+        chainIds[1] = 42161;
+        chainIds[2] = 8453;
+        CloneNetworks memory clones = cloneNetworks(exampleCloneFactory(), exampleCloneImplementation(), chainIds);
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            (bool found, uint256 index) = LibRainDeployClone.findCloneNetwork(clones, chainIds[i]);
+            assertTrue(found);
+            assertEq(index, i);
+        }
+    }
+
+    /// A chain id with no entry is not found, at index zero, without reverting.
+    function testFindCloneNetworkReportsAChainIdWithNoEntryAsNotFound(uint256 chainId) external pure {
+        vm.assume(chainId != 42161 && chainId != 137);
+        (bool found, uint256 index) = LibRainDeployClone.findCloneNetwork(exampleCloneNetworks(), chainId);
+        assertFalse(found);
+        assertEq(index, 0);
+
+        CloneNetworks memory none = cloneNetworks(exampleCloneFactory(), exampleCloneImplementation(), new uint256[](0));
+        (found, index) = LibRainDeployClone.findCloneNetwork(none, chainId);
+        assertFalse(found);
+        assertEq(index, 0);
     }
 
     /// An entry's params are the shared factory, implementation and salt with THAT entry's data, and

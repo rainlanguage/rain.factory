@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.38/src/abstract/RainDeployVerifyChain.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {ExtendedNetworkUnfrozen, LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {CloneDeploy, CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {
@@ -46,7 +46,6 @@ contract RainDeployVerifyChainClonePerNetworkUnrecordedUpgradedTest is
     function testUnrecordedNetworkTakesTheCandidatesDataUnderTheReleasesImplementation() external view {
         DeployDeclaration memory d = declaration();
         DeploySuite memory suite = onlyFirstRecordedNetwork(d.released[0]);
-        addRecordedNetworks(d, suite);
         addCandidateNetworks(d, suite, LibRainDeploy.networkChainIds(LibRainDeploy.declaredNetworkConfigs(d.networks)));
         CloneNetworks memory extended = abi.decode(LibRainDeployCloneMechanism.payload(suite), (CloneNetworks));
         assertEq(extended.networks.length, 2);

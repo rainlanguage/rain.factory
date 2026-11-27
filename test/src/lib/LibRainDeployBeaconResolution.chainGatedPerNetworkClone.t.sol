@@ -2,9 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {DeployDependency, DeploySuite} from "rain-deploy-0.1.38/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.38/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.38/src/lib/LibRainDeploy.sol";
+import {
+    DeployDeclaration,
+    DeployDependency,
+    DeploySuite
+} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
@@ -14,6 +18,7 @@ import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockChainGatedCloneable, MockChainGatedCloneableWrongChain} from "../../concrete/MockChainGatedCloneable.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
 import {BeaconVerifyFixture} from "../../abstract/BeaconVerifyFixture.sol";
+import {LibExternalDeployments} from "../../lib/LibExternalDeployments.sol";
 
 /// @title LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest
 /// @notice A per-network clone suite whose clones initialize only under their own network's chain id derives every
@@ -38,13 +43,18 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
         return chainGatedSuite(chainGatedClones(abi.encode(uint256(8453))));
     }
 
-    function chainGatedSuite(CloneNetworks memory clones) internal pure returns (DeploySuite memory) {
+    function chainGatedDependencies() internal pure returns (DeployDependency[] memory) {
+        CloneNetworks memory clones = chainGatedClones("");
         DeployDependency[] memory dependencies = new DeployDependency[](2);
         dependencies[0] =
             DeployDependency({deployedAddress: clones.factory, runtimeCode: type(MockCloneFactory).runtimeCode});
         dependencies[1] = DeployDependency({
             deployedAddress: clones.implementation, runtimeCode: type(MockChainGatedCloneable).runtimeCode
         });
+        return dependencies;
+    }
+
+    function chainGatedSuite(CloneNetworks memory clones) internal pure returns (DeploySuite memory) {
         string[] memory networks = new string[](2);
         networks[0] = LibRainDeploy.ARBITRUM_ONE;
         networks[1] = LibRainDeploy.BASE;
@@ -56,7 +66,7 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
             storedBytecodeHash: keccak256(runtimeCode),
             storedRuntimeCode: runtimeCode,
             artifactPath: CLONE_ARTIFACT_PATH,
-            dependencies: dependencies,
+            dependencies: chainGatedDependencies(),
             mechanismData: abi.encode(CLONE_PER_NETWORK_MECHANISM, abi.encode(clones)),
             networks: networks,
             describedByMeta: ""
@@ -71,6 +81,12 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
         }
         released[fixture.length] = chainGatedSuite();
         return released;
+    }
+
+    function declaration() internal view override returns (DeployDeclaration memory) {
+        DeployDeclaration memory d = super.declaration();
+        LibExternalDeployments.add(d, chainGatedDependencies());
+        return d;
     }
 
     function externalResolvedCount(SupportedNetwork[] memory networks) external returns (uint256) {

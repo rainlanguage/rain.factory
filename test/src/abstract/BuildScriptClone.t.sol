@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.38/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibCodeGen,
     RAIN_COPYRIGHT_TEXT,
@@ -218,6 +218,74 @@ contract BuildScriptCloneTest is Test {
                 LibRainDeployExtendedNetworks.extendedNetworksBody(vm, networks)
             )
         );
+    }
+
+    /// PROPERTY: over a written record the build writes what the declaration appends, still refusing an appended
+    /// network the release would refuse, and refuses a declaration that drops, changes or reorders the record.
+    function testRegenerateExtendedNetworksAppendsToAWrittenRecord() external {
+        string memory root = string.concat(EXTENDED_NETWORKS_FIXTURE_ROOT, "-append");
+        string memory suite = "per-network-clone@0_0_1";
+        resetFixture(root);
+        PerNetworkCloneBuildScriptHarness harness = new PerNetworkCloneBuildScriptHarness(root, root);
+        (,, string memory path) = LibRainDeployExtendedNetworks.extendedNetworksPath(root, suite);
+
+        ChainDeploy[] memory first = new ChainDeploy[](1);
+        first[0] = extendedNetwork(8453, hex"00aa");
+        harness.setExtendedNetworks(first);
+        harness.externalRegenerateExtendedNetworks();
+
+        ChainDeploy[] memory networks = new ChainDeploy[](2);
+        networks[0] = first[0];
+        networks[1] = extendedNetwork(1, hex"00bb");
+        harness.setExtendedNetworks(networks);
+        harness.externalRegenerateExtendedNetworks();
+        string memory appendedRecord = vm.readFile(path);
+
+        ChainDeploy[] memory misderived = new ChainDeploy[](3);
+        misderived[0] = networks[0];
+        misderived[1] = networks[1];
+        misderived[2] = extendedNetwork(10, hex"00cc");
+        address derived = misderived[2].deployedAddress;
+        misderived[2].deployedAddress = address(0x1111111111111111111111111111111111111111);
+        harness.setExtendedNetworks(misderived);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ExtendedNetworkAddressMismatch.selector, suite, 10, derived, misderived[2].deployedAddress
+            )
+        );
+        harness.externalRegenerateExtendedNetworks();
+
+        ChainDeploy[] memory reordered = new ChainDeploy[](2);
+        reordered[0] = networks[1];
+        reordered[1] = networks[0];
+        harness.setExtendedNetworks(reordered);
+        vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksRewritten.selector, suite, 0));
+        harness.externalRegenerateExtendedNetworks();
+
+        ChainDeploy[] memory changed = new ChainDeploy[](3);
+        changed[0] = networks[0];
+        changed[1] = extendedNetwork(1, hex"00cc");
+        changed[2] = extendedNetwork(10, hex"00cc");
+        harness.setExtendedNetworks(changed);
+        vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksRewritten.selector, suite, 1));
+        harness.externalRegenerateExtendedNetworks();
+
+        harness.setExtendedNetworks(first);
+        vm.expectRevert(abi.encodeWithSelector(ExtendedNetworksRewritten.selector, suite, 1));
+        harness.externalRegenerateExtendedNetworks();
+
+        string memory finalRecord = vm.readFile(path);
+        //forge-lint: disable-next-line(unsafe-cheatcode)
+        vm.removeDir(root, true);
+
+        assertEq(
+            appendedRecord,
+            string.concat(
+                LibCodeGen.filePrefix(RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
+                LibRainDeployExtendedNetworks.extendedNetworksBody(vm, networks)
+            )
+        );
+        assertEq(finalRecord, appendedRecord, "a refused declaration rewrote the record");
     }
 
     /// PROPERTY: `run()` writes each release's declared extended networks to its record.
