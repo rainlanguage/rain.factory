@@ -1,0 +1,76 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: CloneFactoryV5
+    network: template
+    source:
+      abi: CloneFactoryV5
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Factory
+        - NewClone
+        - NewBeaconProxy
+      abis:
+        - name: CloneFactoryV5
+          file: ../out/ICloneableFactoryV5.sol/ICloneableFactoryV5.json
+      eventHandlers:
+        - event: NewClone(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV5NewClone
+        - event: NewBeaconProxy(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV5NewBeaconProxy
+      file: ./src/cloneFactory.ts
+  - kind: ethereum/contract
+    name: CloneFactoryV6
+    network: template
+    source:
+      abi: CloneFactoryV6
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Factory
+        - NewClone
+        - NewBeaconProxy
+        - NewRegistryBeaconProxy
+      abis:
+        - name: CloneFactoryV6
+          file: ../out/ICloneableFactoryV6.sol/ICloneableFactoryV6.json
+      eventHandlers:
+        - event: NewClone(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV6NewClone
+        - event: NewBeaconProxy(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV6NewBeaconProxy
+        - event: NewRegistryBeaconProxy(address,address,address,bytes32,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV6NewRegistryBeaconProxy
+      file: ./src/cloneFactory.ts
+  - kind: ethereum/contract
+    name: CloneFactoryV7
+    network: template
+    source:
+      abi: CloneFactoryV7
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Factory
+        - NewClone
+        - NewBeaconProxy
+        - NewRegistryBeaconProxy
+      abis:
+        - name: CloneFactoryV7
+          file: ../out/ICloneableFactoryV7.sol/ICloneableFactoryV7.json
+      eventHandlers:
+        - event: NewClone(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV7NewClone
+        - event: NewBeaconProxy(address,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV7NewBeaconProxy
+        - event: NewRegistryBeaconProxy(address,address,address,bytes32,address,address,bytes32,bytes)
+          handler: handleCloneFactoryV7NewRegistryBeaconProxy
+      file: ./src/cloneFactory.ts

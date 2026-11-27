@@ -1,0 +1,49 @@
+type Factory @entity {
+  id: Bytes!
+  version: String!
+  clones: [NewClone!]! @derivedFrom(field: "factory")
+  beaconProxies: [NewBeaconProxy!]! @derivedFrom(field: "factory")
+  registryBeaconProxies: [NewRegistryBeaconProxy!]! @derivedFrom(field: "factory")
+}
+
+type NewClone @entity(immutable: true) {
+  id: Bytes!
+  factory: Factory!
+  sender: Bytes!
+  implementation: Bytes!
+  clone: Bytes!
+  salt: Bytes!
+  data: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewBeaconProxy @entity(immutable: true) {
+  id: Bytes!
+  factory: Factory!
+  sender: Bytes!
+  beacon: Bytes!
+  proxy: Bytes!
+  salt: Bytes!
+  data: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewRegistryBeaconProxy @entity(immutable: true) {
+  id: Bytes!
+  factory: Factory!
+  sender: Bytes!
+  registry: Bytes!
+  authority: Bytes!
+  beaconName: Bytes!
+  beacon: Bytes!
+  proxy: Bytes!
+  salt: Bytes!
+  data: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
