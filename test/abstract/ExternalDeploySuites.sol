@@ -8,9 +8,9 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
 /// @title ExternalDeploySuites
@@ -121,11 +121,11 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
     }
 
     function externalDeployLocally(Vm localVm, DeploySuite memory suite) external returns (address[] memory) {
-        return deployLocally(declaration(), localVm, suite);
+        return deployLocally(declaration(), LibRainDeployDeclaration.emptyIndex(), localVm, suite);
     }
 
     function externalDeployLocallyOnChain(Vm localVm, DeploySuite memory suite) external {
-        deployLocallyOnChain(declaration(), localVm, suite);
+        deployLocallyOnChain(declaration(), LibRainDeployDeclaration.emptyIndex(), localVm, suite);
     }
 
     /// @return `suite` as `addUnrecordedNetworks` leaves it.
@@ -196,7 +196,11 @@ abstract contract ExternalDeploySuites is RainDeploySuitesBase {
         DeploySuite memory suite
     ) external returns (string memory) {
         return writeSuiteSnapshot(
-            declaration(), fileVm, SnapshotFile(root, dir, contractName, spdxLicenseIdentifier, copyrightText), suite
+            declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
+            fileVm,
+            SnapshotFile(root, dir, contractName, spdxLicenseIdentifier, copyrightText),
+            suite
         );
     }
 

@@ -10,15 +10,15 @@ import {
     MechanismUnclaimed,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {BEACON_PROXY_ARTIFACT_PATH, BeaconProxyDeploy} from "../../../src/lib/LibRainDeployBeaconProxy.sol";
 import {
@@ -33,7 +33,7 @@ import {
     FrozenSnapshotBeaconProxyMechanismDataMissing,
     LibRainDeployCloneSnapshot
 } from "../../../src/lib/LibRainDeployCloneSnapshot.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {MockBeaconProxyFactory} from "../../concrete/MockBeaconProxyFactory.sol";
 import {MockCloneableV2} from "../../concrete/MockCloneableV2.sol";
 import {exampleCloneImplementation} from "../../abstract/ExampleCloneDeploys.sol";
@@ -267,6 +267,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
         vm.createDir(string.concat(ROOT, "/", tag), true);
         return writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, tag, "BeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite
@@ -419,6 +420,7 @@ contract LibRainDeployCloneSnapshotBeaconProxyTest is Test, RainDeploySuitesBase
     function checkPerNetworkRecord(string memory tag, uint256[] memory chainIds, DeploySuite memory suite) internal {
         string memory path = LibRainDeployCloneSnapshot.writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, tag, "PerNetworkCloneRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite

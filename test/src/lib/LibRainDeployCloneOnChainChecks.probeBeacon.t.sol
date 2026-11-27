@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     BeaconProbe,
@@ -23,7 +23,9 @@ contract LibRainDeployCloneOnChainChecksProbeBeaconTest is Test {
         LibRainDeployDeclaration.extend(d);
         LibRainDeployZoltuMechanism.extend(d);
         LibRainDeployCloneMechanism.extend(d);
-        return LibRainDeployCloneOnChainChecks.probeBeacon(d, suite, address(0xBEAC), 42161);
+        return LibRainDeployCloneOnChainChecks.probeBeacon(
+            d, LibRainDeployDeclaration.emptyIndex(), suite, address(0xBEAC), 42161
+        );
     }
 
     function testProbeBeaconWhoseDeployCannotBeRevertedIsRefused() external {

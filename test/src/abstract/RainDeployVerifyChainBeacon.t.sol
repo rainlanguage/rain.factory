@@ -4,11 +4,12 @@ pragma solidity =0.8.25;
 
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyChain.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
-import {MIGRATION_HEAD_GENESIS, Prerequisite} from "rain-deploy-0.1.41/src/interface/IMigrationRegistryV5.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {MIGRATION_HEAD_GENESIS, Prerequisite} from "rain-deploy-0.1.43/src/interface/IMigrationRegistryV5.sol";
 import {
     BeaconState,
     BeaconTransition,
@@ -568,7 +569,7 @@ contract RainDeployVerifyChainBeaconTest is BeaconVerifyFixture, RainDeployVerif
         LibRainDeployBeaconResolution.resolveBeacons(d, networks);
         candidate.networks = LibRainDeploy.networkNames(networks);
         addCandidateNetworks(d, candidate, LibRainDeploy.networkChainIds(networks));
-        return deriveDeployment(d, candidate);
+        return deriveDeployment(d, LibRainDeployDeclaration.emptyIndex(), candidate);
     }
 
     function testSuiteWithAResolvedKeyButOtherCodeIsDerivedAfresh() external {

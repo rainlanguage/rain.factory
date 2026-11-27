@@ -6,7 +6,7 @@ import {
     DeployDeclaration,
     DeployDependency,
     ExternalDeployment
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 
 /// @title LibExternalDeployments
 /// @notice Declares deployments outside a fixture's suites as its external deployments.

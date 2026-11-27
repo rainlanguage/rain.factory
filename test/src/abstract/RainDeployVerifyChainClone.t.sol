@@ -7,9 +7,9 @@ import {
     DeployDeclaration,
     DeploySuite,
     RainDeploySuitesBase
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyChain.sol";
-import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyChain.sol";
+import {DeployDependency, LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {ExampleCloneDeploys} from "../../abstract/ExampleCloneDeploys.sol";
 import {CloneParams} from "../../../src/lib/LibRainDeployClone.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";

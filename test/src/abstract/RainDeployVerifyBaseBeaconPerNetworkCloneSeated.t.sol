@@ -8,11 +8,11 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {MockCloneFactory} from "../../concrete/MockCloneFactory.sol";
 import {MockChainRefusingCloneable} from "../../concrete/MockChainRefusingCloneable.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";

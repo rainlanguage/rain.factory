@@ -9,14 +9,14 @@ import {
     DeploySuite,
     RainDeploySuitesBase,
     SnapshotFile
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {
     LibRainDeployRegistryBeaconProxy,
     REGISTRY_BEACON_PROXY_ARTIFACT_PATH,
@@ -265,6 +265,7 @@ contract LibRainDeployCloneSnapshotRegistryBeaconProxyTest is Test, RainDeploySu
         vm.createDir(string.concat(ROOT, "/0_0_1"), true);
         string memory path = writeSuiteSnapshot(
             declaration(),
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(ROOT, "0_0_1", "RegistryBeaconProxyRecord", RAIN_SPDX_LICENSE_IDENTIFIER, RAIN_COPYRIGHT_TEXT),
             suite

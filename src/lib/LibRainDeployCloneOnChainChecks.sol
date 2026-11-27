@@ -10,9 +10,9 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuiteIndex, LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {ChainBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {
     BEACON_PROXY_MECHANISM,
@@ -115,14 +115,17 @@ library LibRainDeployCloneOnChainChecks {
 
     /// `suite` deployed locally under `chainId` in a reverted snapshot: `beacon`'s raw `owner()` and
     /// `implementation()` answers.
-    function probeBeacon(DeployDeclaration memory d, DeploySuite memory suite, address beacon, uint256 chainId)
-        internal
-        returns (BeaconProbe memory)
-    {
+    function probeBeacon(
+        DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
+        DeploySuite memory suite,
+        address beacon,
+        uint256 chainId
+    ) internal returns (BeaconProbe memory) {
         Vm vm = StdConstants.VM;
         uint256 snapshotId = vm.snapshotState();
         vm.chainId(chainId);
-        handlerOf(d, suite).deployLocallyOnChain(d, vm, suite);
+        handlerOf(d, suite).deployLocallyOnChain(d, index, vm, suite);
         // slither-disable-next-line low-level-calls
         (bool ownerAnswered, bytes memory owner) = beacon.staticcall(abi.encodeCall(IERC5313.owner, ()));
         // slither-disable-next-line low-level-calls

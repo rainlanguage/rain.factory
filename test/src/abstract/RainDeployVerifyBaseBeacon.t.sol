@@ -19,8 +19,9 @@ import {
     LibRainDeployBeacon
 } from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
-import {DeployDeclaration} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {MockDeployable} from "../../concrete/MockDeployable.sol";
 import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
 import {LibBeaconDeclarations} from "../../lib/LibBeaconDeclarations.sol";
@@ -43,7 +44,7 @@ contract RainDeployVerifyBaseBeaconTest is BeaconVerifyFixture {
 
     function externalResolveBeaconLeavesDeclaration(DeployBeacon memory beacon) external returns (DeployBeacon memory) {
         DeployDeclaration memory d = declaration();
-        LibRainDeployBeaconResolution.resolveBeacon(d, beacon, 42161, 0);
+        LibRainDeployBeaconResolution.resolveBeacon(d, LibRainDeployDeclaration.emptyIndex(), beacon, 42161, 0);
         return beacon;
     }
 

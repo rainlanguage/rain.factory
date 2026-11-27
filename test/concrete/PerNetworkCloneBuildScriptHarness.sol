@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BuildScript, GeneratedContract} from "rain-deploy-0.1.41/src/abstract/BuildScript.sol";
-import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployConfig} from "rain-deploy-0.1.41/src/lib/LibRainDeployConfig.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.41/src/lib/LibRainDeploySnapshot.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
+import {BuildScript, GeneratedContract} from "rain-deploy-0.1.43/src/abstract/BuildScript.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployConfig} from "rain-deploy-0.1.43/src/lib/LibRainDeployConfig.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {RAIN_COPYRIGHT_TEXT, RAIN_SPDX_LICENSE_IDENTIFIER} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibRainDeployCloneBuild} from "../../src/lib/LibRainDeployCloneBuild.sol";
 import {ExtendedNetworksDeclaration, LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
@@ -109,6 +109,7 @@ contract PerNetworkCloneBuildScriptHarness is BuildScript {
         snapshot.networks = d.networks;
         writeSuiteSnapshot(
             d,
+            LibRainDeployDeclaration.emptyIndex(),
             vm,
             SnapshotFile(
                 recordRoot(),

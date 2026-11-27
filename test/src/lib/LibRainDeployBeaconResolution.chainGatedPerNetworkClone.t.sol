@@ -6,9 +6,10 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";
@@ -94,7 +95,8 @@ contract LibRainDeployBeaconResolutionChainGatedPerNetworkCloneTest is BeaconVer
     }
 
     function externalDeriveDeployment(DeploySuite memory suite) external returns (DerivedDeploy memory) {
-        return LibRainDeployBeaconResolution.deriveDeployment(declaration(), suite);
+        return
+            LibRainDeployBeaconResolution.deriveDeployment(declaration(), LibRainDeployDeclaration.emptyIndex(), suite);
     }
 
     function testChainGatedPerNetworkCloneBeaconSuiteResolvesOnArbitrum() external {
