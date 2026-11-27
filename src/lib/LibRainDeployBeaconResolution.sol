@@ -11,7 +11,7 @@ import {
 } from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
 import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.42/src/abstract/RainDeployVerifyBase.sol";
 import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
+import {DeploySuiteIndex, LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
 import {ChainBeacon, DeployBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "./LibRainDeployCloneMechanism.sol";
 import {
@@ -169,10 +169,13 @@ library LibRainDeployBeaconResolution {
         }
         ResolvedBeacon[] memory resolved = new ResolvedBeacon[](onNetworks);
         uint256 resolvedIndex = 0;
+        // One index for every derivation in the loop, so it is built at most once.
+        DeploySuiteIndex memory index = LibRainDeployDeclaration.emptyIndex();
         for (uint256 beaconIndex = 0; beaconIndex < chainBeacons.length; beaconIndex++) {
             uint256 chainId = chainBeacons[beaconIndex].chainId;
             if (LibRainDeploy.hasChainId(networks, chainId)) {
-                ResolvedBeacon memory beacon = resolveBeacon(d, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
+                ResolvedBeacon memory beacon =
+                    resolveBeacon(d, index, chainBeacons[beaconIndex].beacon, chainId, beaconIndex);
                 for (uint256 earlier = 0; earlier < resolvedIndex; earlier++) {
                     if (resolved[earlier].chainId == chainId && resolved[earlier].beacon.beacon == beacon.beacon.beacon)
                     {
@@ -189,12 +192,14 @@ library LibRainDeployBeaconResolution {
     /// `LibRainDeployBeacon.checkTransitionMigrations`'s refusals, those of each named suite's address and derivation
     /// on `chainId`, and `checkSeatedState`'s for a beacon named by `beaconSuite`.
     /// @param d The declaration, extended.
+    /// @param index `d`'s suite index.
     /// @param declaration The beacon, left unwritten so one declaration can be resolved on several networks.
     /// @param chainId The beacon's network.
     /// @param beaconIndex The beacon's index in the declared beacons, for the refusal.
     /// @return The beacon, resolved on `chainId`.
     function resolveBeacon(
         DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
         DeployBeacon memory declaration,
         uint256 chainId,
         uint256 beaconIndex
@@ -213,7 +218,7 @@ library LibRainDeployBeaconResolution {
             if (beacon.beacon != address(0) || beacon.beaconCodeHash != bytes32(0)) {
                 revert BeaconNamedTwice(chainId, beaconIndex);
             }
-            (resolved.suite, resolved.derived) = resolveReleased(d, beacon.beaconSuite);
+            (resolved.suite, resolved.derived) = resolveReleased(d, index, beacon.beaconSuite);
             beacon.beacon =
                 LibRainDeployDeclaration.mechanismOf(d, resolved.suite).deployedAddress(d, resolved.suite, chainId);
             beacon.beaconCodeHash = resolved.derived.bytecodeHash;
@@ -223,24 +228,29 @@ library LibRainDeployBeaconResolution {
         LibRainDeployBeacon.checkTransitionMigrations(chainId, beacon);
         resolved.chainId = chainId;
         resolved.beacon = beacon;
-        resolveImplementations(d, resolved);
+        resolveImplementations(d, index, resolved);
         if (bytes(beacon.beaconSuite).length != 0) {
-            checkSeatedState(d, resolved, beaconIndex);
+            checkSeatedState(d, index, resolved, beaconIndex);
         }
         return resolved;
     }
 
     /// Resolves each state's implementation suite, address and derivation on `resolved.chainId`.
     /// @param d The declaration, extended.
+    /// @param index `d`'s suite index.
     /// @param resolved The beacon, its `chainId` and `beacon` set, its implementations written.
-    function resolveImplementations(DeployDeclaration memory d, ResolvedBeacon memory resolved) internal {
+    function resolveImplementations(
+        DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
+        ResolvedBeacon memory resolved
+    ) internal {
         uint256 states = resolved.beacon.transitions.length + 1;
         resolved.implementations = new DeploySuite[](states);
         resolved.implementationAddresses = new address[](states);
         resolved.implementationDerived = new DerivedDeploy[](states);
         for (uint256 state = 0; state < states; state++) {
             (DeploySuite memory suite, DerivedDeploy memory derived) =
-                resolveReleased(d, LibRainDeployBeacon.stateAt(resolved.beacon, state).implementation);
+                resolveReleased(d, index, LibRainDeployBeacon.stateAt(resolved.beacon, state).implementation);
             resolved.implementations[state] = suite;
             resolved.implementationAddresses[state] =
                 LibRainDeployDeclaration.mechanismOf(d, suite).deployedAddress(d, suite, resolved.chainId);
@@ -250,10 +260,11 @@ library LibRainDeployBeaconResolution {
 
     /// Refuses `BeaconSuiteNotReleased` when `key` is not in `d.released`; resolves and derives the released suite.
     /// @param d The declaration, extended.
+    /// @param index `d`'s suite index.
     /// @param key The key a beacon names.
     /// @return The released suite, resolved by its form on every declared network.
     /// @return The suite's derivation.
-    function resolveReleased(DeployDeclaration memory d, string memory key)
+    function resolveReleased(DeployDeclaration memory d, DeploySuiteIndex memory index, string memory key)
         internal
         returns (DeploySuite memory, DerivedDeploy memory)
     {
@@ -261,20 +272,22 @@ library LibRainDeployBeaconResolution {
             revert BeaconSuiteNotReleased(key);
         }
         DeploySuite memory suite = LibRainDeployCloneOnChainChecks.released(d, key);
-        return (suite, deriveDeployment(d, suite));
+        return (suite, deriveDeployment(d, index, suite));
     }
 
     /// Derives a suite through its own mechanism under a reverted snapshot, as core `deriveDeployment` does.
     /// @param d The declaration, extended.
+    /// @param index `d`'s suite index.
     /// @param suite The suite.
     /// @return The addresses and code hash the suite's mechanism produces.
-    function deriveDeployment(DeployDeclaration memory d, DeploySuite memory suite)
+    function deriveDeployment(DeployDeclaration memory d, DeploySuiteIndex memory index, DeploySuite memory suite)
         internal
         returns (DerivedDeploy memory)
     {
         Vm vm = StdConstants.VM;
         uint256 snapshotId = vm.snapshotState();
-        address[] memory deployedAddresses = LibRainDeployDeclaration.mechanismOf(d, suite).deployLocally(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
+        address[] memory deployedAddresses =
+            LibRainDeployDeclaration.mechanismOf(d, suite).deployLocally(d, index, vm, suite);
         uint256 deployed = 0;
         while (deployed < deployedAddresses.length && deployedAddresses[deployed] == address(0)) {
             deployed++;
@@ -295,13 +308,17 @@ library LibRainDeployBeaconResolution {
     /// `BeaconSeatedImplementation` when the beacon answers `owner()` or `implementation()` other than the initial
     /// state. A read that reverts or answers nothing is left to `LibRainDeployBeacon.checkBeacon`.
     /// @param d The declaration, extended.
+    /// @param index `d`'s suite index.
     /// @param resolved The beacon, resolved and named by `beaconSuite`.
     /// @param beaconIndex The beacon's index in the declared beacons, for the refusal.
-    function checkSeatedState(DeployDeclaration memory d, ResolvedBeacon memory resolved, uint256 beaconIndex)
-        internal
-    {
+    function checkSeatedState(
+        DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
+        ResolvedBeacon memory resolved,
+        uint256 beaconIndex
+    ) internal {
         BeaconProbe memory probe = LibRainDeployCloneOnChainChecks.probeBeacon(
-            d, resolved.suite, resolved.beacon.beacon, resolved.chainId
+            d, index, resolved.suite, resolved.beacon.beacon, resolved.chainId
         );
         if (LibRainDeployCloneOnChainChecks.seatsOther(probe.ownerAnswered, probe.owner, resolved.beacon.initial.owner))
         {
