@@ -6,9 +6,9 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.41/src/abstract/RainDeployVerifyBase.sol";
-import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {DerivedDeploy, NoDerivedDeployment} from "rain-deploy-0.1.42/src/abstract/RainDeployVerifyBase.sol";
+import {LibRainDeploy, SupportedNetwork} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
 import {ChainBeacon} from "../../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployBeaconResolution} from "../../../src/lib/LibRainDeployBeaconResolution.sol";
 import {CLONE_ARTIFACT_PATH, CloneNetworks, LibRainDeployClone} from "../../../src/lib/LibRainDeployClone.sol";

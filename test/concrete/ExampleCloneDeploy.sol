@@ -4,8 +4,8 @@ pragma solidity =0.8.25;
 
 import {ExampleCloneDeploys} from "../abstract/ExampleCloneDeploys.sol";
 import {ExternalDeployBroadcast} from "../abstract/ExternalDeployBroadcast.sol";
-import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration, RainDeploySuitesBase} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
 import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 
 /// @title ExampleCloneDeploy

@@ -10,15 +10,15 @@ import {
     DeployBeacon,
     LibRainDeployBeacon
 } from "../../../src/lib/LibRainDeployBeacon.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
-import {LibMigrationRegistry} from "rain-deploy-0.1.41/src/lib/LibMigrationRegistry.sol";
-import {LibMigrationRegistryDeploy} from "rain-deploy-0.1.41/src/lib/LibMigrationRegistryDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
+import {LibMigrationRegistry} from "rain-deploy-0.1.42/src/lib/LibMigrationRegistry.sol";
+import {LibMigrationRegistryDeploy} from "rain-deploy-0.1.42/src/lib/LibMigrationRegistryDeploy.sol";
 import {
     IMigrationRegistryV5,
     MIGRATION_HEAD_GENESIS,
     Prerequisite
-} from "rain-deploy-0.1.41/src/interface/IMigrationRegistryV5.sol";
-import {MigrationRegistry} from "rain-deploy-0.1.41/src/concrete/MigrationRegistry.sol";
+} from "rain-deploy-0.1.42/src/interface/IMigrationRegistryV5.sol";
+import {MigrationRegistry} from "rain-deploy-0.1.42/src/concrete/MigrationRegistry.sol";
 import {MockDeployableV2} from "../../concrete/MockDeployableV2.sol";
 import {MockOwnable2StepBeacon} from "../../concrete/MockOwnable2StepBeacon.sol";
 import {MockFallbackBeacon} from "../../concrete/MockFallbackBeacon.sol";

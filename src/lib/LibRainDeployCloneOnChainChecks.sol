@@ -10,9 +10,9 @@ import {
     DeployDeclaration,
     DeployMechanismHandler,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.41/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
+} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
 import {ChainBeacon, LibRainDeployBeacon} from "./LibRainDeployBeacon.sol";
 import {
     BEACON_PROXY_MECHANISM,

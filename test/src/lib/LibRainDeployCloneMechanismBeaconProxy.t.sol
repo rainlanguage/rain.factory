@@ -9,9 +9,9 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeploySuite
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.41/src/lib/LibRainDeploy.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.41/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.42/src/lib/LibRainDeployZoltuMechanism.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneNetworks,

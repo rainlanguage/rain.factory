@@ -7,7 +7,7 @@ import {
     DeployDeclaration,
     DeploySuite,
     UnrecordedOnNetwork
-} from "rain-deploy-0.1.41/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
 import {
     BEACON_PROXY_PER_NETWORK_MECHANISM,
     LibRainDeployCloneMechanism
