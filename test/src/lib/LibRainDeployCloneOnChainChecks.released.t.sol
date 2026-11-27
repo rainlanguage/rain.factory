@@ -7,8 +7,8 @@ import {
     DeployCandidate,
     DeployDeclaration,
     DeploySuite
-} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {CloneNetworks} from "../../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy, LibRainDeployExtendedNetworks} from "../../../src/lib/LibRainDeployExtendedNetworks.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";

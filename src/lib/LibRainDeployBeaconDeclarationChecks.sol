@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {DeployDeclaration} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {LibRainDeployBeaconResolution} from "./LibRainDeployBeaconResolution.sol";
 
 /// @param chainId The beacon's chain id.

@@ -5,13 +5,14 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {LibCodeGen} from "rain-sol-codegen-0.1.39/src/lib/LibCodeGen.sol";
 import {LibFs} from "rain-sol-codegen-0.1.39/src/lib/LibFs.sol";
-import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+import {DeployDeclaration, DeploySuite, SnapshotFile} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {DeploySuiteIndex} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
 import {
     FrozenSnapshotMechanismDataAmbiguous,
     FrozenSnapshotMechanismDataMissing,
     FrozenSnapshotUnreadable,
     LibRainDeploySnapshot
-} from "rain-deploy-0.1.42/src/lib/LibRainDeploySnapshot.sol";
+} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
 import {CloneNetworks} from "./LibRainDeployClone.sol";
 import {
     BEACON_PROXY_MECHANISM,
@@ -391,12 +392,15 @@ library LibRainDeployCloneSnapshot {
 
     /// Deploys `suite` locally under a reverted state snapshot and writes its record.
     /// @return The path written.
-    function writeSuiteSnapshot(DeployDeclaration memory d, Vm vm, SnapshotFile memory file, DeploySuite memory suite)
-        internal
-        returns (string memory)
-    {
+    function writeSuiteSnapshot(
+        DeployDeclaration memory d,
+        DeploySuiteIndex memory index,
+        Vm vm,
+        SnapshotFile memory file,
+        DeploySuite memory suite
+    ) internal returns (string memory) {
         uint256 snapshotId = vm.snapshotState();
-        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(d, LibRainDeployDeclaration.emptyIndex(), vm, suite);
+        address[] memory deployed = LibRainDeployCloneMechanism.deployLocally(d, index, vm, suite);
         writeCloneSnapshotFile(
             vm,
             LibRainDeploySnapshot.dirForSnapshot(file.root, file.dir),

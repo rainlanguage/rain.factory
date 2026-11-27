@@ -3,8 +3,8 @@
 pragma solidity ^0.8.25;
 
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.42/src/lib/LibRainDeployZoltuMechanism.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
 import {LibExternalDeployments} from "../lib/LibExternalDeployments.sol";
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
@@ -12,7 +12,7 @@ import {
     DeployDeclaration,
     DeploySuite,
     RainDeploySuitesBase
-} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
 import {
     CLONE_ARTIFACT_PATH,
     CloneDeploy,
@@ -21,7 +21,7 @@ import {
     LibRainDeployClone
 } from "../../src/lib/LibRainDeployClone.sol";
 import {ChainDeploy} from "../../src/lib/LibRainDeployExtendedNetworks.sol";
-import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
+import {DeployDependency, LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {exampleCloneDependencies, exampleCloneFactory, exampleCloneImplementation} from "./ExampleCloneDeploys.sol";
 import {
     BYTECODE_HASH as PER_NETWORK_CLONE_BYTECODE_HASH,

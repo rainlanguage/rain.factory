@@ -4,8 +4,8 @@ pragma solidity =0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 import {UpgradeableBeacon} from "@openzeppelin-contracts-5.7.0/proxy/beacon/UpgradeableBeacon.sol";
-import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.42/src/lib/LibRainDeploy.sol";
+import {DeployDeclaration, DeploySuite} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.43/src/lib/LibRainDeploy.sol";
 import {LibRainDeployCloneMechanism} from "../../../src/lib/LibRainDeployCloneMechanism.sol";
 import {
     LibRainDeployRegistryBeaconProxy,

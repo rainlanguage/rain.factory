@@ -6,11 +6,11 @@ import {
     DeployDeclaration,
     DeployDependency,
     DeploySuite
-} from "rain-deploy-0.1.42/src/abstract/RainDeploySuitesBase.sol";
-import {RainDeployVerifyChain} from "rain-deploy-0.1.42/src/abstract/RainDeployVerifyChain.sol";
-import {LibRainDeployDeclaration} from "rain-deploy-0.1.42/src/lib/LibRainDeployDeclaration.sol";
-import {LibRainDeploySnapshot} from "rain-deploy-0.1.42/src/lib/LibRainDeploySnapshot.sol";
-import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.42/src/lib/LibRainDeployZoltuMechanism.sol";
+} from "rain-deploy-0.1.43/src/abstract/RainDeploySuitesBase.sol";
+import {RainDeployVerifyChain} from "rain-deploy-0.1.43/src/abstract/RainDeployVerifyChain.sol";
+import {LibRainDeployDeclaration} from "rain-deploy-0.1.43/src/lib/LibRainDeployDeclaration.sol";
+import {LibRainDeploySnapshot} from "rain-deploy-0.1.43/src/lib/LibRainDeploySnapshot.sol";
+import {LibRainDeployZoltuMechanism} from "rain-deploy-0.1.43/src/lib/LibRainDeployZoltuMechanism.sol";
 import {BeaconState, ChainBeacon} from "../../src/lib/LibRainDeployBeacon.sol";
 import {LibRainDeployCloneMechanism} from "../../src/lib/LibRainDeployCloneMechanism.sol";
 import {LibCloneCandidates} from "../../src/lib/LibCloneCandidates.sol";
